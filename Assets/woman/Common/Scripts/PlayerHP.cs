@@ -184,7 +184,10 @@ public class PlayerHP : MonoBehaviour
                 ScoreManager.Instance.AddDeathPenalty();
             }
         }
-
+        if (_animator != null)
+        {
+            _animator.Play("RFA_Movement");
+        }
         Debug.Log("Player Revived");
     }
 

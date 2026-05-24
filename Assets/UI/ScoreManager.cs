@@ -9,18 +9,10 @@ public class ScoreManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI inGameScoreText;
     [SerializeField] private TextMeshProUGUI clearScoreText;
 
-    [Header("基本スコア")]
-    [SerializeField] private int clearBaseScore = 5000;
-
-    [Header("タイムボーナス")]
-    [SerializeField] private int maxTimeBonus = 5000;
-    [SerializeField] private float fastestTime = 45f;
-    [SerializeField] private float bonusZeroTime = 240f;
-
-    [Header("部位破壊ボーナス")]
+    [Header("スコア設定")]
+    [SerializeField] private int startScore = 11200;
+    [SerializeField] private float scoreDecreasePerSecond = 33f;
     [SerializeField] private int crystalBreakBonus = 1500;
-
-    [Header("死亡ペナルティ")]
     [SerializeField] private int deathPenalty = 1000;
 
     private int partBonus = 0;
@@ -34,6 +26,11 @@ public class ScoreManager : MonoBehaviour
     }
 
     void Start()
+    {
+        UpdateInGameScoreUI();
+    }
+
+    void Update()
     {
         UpdateInGameScoreUI();
     }
@@ -53,22 +50,28 @@ public class ScoreManager : MonoBehaviour
         UpdateInGameScoreUI();
     }
 
-    public int CalculateTimeBonus(float clearTime)
+    public int GetCurrentScore()
     {
-        if (clearTime <= fastestTime) return maxTimeBonus;
-        if (clearTime >= bonusZeroTime) return 0;
+        float time = GameManager.Instance != null ? GameManager.Instance.CurrentTime : 0f;
 
-        float t = 1f - ((clearTime - fastestTime) / (bonusZeroTime - fastestTime));
-        return Mathf.RoundToInt(maxTimeBonus * t);
+        int score =
+            startScore
+            - Mathf.RoundToInt(time * scoreDecreasePerSecond)
+            + partBonus
+            - (deathCount * deathPenalty);
+
+        return Mathf.Max(0, score);
     }
 
     public int GetFinalScore(float clearTime)
     {
-        int timeBonus = CalculateTimeBonus(clearTime);
-        int penalty = deathCount * deathPenalty;
+        int score =
+            startScore
+            - Mathf.RoundToInt(clearTime * scoreDecreasePerSecond)
+            + partBonus
+            - (deathCount * deathPenalty);
 
-        int finalScore = clearBaseScore + timeBonus + partBonus - penalty;
-        return Mathf.Max(0, finalScore);
+        return Mathf.Max(0, score);
     }
 
     public string GetRank(float clearTime)
@@ -76,26 +79,26 @@ public class ScoreManager : MonoBehaviour
         int score = GetFinalScore(clearTime);
 
         if (score >= 10000) return "S";
-        if (score >= 8500) return "A";
-        if (score >= 7000) return "B";
-        if (score >= 5000) return "C";
+        if (score >= 8000) return "A";
+        if (score >= 6000) return "B";
+        if (score >= 4000) return "C";
         return "D";
     }
 
     public void ShowFinalScore(float clearTime)
     {
-        int timeBonus = CalculateTimeBonus(clearTime);
-        int penalty = deathCount * deathPenalty;
+        int timePenalty = Mathf.RoundToInt(clearTime * scoreDecreasePerSecond);
+        int deathTotalPenalty = deathCount * deathPenalty;
         int finalScore = GetFinalScore(clearTime);
 
         if (clearScoreText != null)
         {
             clearScoreText.text =
                 "Score : " + finalScore +
-                "\nBase : " + clearBaseScore +
-                "\nTime Bonus : " + timeBonus +
-                "\nCrystal Bonus : " + partBonus +
-                "\nDeath Penalty : -" + penalty;
+                "\nStart : " + startScore +
+                "\nTime Penalty : -" + timePenalty +
+                "\nCrystal Bonus : +" + partBonus +
+                "\nDeath Penalty : -" + deathTotalPenalty;
         }
     }
 
@@ -103,9 +106,6 @@ public class ScoreManager : MonoBehaviour
     {
         if (inGameScoreText == null) return;
 
-        int currentScore = clearBaseScore + partBonus - (deathCount * deathPenalty);
-        currentScore = Mathf.Max(0, currentScore);
-
-        inGameScoreText.text = "Score : " + currentScore;
+        inGameScoreText.text = "Score : " + GetCurrentScore();
     }
 }

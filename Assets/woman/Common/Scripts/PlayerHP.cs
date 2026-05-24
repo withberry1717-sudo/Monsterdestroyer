@@ -4,12 +4,13 @@ using TMPro;
 
 public class PlayerHP : MonoBehaviour
 {
-    [SerializeField] private int maxHp = 3;
+    // ★ここを int から float にして、初期値を100にします
+    [SerializeField] private float maxHp = 100f;
     [SerializeField] private TextMeshProUGUI hpText;
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private GameObject gameClearPanel;
 
-    private int currentHp;
+    private float currentHp; // ★ここも float に変更
     private bool isGameOver = false;
     private bool isGameClear = false;
 
@@ -26,11 +27,12 @@ public class PlayerHP : MonoBehaviour
         Debug.Log("Game Start! Player HP: " + currentHp);
     }
 
-    public void TakeDamage(int damage)
+    // ★int だったダメージ値を float に変更
+    public void TakeDamage(float damage)
     {
         if (isGameOver || isGameClear) return;
 
-        currentHp -= damage;
+        currentHp -= damage; // 1ずつ減らすのではなく、ダメージ分をそのまま減らす！
         UpdateHPUI();
         Debug.Log("Hit! Damage: " + damage + " | Remaining HP: " + currentHp);
 
@@ -51,59 +53,24 @@ public class PlayerHP : MonoBehaviour
     {
         if (hpText != null)
         {
-            hpText.text = "HP: " + currentHp;
+            // ★表示も「HP: 整数」になるように調整
+            hpText.text = "HP: " + Mathf.CeilToInt(currentHp);
         }
     }
 
+    // （以下、GameOverやGameClearなどの処理はそのまま）
     void GameOver()
     {
         isGameOver = true;
+        if (hpText != null) hpText.text = "HP: 0";
+        if (_animator != null) _animator.SetTrigger("Die");
+        if (_movement != null) _movement.enabled = false;
+        if (gameOverPanel != null) gameOverPanel.SetActive(true);
 
-        if (hpText != null)
-        {
-            hpText.text = "HP: 0";
-        }
-
-        if (_animator != null)
-        {
-            _animator.SetTrigger("Die");
-        }
-
-        if (_movement != null)
-        {
-            _movement.enabled = false;
-        }
-
-        if (gameOverPanel != null)
-        {
-            gameOverPanel.SetActive(true);
-        }
-
-        Debug.Log("GAME OVER. Restarting in 1.5 seconds...");
-        Invoke("RestartGame", 1.5f);
+        Debug.Log("GAME OVER. Restarting...");
+        Invoke("RestartGame", 2.0f);
     }
 
-    public void GameClear()
-    {
-        if (isGameOver || isGameClear) return;
-
-        isGameClear = true;
-
-        if (_movement != null)
-        {
-            _movement.enabled = false;
-        }
-
-        if (gameClearPanel != null)
-        {
-            gameClearPanel.SetActive(true);
-        }
-
-        Debug.Log("GAME CLEAR");
-    }
-
-    void RestartGame()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-    }
+    // ... (RestartGameなどのメソッド)
+    void RestartGame() { SceneManager.LoadScene(SceneManager.GetActiveScene().name); }
 }

@@ -10,6 +10,7 @@ public class PlayerHP : MonoBehaviour
     [SerializeField] private TextMeshProUGUI hpText;
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private GameObject gameClearPanel;
+    [SerializeField] private UnityEngine.UI.Image hpBarFill;
 
     [Header("îÌíeê›íË")]
     [SerializeField] private float heavyDamageThreshold = 25f;
@@ -162,7 +163,13 @@ public class PlayerHP : MonoBehaviour
         {
             hpText.text = "HP: " + Mathf.CeilToInt(currentHp);
         }
+
+        if (hpBarFill != null)
+        {
+            hpBarFill.fillAmount = currentHp / maxHp;
+        }
     }
+
     public void Revive()
     {
         isGameOver = false;

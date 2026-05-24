@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.Collections; // ★時間をコントロールするコルーチンに必要です！
+using System.Collections;
 
 public class WeaponHitbox : MonoBehaviour
 {
@@ -7,17 +7,18 @@ public class WeaponHitbox : MonoBehaviour
     private bool _hasHit; // 二度当たり防止用
 
     [Header("攻撃設定")]
-    public int damage = 1;
+    // 倍率計算（1.5倍など）を綺麗にするため、int（整数）から float（小数）に変更しました！
+    public float damage = 10f;
 
     [Header("演出設定")]
-    public float hitStopDuration = 0.1f; // 最初から体感しやすい0.1秒にしておきます
+    public float hitStopDuration = 0.1f;
 
-    [Header("★サイズ自由調整（アニメーション対策）")]
+    [Header("サイズ自由調整（アニメーション対策）")]
     [Tooltip("インスペクターのサイズ設定を強制適用するかどうか")]
     public bool fixScale = true;
 
     [Tooltip("ここを変えると武器の大きさがリアルタイムに変わります")]
-    public Vector3 weaponScale = new Vector3(1.5f, 1.5f, 1.5f); // いつもの綺麗なXYZ入力が出ます！
+    public Vector3 weaponScale = new Vector3(1.5f, 1.5f, 1.5f);
 
     void Start()
     {
@@ -38,32 +39,40 @@ public class WeaponHitbox : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // 敵に当たった時の処理
+        // 敵（Enemyタグ）に当たった時の処理
         if (_hasHit || !other.CompareTag("Enemy")) return;
 
         _hasHit = true;
         Debug.Log(gameObject.name + " が命中！");
 
-        // 当たった相手（Enemy）からEnemyHPコンポーネントを取得してダメージを与える
-        EnemyHP enemyHP = other.GetComponent<EnemyHP>();
-        if (enemyHP != null)
+        // 【超重要】新しく作ったドラゴンの当たり判定を探す！
+        DragonHurtbox dragonHurtbox = other.GetComponent<DragonHurtbox>();
+        if (dragonHurtbox != null)
         {
-            enemyHP.TakeDamage(damage);
+            // ドラゴンシステムを発動！（倍率計算やポップアップ文字が出ます）
+            dragonHurtbox.OnHit(damage);
+        }
+        else
+        {
+            // ※もしドラゴン以外の古い敵（EnemyHP）がいてもエラーにならないように残しておきます
+            EnemyHP enemyHP = other.GetComponent<EnemyHP>();
+            if (enemyHP != null)
+            {
+                enemyHP.TakeDamage((int)damage);
+            }
         }
 
-        // ★HitStop.cs（幽霊ファイル）は使いません！武器自身が直接時間を一瞬止めます
+        // ヒットストップ
         StartCoroutine(DoHitStop(hitStopDuration));
     }
 
-    // ★ここにヒットストップの処理を直接内蔵しました
     private IEnumerator DoHitStop(float duration)
     {
-        Time.timeScale = 0.02f; // ゲーム全体の時間をほぼ停止（1/50の遅さに）
-        yield return new WaitForSecondsRealtime(duration); // 現実の秒数で待つ
+        Time.timeScale = 0.02f; // ゲーム全体の時間をほぼ停止
+        yield return new WaitForSecondsRealtime(duration);
         Time.timeScale = 1f; // 時間を元に戻す
     }
 
-    // アニメーションの上書きに打ち勝ってサイズを維持する魔法のタイミング
     void LateUpdate()
     {
         if (fixScale)

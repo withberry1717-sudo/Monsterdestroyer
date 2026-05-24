@@ -334,8 +334,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 39678836}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.779519, y: 0.21384607, z: -0.3081469, w: -0.50166273}
-  m_LocalPosition: {x: 13.296509, y: -1.2885485, z: -5.8799896}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.000002861023, z: 0.0000076293945}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -369,7 +369,7 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 1899684530}
+  - sourceTransform: {fileID: 0}
     weight: 1
 --- !u!1001 &53812667
 PrefabInstance:
@@ -537,9 +537,10 @@ GameObject:
   - component: {fileID: 68696327}
   - component: {fileID: 68696329}
   - component: {fileID: 68696328}
-  m_Layer: 0
+  - component: {fileID: 68696330}
+  m_Layer: 3
   m_Name: 'RIghtWing4_Hurtbox '
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -552,8 +553,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 68696326}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.984344, y: 0.019890213, z: 0.16038598, w: -0.0703403}
-  m_LocalPosition: {x: 9.162888, y: 0.75237656, z: -6.0498886}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0000038146973, z: -0.0000076293945}
   m_LocalScale: {x: 1.417847, y: 2.6846, z: 0.19675536}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -605,8 +606,23 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 894880598}
+  - sourceTransform: {fileID: 0}
     weight: 1
+--- !u!114 &68696330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 68696326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1 &101645236
 GameObject:
   m_ObjectHideFlags: 0
@@ -617,9 +633,10 @@ GameObject:
   m_Component:
   - component: {fileID: 101645237}
   - component: {fileID: 101645238}
-  m_Layer: 0
+  - component: {fileID: 101645239}
+  m_Layer: 3
   m_Name: RightTailCrystal
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -660,6 +677,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &101645239
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 101645236}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 1
+  isCrystalPart: 1
 --- !u!1 &119260592
 GameObject:
   m_ObjectHideFlags: 0
@@ -685,8 +717,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 119260592}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.2353414, y: 0.6905389, z: -0.6341033, w: 0.25628787}
-  m_LocalPosition: {x: 15.555038, y: 2.607626, z: -10.092339}
+  m_LocalRotation: {x: 0.23534125, y: 0.6905398, z: -0.63410217, w: 0.25628847}
+  m_LocalPosition: {x: 15.555038, y: 5.359206, z: -10.092339}
   m_LocalScale: {x: 1, y: 1, z: 0.9771683}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -718,7 +750,7 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 784722682}
+  - sourceTransform: {fileID: 0}
     weight: 1
 --- !u!1001 &131519520
 PrefabInstance:
@@ -801,9 +833,10 @@ GameObject:
   m_Component:
   - component: {fileID: 132908383}
   - component: {fileID: 132908384}
-  m_Layer: 0
+  - component: {fileID: 132908385}
+  m_Layer: 3
   m_Name: BackTailCrystal
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -844,6 +877,21 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &132908385
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 132908382}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 1
+  isCrystalPart: 1
 --- !u!1 &134763826
 GameObject:
   m_ObjectHideFlags: 0
@@ -854,9 +902,10 @@ GameObject:
   m_Component:
   - component: {fileID: 134763827}
   - component: {fileID: 134763828}
-  m_Layer: 0
+  - component: {fileID: 134763829}
+  m_Layer: 3
   m_Name: Head_Sphere
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -897,11 +946,21 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.8
   m_Center: {x: 0, y: -0.5, z: 0}
---- !u!4 &137531199 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -2122143394461723948, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
+--- !u!114 &134763829
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 134763826}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 1.5
+  isCrystalPart: 0
 --- !u!1001 &186327343
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1092,21 +1151,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 208384252}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!4 &210505590 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2878999192746246576, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &244371627 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8193602330189864337, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &251879844 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5408207652692702589, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &271173583
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1193,8 +1237,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 274923317}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7918074, y: -0.16522597, z: 0.27503732, w: 0.5197075}
-  m_LocalPosition: {x: 11.725403, y: -1.2885494, z: -7.232506}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0000047683716, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1228,7 +1272,7 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 732328238}
+  - sourceTransform: {fileID: 0}
     weight: 1
 --- !u!1 &284502004
 GameObject:
@@ -1240,9 +1284,10 @@ GameObject:
   m_Component:
   - component: {fileID: 284502005}
   - component: {fileID: 284502006}
-  m_Layer: 0
+  - component: {fileID: 284502007}
+  m_Layer: 3
   m_Name: Head_nose
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1283,6 +1328,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 0.8, z: 1.5}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &284502007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 284502004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 1.5
+  isCrystalPart: 0
 --- !u!1001 &322919017
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1862,8 +1922,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 434752117}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.22749539, y: 0.4693853, z: 0.4852252, w: 0.7017691}
-  m_LocalPosition: {x: 13.385757, y: 1.0942478, z: -5.7879715}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.000015258789, y: 0, z: 0.0000076293945}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1895,7 +1955,7 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 1730753548}
+  - sourceTransform: {fileID: 0}
     weight: 1
 --- !u!1 &446893111
 GameObject:
@@ -1922,8 +1982,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 446893111}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.2353414, y: 0.6905389, z: -0.6341033, w: 0.25628787}
-  m_LocalPosition: {x: 15.555038, y: 2.607626, z: -10.092339}
+  m_LocalRotation: {x: 0.23534125, y: 0.6905398, z: -0.63410217, w: 0.25628847}
+  m_LocalPosition: {x: 15.555038, y: 1.8376255, z: -10.092339}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1941,7 +2001,7 @@ ParentConstraint:
   m_Enabled: 1
   serializedVersion: 2
   m_Weight: 1
-  m_TranslationAtRest: {x: 15.555038, y: 5.359206, z: -10.092339}
+  m_TranslationAtRest: {x: 15.555038, y: 1.8376255, z: -10.092339}
   m_RotationAtRest: {x: 85.12066, y: 139.27527, z: -0.00078295753}
   m_TranslationOffsets:
   - {x: 0, y: 0, z: 0}
@@ -1956,7 +2016,7 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 784722682}
+  - sourceTransform: {fileID: 0}
     weight: 1
 --- !u!1 &460484412
 GameObject:
@@ -1969,9 +2029,10 @@ GameObject:
   - component: {fileID: 460484413}
   - component: {fileID: 460484415}
   - component: {fileID: 460484414}
-  m_Layer: 0
+  - component: {fileID: 460484416}
+  m_Layer: 3
   m_Name: 'RIghtWing3_Hurtbox '
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1984,8 +2045,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 460484412}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.8966098, y: -0.42571524, z: -0.088035405, w: 0.08430426}
-  m_LocalPosition: {x: 10.434494, y: 1.8112392, z: -6.4340286}
+  m_LocalRotation: {x: 0.89660984, y: -0.42571518, z: -0.08803549, w: 0.08430428}
+  m_LocalPosition: {x: 10.434494, y: 4.5628195, z: -6.4340286}
   m_LocalScale: {x: 2.4590843, y: 2.1735973, z: 0.28541768}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2037,8 +2098,23 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 1846655323}
+  - sourceTransform: {fileID: 0}
     weight: 1
+--- !u!114 &460484416
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 460484412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1 &476560598
 GameObject:
   m_ObjectHideFlags: 0
@@ -2049,9 +2125,10 @@ GameObject:
   m_Component:
   - component: {fileID: 476560599}
   - component: {fileID: 476560600}
-  m_Layer: 0
+  - component: {fileID: 476560601}
+  m_Layer: 3
   m_Name: LeftWing3
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2092,6 +2169,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &476560601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 476560598}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1 &478668671
 GameObject:
   m_ObjectHideFlags: 0
@@ -2103,9 +2195,10 @@ GameObject:
   - component: {fileID: 478668672}
   - component: {fileID: 478668674}
   - component: {fileID: 478668673}
-  m_Layer: 0
+  - component: {fileID: 478668675}
+  m_Layer: 3
   m_Name: Tail_Hurtbox
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2118,8 +2211,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 478668671}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.29000372, y: -0.49944878, z: -0.7969405, w: -0.17701592}
-  m_LocalPosition: {x: 12.110062, y: -0.43252373, z: -6.125801}
+  m_LocalRotation: {x: 0.29000387, y: -0.49944887, z: -0.7969404, w: -0.1770161}
+  m_LocalPosition: {x: 12.110062, y: 2.3190565, z: -6.125801}
   m_LocalScale: {x: 0.85579365, y: 2.5041, z: 0.59773}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2171,8 +2264,23 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 137531199}
+  - sourceTransform: {fileID: 0}
     weight: 1
+--- !u!114 &478668675
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 478668671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 1
+  isCrystalPart: 0
 --- !u!1 &544627189
 GameObject:
   m_ObjectHideFlags: 0
@@ -2183,9 +2291,10 @@ GameObject:
   m_Component:
   - component: {fileID: 544627190}
   - component: {fileID: 544627191}
-  m_Layer: 0
+  - component: {fileID: 544627192}
+  m_Layer: 3
   m_Name: Neck
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2226,6 +2335,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &544627192
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 544627189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 1.2
+  isCrystalPart: 0
 --- !u!1 &559545622
 GameObject:
   m_ObjectHideFlags: 0
@@ -2303,16 +2427,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 559545622}
   m_CullTransparentMesh: 1
---- !u!4 &586795906 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 9143347403616704338, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &602724079 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4953095519640839867, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &615957374
 GameObject:
   m_ObjectHideFlags: 0
@@ -2323,7 +2437,8 @@ GameObject:
   m_Component:
   - component: {fileID: 615957375}
   - component: {fileID: 615957376}
-  m_Layer: 0
+  - component: {fileID: 615957377}
+  m_Layer: 3
   m_Name: BRLeg3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2366,6 +2481,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &615957377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 615957374}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1 &627449050 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3306100764376975615, guid: 80844b2319340044da27db99208a9eac, type: 3}
@@ -7408,8 +7538,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 636279515}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.34508908, y: -0.11665135, z: 0.93060565, w: -0.035764385}
-  m_LocalPosition: {x: 14.063599, y: -0.79914284, z: -7.0484467}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.000015258789, y: 0, z: -0.000015258789}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -7442,7 +7572,7 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 1297065482}
+  - sourceTransform: {fileID: 0}
     weight: 1
 --- !u!1 &645601529
 GameObject:
@@ -7591,9 +7721,10 @@ GameObject:
   m_Component:
   - component: {fileID: 702384812}
   - component: {fileID: 702384813}
-  m_Layer: 0
+  - component: {fileID: 702384814}
+  m_Layer: 3
   m_Name: BLLeg1
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -7634,6 +7765,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &702384814
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 702384811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1 &709078152
 GameObject:
   m_ObjectHideFlags: 0
@@ -7816,11 +7962,6 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: d9d1fbfcf69364ffd8f9c6ade9ce90fe, type: 3}
   m_PrefabInstance: {fileID: 710169281}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &732328238 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5631098609946611486, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &732622615 stripped
 Transform:
@@ -8054,11 +8195,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &784722682 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4822280691447539524, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &792229271
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8195,9 +8331,10 @@ GameObject:
   m_Component:
   - component: {fileID: 845850337}
   - component: {fileID: 845850338}
-  m_Layer: 0
+  - component: {fileID: 845850339}
+  m_Layer: 3
   m_Name: BigLegFL
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -8238,6 +8375,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &845850339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 845850336}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1001 &849625512
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8326,9 +8478,10 @@ GameObject:
   m_Component:
   - component: {fileID: 853324826}
   - component: {fileID: 853324827}
-  m_Layer: 0
+  - component: {fileID: 853324828}
+  m_Layer: 3
   m_Name: Leg_FL
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -8369,6 +8522,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &853324828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 853324825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1 &864354339
 GameObject:
   m_ObjectHideFlags: 0
@@ -8380,9 +8548,10 @@ GameObject:
   - component: {fileID: 864354340}
   - component: {fileID: 864354342}
   - component: {fileID: 864354341}
-  m_Layer: 0
+  - component: {fileID: 864354343}
+  m_Layer: 3
   m_Name: Tail4_Hurtbox
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -8395,8 +8564,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 864354339}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.22545385, y: 0.71411854, z: 0.6073639, w: 0.26516888}
-  m_LocalPosition: {x: 9.307999, y: -1.4744444, z: -2.8501205}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.643, y: 2.0049615, z: 0.61012}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8448,8 +8617,23 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 1837724301}
+  - sourceTransform: {fileID: 0}
     weight: 1
+--- !u!114 &864354343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 864354339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 1
+  isCrystalPart: 0
 --- !u!1001 &871700988
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8538,9 +8722,10 @@ GameObject:
   m_Component:
   - component: {fileID: 883190701}
   - component: {fileID: 883190702}
-  m_Layer: 0
+  - component: {fileID: 883190703}
+  m_Layer: 3
   m_Name: BodyFront
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -8581,6 +8766,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &883190703
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 883190700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 1
+  isCrystalPart: 0
 --- !u!1 &883327494
 GameObject:
   m_ObjectHideFlags: 0
@@ -8591,9 +8791,10 @@ GameObject:
   m_Component:
   - component: {fileID: 883327495}
   - component: {fileID: 883327496}
-  m_Layer: 0
+  - component: {fileID: 883327497}
+  m_Layer: 3
   m_Name: BigLegFR
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -8634,11 +8835,72 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!4 &894880598 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -3758454253187976605, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
+--- !u!114 &883327497
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 883327494}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
+--- !u!1 &892692332
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 892692333}
+  - component: {fileID: 892692334}
+  m_Layer: 0
+  m_Name: DragonCore
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &892692333
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 892692332}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 227.21982, y: 14.22812, z: 100.42319}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1137470615}
+  - {fileID: 1133066147}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &892692334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 892692332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 091636b6d46cff54c9cf63826b8b13f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonCore
+  maxHP: 1000
+  currentHP: 0
+  maxCrystalHP: 300
+  currentCrystalHP: 0
+  isCrystalBroken: 1
 --- !u!4 &900658707 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: 24be8e1643b8a474fbb57fcda8a1c454, type: 3}
@@ -8747,9 +9009,10 @@ GameObject:
   m_Component:
   - component: {fileID: 994408655}
   - component: {fileID: 994408656}
-  m_Layer: 0
+  - component: {fileID: 994408657}
+  m_Layer: 3
   m_Name: LeftWing2
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -8790,6 +9053,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &994408657
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 994408654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1 &1033439542
 GameObject:
   m_ObjectHideFlags: 0
@@ -8815,8 +9093,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1033439542}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.84640676, y: 0.053718254, z: 0.5253463, w: -0.06871216}
-  m_LocalPosition: {x: 12.455978, y: 0.7443657, z: -3.1878433}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.000015258789, y: 0.000002861023, z: 0.0000076293945}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -8848,7 +9126,7 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 210505590}
+  - sourceTransform: {fileID: 0}
     weight: 1
 --- !u!1001 &1040816562
 PrefabInstance:
@@ -9049,9 +9327,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1071525132}
   - component: {fileID: 1071525133}
-  m_Layer: 0
+  - component: {fileID: 1071525134}
+  m_Layer: 3
   m_Name: BLLeg3
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -9092,6 +9371,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1071525134
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1071525131}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1 &1081450770
 GameObject:
   m_ObjectHideFlags: 0
@@ -9117,8 +9411,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1081450770}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.26259252, y: 0.6152265, z: 0.70734876, w: 0.2284716}
-  m_LocalPosition: {x: 8.937225, y: -1.3820219, z: -2.4196167}
+  m_LocalRotation: {x: -0.2625926, y: 0.61522615, z: 0.7073491, w: 0.2284714}
+  m_LocalPosition: {x: 8.937225, y: 1.3695583, z: -2.4196167}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -9152,8 +9446,13 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 1791903257}
+  - sourceTransform: {fileID: 0}
     weight: 1
+--- !u!4 &1133066147 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+  m_PrefabInstance: {fileID: 1227542887}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1137470614
 GameObject:
   m_ObjectHideFlags: 0
@@ -9178,8 +9477,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1137470614}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -39.898758, y: 2.8618803, z: 10.635643}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -9203,7 +9502,7 @@ Transform:
   - {fileID: 434752118}
   - {fileID: 1953329947}
   - {fileID: 1033439543}
-  m_Father: {fileID: 1458932384}
+  m_Father: {fileID: 892692333}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1150122093
 GameObject:
@@ -9417,6 +9716,10 @@ PrefabInstance:
     - target: {fileID: 1358346619967761938, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: m_Enabled
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1358346619967761938, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: _aimCameraDistance
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1366793103908324336, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: m_Layer
@@ -10102,7 +10405,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 554e22fd1632f164d99b4e8fbde3c028, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponHitbox
-  damage: 3
+  damage: 30
   hitStopDuration: 0.1
   fixScale: 1
   weaponScale: {x: 1.5, y: 1.5, z: 1.5}
@@ -10129,6 +10432,83 @@ CapsuleCollider:
   m_Height: 1.2
   m_Direction: 1
   m_Center: {x: 0, y: 0.4, z: 0}
+--- !u!1001 &1227542887
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 892692333}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -6.2039948
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.219697
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -2.2454453
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.14799526
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.9889881
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -162.978
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_Name
+      value: Dragon_Model
+      objectReference: {fileID: 0}
+    - target: {fileID: 3848525464603726931, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.316
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
 --- !u!4 &1254087227 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 423682, guid: 80844b2319340044da27db99208a9eac, type: 3}
@@ -10145,9 +10525,10 @@ GameObject:
   - component: {fileID: 1285530694}
   - component: {fileID: 1285530696}
   - component: {fileID: 1285530695}
-  m_Layer: 0
+  - component: {fileID: 1285530697}
+  m_Layer: 3
   m_Name: 'RIghtWing2_Hurtbox '
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -10160,8 +10541,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1285530693}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.49276772, y: -0.81514144, z: -0.19304192, w: 0.2354981}
-  m_LocalPosition: {x: 11.606293, y: 1.0878124, z: -7.3334045}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.0000104904175, z: -0.000015258789}
   m_LocalScale: {x: 1.9780767, y: 1.5139, z: 0.30617}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10213,13 +10594,23 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 244371627}
+  - sourceTransform: {fileID: 0}
     weight: 1
---- !u!4 &1297065482 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4700483250055236277, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
+--- !u!114 &1285530697
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1285530693}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1001 &1302950813
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10297,11 +10688,6 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: 7b5f2f9ea19c74c659ab8ac969280fb2, type: 3}
   m_PrefabInstance: {fileID: 1302950813}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &1338671196 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8672105196037324638, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1352142955
 PrefabInstance:
@@ -10391,9 +10777,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1394510474}
   - component: {fileID: 1394510475}
-  m_Layer: 0
+  - component: {fileID: 1394510476}
+  m_Layer: 3
   m_Name: BodyBack
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -10434,6 +10821,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1394510476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1394510473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 1
+  isCrystalPart: 0
 --- !u!1 &1397508443
 GameObject:
   m_ObjectHideFlags: 0
@@ -10728,11 +11130,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1419521491}
   m_CullTransparentMesh: 1
---- !u!4 &1429263527 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -6459127546556013436, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1450009360
 GameObject:
   m_ObjectHideFlags: 0
@@ -10743,9 +11140,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1450009361}
   - component: {fileID: 1450009362}
-  m_Layer: 0
+  - component: {fileID: 1450009363}
+  m_Layer: 3
   m_Name: Leftwing
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -10786,6 +11184,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1450009363
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1450009360}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1001 &1457659661
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10848,38 +11261,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: 84376f2a0948947b5a6dfe814a1100a0, type: 3}
   m_PrefabInstance: {fileID: 1457659661}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1458932383
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1458932384}
-  m_Layer: 0
-  m_Name: Collision_System
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1458932384
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1458932383}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 187.32106, y: 17.09, z: 111.05883}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1137470615}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1464622022
 GameObject:
   m_ObjectHideFlags: 0
@@ -10891,9 +11272,10 @@ GameObject:
   - component: {fileID: 1464622023}
   - component: {fileID: 1464622025}
   - component: {fileID: 1464622024}
-  m_Layer: 0
+  - component: {fileID: 1464622026}
+  m_Layer: 3
   m_Name: RIghtWing_Hurtbox
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -10906,8 +11288,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1464622022}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.55659527, y: -0.7916123, z: -0.063309856, w: 0.24401541}
-  m_LocalPosition: {x: 12.555756, y: 0.6720009, z: -7.7486343}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.000002861023, z: -0.0000076293945}
   m_LocalScale: {x: 1.5267, y: 2.0050151, z: 0.33615}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10959,8 +11341,23 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 251879844}
+  - sourceTransform: {fileID: 0}
     weight: 1
+--- !u!114 &1464622026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1464622022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1 &1493109083
 GameObject:
   m_ObjectHideFlags: 0
@@ -10971,9 +11368,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1493109084}
   - component: {fileID: 1493109085}
-  m_Layer: 0
+  - component: {fileID: 1493109086}
+  m_Layer: 3
   m_Name: BLLeg2
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -11014,6 +11412,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1493109086
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1493109083}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1001 &1493973706
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11121,8 +11534,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1531295791}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.34918535, y: 0.10031016, z: -0.92816794, w: 0.08069528}
-  m_LocalPosition: {x: 12.745651, y: -0.7095356, z: -8.164688}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.000015258789, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -11155,7 +11568,7 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 1429263527}
+  - sourceTransform: {fileID: 0}
     weight: 1
 --- !u!1 &1542409788
 GameObject:
@@ -11167,9 +11580,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1542409789}
   - component: {fileID: 1542409790}
-  m_Layer: 0
+  - component: {fileID: 1542409791}
+  m_Layer: 3
   m_Name: LeftWing4
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -11210,6 +11624,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1542409791
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1542409788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1 &1549365190
 GameObject:
   m_ObjectHideFlags: 0
@@ -11220,9 +11649,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1549365191}
   - component: {fileID: 1549365192}
-  m_Layer: 0
+  - component: {fileID: 1549365193}
+  m_Layer: 3
   m_Name: Leg_FR
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -11263,6 +11693,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1549365193
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1549365190}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1 &1572162854 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6102168432905421709, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
@@ -11280,7 +11725,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4611bc4a4eff4d646be380919d0c36ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHP
-  maxHp: 3
+  maxHp: 100
   hpText: {fileID: 0}
   gameOverPanel: {fileID: 0}
   gameClearPanel: {fileID: 0}
@@ -11294,9 +11739,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1584206854}
   - component: {fileID: 1584206855}
-  m_Layer: 0
+  - component: {fileID: 1584206856}
+  m_Layer: 3
   m_Name: BRLeg2
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -11337,6 +11783,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1584206856
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1584206853}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1 &1670344029
 GameObject:
   m_ObjectHideFlags: 0
@@ -11362,8 +11823,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1670344029}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.2122359, y: 0.7429143, z: -0.57184744, w: 0.275726}
-  m_LocalPosition: {x: 12.525757, y: -0.17617416, z: -6.5734406}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -11396,7 +11857,7 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 586795906}
+  - sourceTransform: {fileID: 0}
     weight: 1
 --- !u!1 &1677085451
 GameObject:
@@ -11408,9 +11869,10 @@ GameObject:
   m_Component:
   - component: {fileID: 1677085452}
   - component: {fileID: 1677085453}
-  m_Layer: 0
+  - component: {fileID: 1677085454}
+  m_Layer: 3
   m_Name: LeftTailCrystal
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -11451,6 +11913,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1677085454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1677085451}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 1
+  isCrystalPart: 1
 --- !u!1 &1697357962
 GameObject:
   m_ObjectHideFlags: 0
@@ -11666,11 +12143,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: d9d1fbfcf69364ffd8f9c6ade9ce90fe, type: 3}
   m_PrefabInstance: {fileID: 1712455764}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1730753548 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -578875872535610105, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1734039823
 GameObject:
   m_ObjectHideFlags: 0
@@ -11723,11 +12195,6 @@ Transform:
   - {fileID: 1302950814}
   m_Father: {fileID: 366261101}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &1791903257 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6428150085336119354, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1802556821
 GameObject:
   m_ObjectHideFlags: 0
@@ -11739,9 +12206,10 @@ GameObject:
   - component: {fileID: 1802556822}
   - component: {fileID: 1802556824}
   - component: {fileID: 1802556823}
-  m_Layer: 0
+  - component: {fileID: 1802556825}
+  m_Layer: 3
   m_Name: 'Tail3_Hurtbox '
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -11754,8 +12222,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1802556821}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.25921392, y: 0.6253178, z: 0.6984982, w: 0.23213415}
-  m_LocalPosition: {x: 10.568192, y: -1.3807516, z: -4.313698}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.67704, y: 1.7479, z: 0.4574615}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -11807,28 +12275,23 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 1338671196}
+  - sourceTransform: {fileID: 0}
     weight: 1
---- !u!4 &1837724301 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 1018771938403657277, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
+--- !u!114 &1802556825
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1846655323 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -1247362710140539424, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &1874111704 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -8468103906218779294, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &1899684530 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 471428919790426003, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
-  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1802556821}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 1
+  isCrystalPart: 0
 --- !u!1 &1908235966
 GameObject:
   m_ObjectHideFlags: 0
@@ -11854,8 +12317,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1908235966}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.36006957, y: 0.4526253, z: 0.42576313, w: 0.6958491}
-  m_LocalPosition: {x: 13.683426, y: 0.6720009, z: -6.777878}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.000002861023, z: 0.0000076293945}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -11887,7 +12350,7 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 1932746549}
+  - sourceTransform: {fileID: 0}
     weight: 1
 --- !u!1001 &1921715805
 PrefabInstance:
@@ -11967,11 +12430,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: 7b5f2f9ea19c74c659ab8ac969280fb2, type: 3}
   m_PrefabInstance: {fileID: 1921715805}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1932746549 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -4264637549779505293, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-  m_PrefabInstance: {fileID: 2136204137}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1953329946
 GameObject:
   m_ObjectHideFlags: 0
@@ -11997,8 +12455,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1953329946}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.60844266, y: 0.28388956, z: 0.6624369, w: 0.33223724}
-  m_LocalPosition: {x: 12.616867, y: 1.7942772, z: -4.513565}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.0000076293945}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -12030,7 +12488,7 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 1874111704}
+  - sourceTransform: {fileID: 0}
     weight: 1
 --- !u!1001 &2011396030
 PrefabInstance:
@@ -12257,9 +12715,10 @@ GameObject:
   - component: {fileID: 2060697448}
   - component: {fileID: 2060697450}
   - component: {fileID: 2060697449}
-  m_Layer: 0
+  - component: {fileID: 2060697451}
+  m_Layer: 3
   m_Name: Tail2_Hurtbox
-  m_TagString: Untagged
+  m_TagString: GameController
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -12272,8 +12731,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2060697447}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.2803051, y: 0.5550597, z: 0.7555839, w: 0.20598762}
-  m_LocalPosition: {x: 11.301865, y: -1.0324764, z: -5.1661606}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.7081579, y: 1.5291, z: 0.5780594}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -12325,8 +12784,23 @@ ParentConstraint:
   m_Active: 1
   m_IsLocked: 1
   m_Sources:
-  - sourceTransform: {fileID: 602724079}
+  - sourceTransform: {fileID: 0}
     weight: 1
+--- !u!114 &2060697451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2060697447}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 1
+  isCrystalPart: 0
 --- !u!1 &2081299981
 GameObject:
   m_ObjectHideFlags: 0
@@ -12604,9 +13078,10 @@ GameObject:
   m_Component:
   - component: {fileID: 2113060009}
   - component: {fileID: 2113060010}
-  m_Layer: 0
+  - component: {fileID: 2113060011}
+  m_Layer: 3
   m_Name: BRLeg1
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -12647,6 +13122,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &2113060011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2113060008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
+  dragonCore: {fileID: 892692334}
+  damageMultiplier: 0.8
+  isCrystalPart: 0
 --- !u!1 &2120810687 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5110133779663952656, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
@@ -12664,7 +13154,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 554e22fd1632f164d99b4e8fbde3c028, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponHitbox
-  damage: 1
+  damage: 10
   hitStopDuration: 0.05
   fixScale: 1
   weaponScale: {x: 1.5, y: 1.5, z: 1.5}
@@ -12691,91 +13181,6 @@ CapsuleCollider:
   m_Height: 0.7
   m_Direction: 1
   m_Center: {x: 0, y: 0.2, z: 0}
---- !u!1001 &2136204137
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 199.62897
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 14.55
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 104.73845
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.34794927
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0.93751335
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 139.276
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_ConstrainProportionsScale
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -7991127317691611182, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_Name
-      value: Dragon_Body
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_Name
-      value: Dragon_Model
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_TagString
-      value: Enemy
-      objectReference: {fileID: 0}
-    - target: {fileID: 5866666021909216657, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
-      propertyPath: m_Controller
-      value: 
-      objectReference: {fileID: 9100000, guid: 459b2952bca4973479735d8e836b825b, type: 2}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 62e5e78f1bbb1c54fa9357ea51d348d0, type: 3}
 --- !u!1001 &2693063377860934578
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -12847,5 +13252,4 @@ SceneRoots:
   - {fileID: 709078156}
   - {fileID: 772781602}
   - {fileID: 2693063377860934578}
-  - {fileID: 2136204137}
-  - {fileID: 1458932384}
+  - {fileID: 892692333}

@@ -163,6 +163,36 @@ public class PlayerHP : MonoBehaviour
             hpText.text = "HP: " + Mathf.CeilToInt(currentHp);
         }
     }
+    public void Revive()
+    {
+        isGameOver = false;
+        isInvincible = false;
+
+        currentHp = maxHp * 1f; 
+        UpdateHPUI();
+
+        SetRenderersVisible(true);
+
+        if (_movement != null) _movement.enabled = true;
+
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+
+        if (GameManager.Instance != null)
+        {
+            if (ScoreManager.Instance != null)
+            {
+                ScoreManager.Instance.AddDeathPenalty();
+            }
+        }
+
+        Debug.Log("Player Revived");
+    }
+
+    public void BackToTitle()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("TitleScene");
+    }
 
     void GameOver()
     {
@@ -187,7 +217,6 @@ public class PlayerHP : MonoBehaviour
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
 
         Debug.Log("GAME OVER. Restarting...");
-        Invoke("RestartGame", 2.0f);
     }
 
     void RestartGame()

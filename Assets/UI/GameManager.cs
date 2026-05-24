@@ -1,34 +1,30 @@
 using UnityEngine;
-using System.Collections;
+using UnityEngine.SceneManagement;
 using TMPro;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
-    [Header("UI設定")]
-    public GameObject clearPanel;     // クリア画面のパネル
-    public TextMeshProUGUI timeText;  // クリア画面のタイム文字
-    public TextMeshProUGUI rankText;  // クリア画面のランク文字
+    [Header("クリアUI")]
+    [SerializeField] private GameObject clearPanel;
+    [SerializeField] private TextMeshProUGUI timeText;
+    [SerializeField] private TextMeshProUGUI rankText;
 
-    [Header("プレイ中のUI設定")]
-    public TextMeshProUGUI inGameTimeText; // ★ここを追加！プレイ中に表示するタイム文字
-
-    [Header("ランクのタイム設定（秒）")]
-    public float sRankTime = 90f;
-    public float aRankTime = 120f;
-    public float bRankTime = 240f;
-    public float cRankTime = 300f;
+    [Header("プレイ中UI")]
+    [SerializeField] private TextMeshProUGUI inGameTimeText;
 
     private float currentTime = 0f;
     private bool isGameActive = true;
 
+    public float CurrentTime => currentTime;
+    public bool IsGameActive => isGameActive;
+
     void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
     }
 
     void Start()
@@ -38,51 +34,47 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (isGameActive)
-        {
-            currentTime += Time.deltaTime;
+        if (!isGameActive) return;
 
-            // ★追加：プレイ中も常に時間を計算して表示する
-            if (inGameTimeText != null)
-            {
-                int currentMinutes = Mathf.FloorToInt(currentTime / 60F);
-                int currentSeconds = Mathf.FloorToInt(currentTime - currentMinutes * 60);
-                inGameTimeText.text = string.Format("{0:0}:{1:00}", currentMinutes, currentSeconds);
-            }
-        }
+        currentTime += Time.deltaTime;
+        UpdateInGameTimeUI();
     }
 
-    // ==========================================
-    // ゲームクリア管理システム
-    // ==========================================
+    private void UpdateInGameTimeUI()
+    {
+        if (inGameTimeText == null) return;
+        inGameTimeText.text = FormatTime(currentTime);
+    }
+
     public void GameClear()
     {
         if (!isGameActive) return;
 
         isGameActive = false;
 
-        string rank = "D";
-        if (currentTime <= sRankTime) rank = "S";
-        else if (currentTime <= aRankTime) rank = "A";
-        else if (currentTime <= bRankTime) rank = "B";
-        else if (currentTime <= cRankTime) rank = "C";
-
-        int minutes = Mathf.FloorToInt(currentTime / 60F);
-        int seconds = Mathf.FloorToInt(currentTime - minutes * 60);
-        string niceTime = string.Format("{0:0}:{1:00}", minutes, seconds);
+        string niceTime = FormatTime(currentTime);
 
         if (timeText != null) timeText.text = "Clear Time : " + niceTime;
-        if (rankText != null) rankText.text = "Rank : " + rank;
+
+        if (ScoreManager.Instance != null)
+        {
+            string rank = ScoreManager.Instance.GetRank(currentTime);
+            if (rankText != null) rankText.text = "Rank : " + rank;
+
+            ScoreManager.Instance.ShowFinalScore(currentTime);
+        }
 
         if (clearPanel != null) clearPanel.SetActive(true);
-
-        // クリアしたらプレイ中のタイマーは見えなくする（お好みで）
         if (inGameTimeText != null) inGameTimeText.gameObject.SetActive(false);
     }
 
-    // ==========================================
-    // ヒットストップ管理システム
-    // ==========================================
+    private string FormatTime(float time)
+    {
+        int minutes = Mathf.FloorToInt(time / 60f);
+        int seconds = Mathf.FloorToInt(time % 60f);
+        return string.Format("{0:0}:{1:00}", minutes, seconds);
+    }
+
     public void Stop(float duration)
     {
         if (Time.timeScale < 1f) return;
@@ -94,5 +86,17 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0.05f;
         yield return new WaitForSecondsRealtime(duration);
         Time.timeScale = 1f;
+    }
+
+    public void Retry()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void BackToTitle()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("TitleScene");
     }
 }

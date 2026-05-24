@@ -3,28 +3,29 @@ using UnityEngine;
 public class DragonHurtbox : MonoBehaviour
 {
     [Header("本体のHP管理スクリプトを登録")]
-    public DragonCore dragonCore;
+    public DragonHP dragonHP;
 
     [Header("ダメージ倍率設定")]
     public float damageMultiplier = 1.0f;
 
-    [Header("部位設定")]
-    public bool isCrystalPart = false; // これにチェックを入れるだけ！HPはCoreが持つ
+    [Header("クリスタル部位かどうか")]
+    public bool isCrystalPart = false;
 
     public void OnHit(float baseDamage)
     {
         float finalDamage = baseDamage * damageMultiplier;
 
-        // もし自分がクリスタルの一部なら、Coreの「共有クリスタルHP」を減らすようにお願いする
-        if (isCrystalPart)
+        if (dragonHP == null)
         {
-            dragonCore.TakeCrystalDamage(finalDamage);
+            Debug.LogWarning("DragonHPがセットされていません！");
+            return;
         }
 
-        // 本体にもダメージを送る
-        if (dragonCore != null)
+        if (isCrystalPart)
         {
-            dragonCore.TakeDamage(finalDamage);
+            dragonHP.TakeCrystalDamage(finalDamage);
         }
+
+        dragonHP.TakeDamage(finalDamage);
     }
 }

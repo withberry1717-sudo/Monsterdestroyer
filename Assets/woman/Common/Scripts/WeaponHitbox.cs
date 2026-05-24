@@ -9,6 +9,9 @@ public class WeaponHitbox : MonoBehaviour
     [Header("攻撃設定")]
     // 倍率計算（1.5倍など）を綺麗にするため、int（整数）から float（小数）に変更しました！
     public float damage = 10f;
+    [Header("ダメージ乱数")]
+    [Range(0f, 1f)]
+    public float damageVariation = 0.15f;
 
     [Header("演出設定")]
     public float hitStopDuration = 0.1f;
@@ -49,8 +52,17 @@ public class WeaponHitbox : MonoBehaviour
         DragonHurtbox dragonHurtbox = other.GetComponent<DragonHurtbox>();
         if (dragonHurtbox != null)
         {
-            // ドラゴンシステムを発動！（倍率計算やポップアップ文字が出ます）
-            dragonHurtbox.OnHit(damage);
+            // ランダム倍率を作る
+            float randomMultiplier = Random.Range(
+                1f - damageVariation,
+                1f + damageVariation
+            );
+
+            // 最終ダメージ
+            float finalDamage = damage * randomMultiplier;
+
+            // ドラゴンへ送る
+            dragonHurtbox.OnHit(finalDamage);
         }
         else
         {
@@ -58,7 +70,14 @@ public class WeaponHitbox : MonoBehaviour
             EnemyHP enemyHP = other.GetComponent<EnemyHP>();
             if (enemyHP != null)
             {
-                enemyHP.TakeDamage((int)damage);
+                float randomMultiplier = Random.Range(
+                    1f - damageVariation,
+                    1f + damageVariation
+                );
+
+                float finalDamage = damage * randomMultiplier;
+
+                enemyHP.TakeDamage(finalDamage);
             }
         }
 

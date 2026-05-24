@@ -17,7 +17,7 @@ public class EnemyHP : MonoBehaviour
         // ©“®æ“¾
         if (damageTextSpawner == null)
         {
-            damageTextSpawner = FindFirstObjectByType<DamageTextSpawner>();
+            damageTextSpawner = FindAnyObjectByType<DamageTextSpawner>();
         }
 
         Debug.Log($"{gameObject.name} ‚ÌHP‚ªİ’è‚³‚ê‚Ü‚µ‚½B‰ŠúHP: {currentHP}");

@@ -10708,7 +10708,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 554e22fd1632f164d99b4e8fbde3c028, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponHitbox
-  damage: 30
+  damage: 60
+  damageVariation: 0.15
   hitStopDuration: 0.1
   fixScale: 1
   weaponScale: {x: 2, y: 2, z: 2}
@@ -13536,7 +13537,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 554e22fd1632f164d99b4e8fbde3c028, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponHitbox
-  damage: 10
+  damage: 20
+  damageVariation: 0.15
   hitStopDuration: 0.05
   fixScale: 1
   weaponScale: {x: 2, y: 2, z: 2}
@@ -13601,6 +13603,10 @@ PrefabInstance:
     - target: {fileID: 2635876393190056881, guid: b96af91580d8d7d48ad2f9c93245e002, type: 3}
       propertyPath: m_Name
       value: DummyEnemy
+      objectReference: {fileID: 0}
+    - target: {fileID: 7221983146225797248, guid: b96af91580d8d7d48ad2f9c93245e002, type: 3}
+      propertyPath: maxHP
+      value: 300
       objectReference: {fileID: 0}
     - target: {fileID: 8007148097399943871, guid: b96af91580d8d7d48ad2f9c93245e002, type: 3}
       propertyPath: m_LocalPosition.x

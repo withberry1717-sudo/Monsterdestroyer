@@ -6,11 +6,11 @@ public class DamageText : MonoBehaviour
     [SerializeField] private float lifeTime = 0.8f;
     [SerializeField] private float moveSpeed = 120f;
 
-    [SerializeField] private float minDamage = 8f;
-    [SerializeField] private float maxDamage = 45f;
+    [SerializeField] private float minDamage = 14f;
+    [SerializeField] private float maxDamage = 105f;
 
-    [SerializeField] private float minScale = 1.5f;
-    [SerializeField] private float maxScale = 4.0f;
+    [SerializeField] private float minScale = 1.0f;
+    [SerializeField] private float maxScale = 3.2f;
 
     private TextMeshProUGUI text;
     private float timer;

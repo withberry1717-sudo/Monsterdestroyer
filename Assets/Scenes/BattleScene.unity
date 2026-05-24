@@ -2281,6 +2281,52 @@ MonoBehaviour:
   dragonCore: {fileID: 892692334}
   damageMultiplier: 1
   isCrystalPart: 0
+--- !u!1 &535884532
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 535884533}
+  - component: {fileID: 535884534}
+  m_Layer: 0
+  m_Name: DamageTextSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &535884533
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 535884532}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -1712.5063, y: -1054.329, z: 134.5614}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 709078156}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &535884534
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 535884532}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70210c9760e18324abdb4fe06abf85ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageTextSpawner
+  canvas: {fileID: 709078155}
+  damageTextPrefab: {fileID: -6709842881191069547, guid: 58ed4b0a645be5f4a8cc04ffbecd5bc1, type: 3}
 --- !u!1 &544627189
 GameObject:
   m_ObjectHideFlags: 0
@@ -7738,14 +7784,14 @@ RectTransform:
   m_GameObject: {fileID: 653409694}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_LocalScale: {x: 5, y: 5, z: 5}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 709078156}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -50, y: -50}
+  m_AnchoredPosition: {x: -50, y: -150}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &653409696
@@ -7770,8 +7816,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 860c6305654cc2f4e8cf3069641d17e0, type: 2}
+  m_sharedMaterial: {fileID: -2927549578884495344, guid: 860c6305654cc2f4e8cf3069641d17e0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -8042,7 +8088,7 @@ GameObject:
   - component: {fileID: 709078154}
   - component: {fileID: 709078153}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: Canvas(UI)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8128,6 +8174,7 @@ RectTransform:
   - {fileID: 1150122094}
   - {fileID: 559545623}
   - {fileID: 67639263}
+  - {fileID: 535884533}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -9781,14 +9828,14 @@ RectTransform:
   m_GameObject: {fileID: 1150122093}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 5, y: 5, z: 5}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 709078156}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 100, y: -50}
+  m_AnchoredPosition: {x: 500, y: -150}
   m_SizeDelta: {x: 200.09, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1150122095
@@ -9811,10 +9858,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: HP:3
+  m_text: HP:100
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 860c6305654cc2f4e8cf3069641d17e0, type: 2}
+  m_sharedMaterial: {fileID: -2927549578884495344, guid: 860c6305654cc2f4e8cf3069641d17e0, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -10329,7 +10376,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: rotationSpeed
-      value: 10
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: _cameraTransform
@@ -10337,7 +10384,7 @@ PrefabInstance:
       objectReference: {fileID: 1254087227}
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: airRotationSpeed
-      value: 5
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 6102168432905421709, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: m_Name
@@ -12009,9 +12056,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHP
   maxHp: 100
-  hpText: {fileID: 0}
-  gameOverPanel: {fileID: 0}
-  gameClearPanel: {fileID: 0}
+  hpText: {fileID: 1150122095}
+  gameOverPanel: {fileID: 559545622}
+  gameClearPanel: {fileID: 67639262}
 --- !u!1 &1584206853
 GameObject:
   m_ObjectHideFlags: 0

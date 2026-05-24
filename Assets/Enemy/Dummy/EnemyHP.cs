@@ -3,22 +3,40 @@ using UnityEngine;
 public class EnemyHP : MonoBehaviour
 {
     [Header("HP設定")]
-    [SerializeField] private int maxHP = 15;
-    private int currentHP;
+    [SerializeField] private float maxHP = 15f;
+
+    private float currentHP;
+
+    [Header("Damage UI")]
+    [SerializeField] private DamageTextSpawner damageTextSpawner;
 
     void Start()
     {
         currentHP = maxHP;
+
+        // 自動取得
+        if (damageTextSpawner == null)
+        {
+            damageTextSpawner = FindFirstObjectByType<DamageTextSpawner>();
+        }
+
         Debug.Log($"{gameObject.name} のHPが設定されました。初期HP: {currentHP}");
     }
 
-    // ダメージを受ける関数（プレイヤー側から呼ばれる）
-    public void TakeDamage(int damage)
+    // ダメージを受ける関数
+    public void TakeDamage(float damage)
     {
         if (currentHP <= 0) return;
 
         currentHP -= damage;
+
         Debug.Log($"{gameObject.name} に {damage} ダメージ！ 残りHP: {currentHP}");
+
+        // ダメージUI表示
+        if (damageTextSpawner != null)
+        {
+            damageTextSpawner.ShowDamage(damage, transform.position);
+        }
 
         if (currentHP <= 0)
         {
@@ -31,7 +49,6 @@ public class EnemyHP : MonoBehaviour
     {
         Debug.Log($"{gameObject.name} を撃破しました！");
 
-        // とりあえずゲームから消去する
         Destroy(gameObject);
     }
 }

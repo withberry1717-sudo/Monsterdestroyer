@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 namespace Retro.ThirdPersonCharacter
 {
@@ -22,7 +23,6 @@ namespace Retro.ThirdPersonCharacter
         private Vector2 lastMovementInput;
         private Vector3 moveDirection = Vector3.zero;
 
-        // 🌟 追加：攻撃中かどうかを判定するフラグ
         public bool isAttacking = false;
 
         [Header("Movement Settings")]
@@ -42,9 +42,18 @@ namespace Retro.ThirdPersonCharacter
         [Header("Dash Settings")]
         public float dashSpeed = 30f;
         public float dashTime = 0.2f;
-        public float dashCooldown = 1f;
+
+        [Header("Blink Charge Settings")]
+        [SerializeField] private int maxBlinkCharges = 2;
+        [SerializeField] private float blinkRecoverTime = 1.5f;
+
+        [Header("Blink UI")]
+        [SerializeField] private Image blinkSlot1Fill;
+        [SerializeField] private Image blinkSlot2Fill;
+
+        private int currentBlinkCharges;
+        private float blinkRecoverTimer = 0f;
         private bool isDashing = false;
-        private float dashCooldownTimer = 0f;
 
         private void Start()
         {
@@ -52,7 +61,9 @@ namespace Retro.ThirdPersonCharacter
             _playerInput = GetComponent<PlayerInput>();
             _combat = GetComponent<Combat>();
             _characterController = GetComponent<CharacterController>();
+
             InputSystem.settings.maxEventBytesPerUpdate = 0;
+
             _trailRenderer = GetComponentInChildren<TrailRenderer>();
             _particleSystem = GetComponentInChildren<ParticleSystem>();
 
@@ -65,16 +76,18 @@ namespace Retro.ThirdPersonCharacter
             {
                 _cameraTransform = Camera.main.transform;
             }
+
+            currentBlinkCharges = maxBlinkCharges;
+            UpdateBlinkUI();
         }
 
         private void Update()
         {
             if (_animator == null) return;
 
-            if (dashCooldownTimer > 0) dashCooldownTimer -= Time.deltaTime;
+            RecoverBlinkCharge();
 
-            // 攻撃中はダッシュも禁止にする場合は && !isAttacking を追加します
-            if (Input.GetKeyDown(dashKey) && !isDashing && dashCooldownTimer <= 0 && !isAttacking)
+            if (Input.GetKeyDown(dashKey) && CanBlink())
             {
                 Vector3 dashDir = transform.forward;
 
@@ -83,6 +96,7 @@ namespace Retro.ThirdPersonCharacter
                     dashDir = new Vector3(moveDirection.x, 0, moveDirection.z).normalized;
                 }
 
+                UseBlink();
                 StartCoroutine(DashCoroutine(dashDir));
             }
 
@@ -92,10 +106,92 @@ namespace Retro.ThirdPersonCharacter
             }
         }
 
+        private bool CanBlink()
+        {
+            return !isDashing && !isAttacking && currentBlinkCharges > 0;
+        }
+
+        private void UseBlink()
+        {
+            currentBlinkCharges--;
+
+            if (currentBlinkCharges < maxBlinkCharges && blinkRecoverTimer <= 0f)
+            {
+                blinkRecoverTimer = blinkRecoverTime;
+            }
+
+            UpdateBlinkUI();
+        }
+
+        private void RecoverBlinkCharge()
+        {
+            if (currentBlinkCharges >= maxBlinkCharges) return;
+
+            blinkRecoverTimer -= Time.deltaTime;
+
+            if (blinkRecoverTimer <= 0f)
+            {
+                currentBlinkCharges++;
+
+                if (currentBlinkCharges < maxBlinkCharges)
+                {
+                    blinkRecoverTimer = blinkRecoverTime;
+                }
+                else
+                {
+                    blinkRecoverTimer = 0f;
+                }
+            }
+
+            UpdateBlinkUI();
+        }
+
+        private void UpdateBlinkUI()
+        {
+            float slot1Amount = 0f;
+            float slot2Amount = 0f;
+
+            if (currentBlinkCharges >= 1)
+            {
+                slot1Amount = 1f;
+            }
+
+            if (currentBlinkCharges >= 2)
+            {
+                slot2Amount = 1f;
+            }
+
+            // 回復中のゲージをじわっと増やす
+            if (currentBlinkCharges < maxBlinkCharges && blinkRecoverTime > 0f)
+            {
+                float recoverProgress = 1f - Mathf.Clamp01(blinkRecoverTimer / blinkRecoverTime);
+
+                if (currentBlinkCharges == 0)
+                {
+                    slot1Amount = recoverProgress;
+                    slot2Amount = 0f;
+                }
+                else if (currentBlinkCharges == 1)
+                {
+                    slot1Amount = 1f;
+                    slot2Amount = recoverProgress;
+                }
+            }
+
+            if (blinkSlot1Fill != null)
+            {
+                blinkSlot1Fill.fillAmount = slot1Amount;
+            }
+
+            if (blinkSlot2Fill != null)
+            {
+                blinkSlot2Fill.fillAmount = slot2Amount;
+            }
+        }
+
         private IEnumerator DashCoroutine(Vector3 dashDir)
         {
             isDashing = true;
-            dashCooldownTimer = dashCooldown;
 
             if (_trailRenderer != null) _trailRenderer.enabled = true;
             if (_particleSystem != null) _particleSystem.Play();
@@ -105,7 +201,7 @@ namespace Retro.ThirdPersonCharacter
             _animator.SetBool("IsInAir", true);
 
             if (CameraShake.Instance != null) CameraShake.Instance.Shake(0.1f, 0.5f);
-            
+
             float startTime = Time.time;
 
             while (Time.time < startTime + dashTime)
@@ -158,31 +254,24 @@ namespace Retro.ThirdPersonCharacter
                 inputDirection = targetDirection * MaxSpeed;
             }
 
-            // 🌟 変更点：攻撃中の「慣性（滑り）」の処理
             if (isAttacking)
             {
-                // プレイヤーのスティック入力は完全に無視する（操作不可）
                 inputDirection = Vector3.zero;
 
-                // 直前のスピードを維持しつつ、徐々にゼロに減速させる（滑らかに止まる）
-                // ※この数値を小さくする(例:5f)とツルツル滑り、大きくする(例:20f)とすぐ止まります
                 float deceleration = 10.0f;
                 moveDirection.x = Mathf.Lerp(moveDirection.x, 0, deceleration * Time.deltaTime);
                 moveDirection.z = Mathf.Lerp(moveDirection.z, 0, deceleration * Time.deltaTime);
             }
             else if (grounded)
             {
-                // 通常時の移動
                 moveDirection.x = inputDirection.x;
                 moveDirection.z = inputDirection.z;
 
-                // 攻撃中じゃなければジャンプ可能
                 if (Input.GetKeyDown(jumpKey))
                     moveDirection.y = jumpSpeed;
             }
             else
             {
-                // 空中の処理
                 if (inputDirection.magnitude > 0.1f)
                 {
                     moveDirection.x = Mathf.Lerp(moveDirection.x, inputDirection.x, airControl * Time.deltaTime);
@@ -192,7 +281,6 @@ namespace Retro.ThirdPersonCharacter
 
             Vector3 lookDirection = new Vector3(moveDirection.x, 0, moveDirection.z);
 
-            // 攻撃中はキャラクターの向き（回転）をロックする
             if (lookDirection != Vector3.zero && !isAttacking)
             {
                 Quaternion targetRotation = Quaternion.LookRotation(lookDirection);
@@ -206,7 +294,6 @@ namespace Retro.ThirdPersonCharacter
 
             float inputMagnitude = new Vector2(x, y).magnitude;
 
-            // 攻撃中は歩きアニメーションを再生させない
             _animator.SetFloat("InputX", 0);
             _animator.SetFloat("InputY", isAttacking ? 0 : inputMagnitude);
             _animator.SetBool("IsInAir", !grounded);

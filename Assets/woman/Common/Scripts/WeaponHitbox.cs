@@ -4,11 +4,12 @@ using System.Collections;
 public class WeaponHitbox : MonoBehaviour
 {
     private Collider _collider;
-    private bool _hasHit; // 二度当たり防止用
+    private bool _hasHit;
+    private float currentDamageMultiplier = 1f;
 
     [Header("攻撃設定")]
-    // 倍率計算（1.5倍など）を綺麗にするため、int（整数）から float（小数）に変更しました！
     public float damage = 10f;
+
     [Header("ダメージ乱数")]
     [Range(0f, 1f)]
     public float damageVariation = 0.15f;
@@ -17,79 +18,90 @@ public class WeaponHitbox : MonoBehaviour
     public float hitStopDuration = 0.1f;
 
     [Header("サイズ自由調整（アニメーション対策）")]
-    [Tooltip("インスペクターのサイズ設定を強制適用するかどうか")]
     public bool fixScale = true;
-
-    [Tooltip("ここを変えると武器の大きさがリアルタイムに変わります")]
     public Vector3 weaponScale = new Vector3(1.5f, 1.5f, 1.5f);
 
     void Start()
     {
         _collider = GetComponent<Collider>();
-        _collider.enabled = false;
+
+        if (_collider != null)
+        {
+            _collider.enabled = false;
+        }
     }
 
     public void EnableHitbox()
     {
-        _collider.enabled = true;
-        _hasHit = false; // 攻撃開始時に判定をリセット
+        EnableHitbox(1f);
+    }
+
+    public void EnableHitbox(float damageMultiplier)
+    {
+        currentDamageMultiplier = Mathf.Max(0f, damageMultiplier);
+        _hasHit = false;
+
+        if (_collider != null)
+        {
+            _collider.enabled = true;
+        }
     }
 
     public void DisableHitbox()
     {
-        _collider.enabled = false;
+        if (_collider != null)
+        {
+            _collider.enabled = false;
+        }
+
+        currentDamageMultiplier = 1f;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        // 敵（Enemyタグ）に当たった時の処理
         if (_hasHit || !other.CompareTag("Enemy")) return;
 
         _hasHit = true;
-        Debug.Log(gameObject.name + " が命中！");
 
-        // 【超重要】新しく作ったドラゴンの当たり判定を探す！
+        float randomMultiplier = Random.Range(
+            1f - damageVariation,
+            1f + damageVariation
+        );
+
+        float finalDamage = damage * currentDamageMultiplier * randomMultiplier;
+
+        Debug.Log(gameObject.name + " が命中！ Damage: " + finalDamage);
+
         DragonHurtbox dragonHurtbox = other.GetComponent<DragonHurtbox>();
+
         if (dragonHurtbox != null)
         {
-            // ランダム倍率を作る
-            float randomMultiplier = Random.Range(
-                1f - damageVariation,
-                1f + damageVariation
-            );
-
-            // 最終ダメージ
-            float finalDamage = damage * randomMultiplier;
-
-            // ドラゴンへ送る
             dragonHurtbox.OnHit(finalDamage);
         }
         else
         {
-            // ※もしドラゴン以外の古い敵（EnemyHP）がいてもエラーにならないように残しておきます
             EnemyHP enemyHP = other.GetComponent<EnemyHP>();
+
             if (enemyHP != null)
             {
-                float randomMultiplier = Random.Range(
-                    1f - damageVariation,
-                    1f + damageVariation
-                );
-
-                float finalDamage = damage * randomMultiplier;
-
                 enemyHP.TakeDamage(finalDamage);
             }
         }
 
-        // ヒットストップ
         StartCoroutine(DoHitStop(hitStopDuration));
     }
 
     private IEnumerator DoHitStop(float duration)
     {
-        Time.timeScale = 0.02f; // ゲーム全体の時間をほぼ停止
+        float previousTimeScale = Time.timeScale;
+
+        Time.timeScale = 0.02f;
         yield return new WaitForSecondsRealtime(duration);
-        Time.timeScale = 1f; // 時間を元に戻す
+
+        if (Time.timeScale != 0f)
+        {
+            Time.timeScale = previousTimeScale <= 0f ? 1f : previousTimeScale;
+        }
     }
 
     void LateUpdate()

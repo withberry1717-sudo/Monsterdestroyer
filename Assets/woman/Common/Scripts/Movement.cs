@@ -43,6 +43,9 @@ namespace Retro.ThirdPersonCharacter
         public float dashSpeed = 30f;
         public float dashTime = 0.2f;
 
+        [Header("Dash Attack")]
+        [SerializeField] private float dashAttackInputWindow = 0.25f;
+
         [Header("Blink Charge Settings")]
         [SerializeField] private int maxBlinkCharges = 2;
         [SerializeField] private float blinkRecoverTime = 1.5f;
@@ -55,7 +58,12 @@ namespace Retro.ThirdPersonCharacter
         private int currentBlinkCharges;
         private float blinkRecoverTimer = 0f;
         private float blinkRecoverDelayTimer = 0f;
+
         private bool isDashing = false;
+        private float dashAttackWindowTimer = 0f;
+
+        public bool IsDashing => isDashing;
+        public bool CanDashAttack => isDashing || dashAttackWindowTimer > 0f;
 
         private void Start()
         {
@@ -97,6 +105,11 @@ namespace Retro.ThirdPersonCharacter
         {
             if (_animator == null) return;
 
+            if (dashAttackWindowTimer > 0f)
+            {
+                dashAttackWindowTimer -= Time.deltaTime;
+            }
+
             RecoverBlinkCharge();
 
             if (Input.GetKeyDown(dashKey) && CanBlink())
@@ -132,7 +145,6 @@ namespace Retro.ThirdPersonCharacter
                 currentBlinkCharges = 0;
             }
 
-            // すでに回復中じゃない場合だけ、回復開始をセットする
             if (currentBlinkCharges < maxBlinkCharges)
             {
                 blinkRecoverDelayTimer = blinkRecoverDelay;
@@ -154,7 +166,6 @@ namespace Retro.ThirdPersonCharacter
                 return;
             }
 
-            // 回復開始までの遅延
             if (blinkRecoverDelayTimer > 0f)
             {
                 blinkRecoverDelayTimer -= Time.deltaTime;
@@ -162,7 +173,6 @@ namespace Retro.ThirdPersonCharacter
                 return;
             }
 
-            // 遅延後、ゲージ回復開始
             blinkRecoverTimer -= Time.deltaTime;
 
             if (blinkRecoverTimer <= 0f)
@@ -203,7 +213,6 @@ namespace Retro.ThirdPersonCharacter
             {
                 float recoverProgress = 0f;
 
-                // 遅延中はゲージを増やさない
                 if (blinkRecoverDelayTimer <= 0f)
                 {
                     recoverProgress = 1f - Mathf.Clamp01(blinkRecoverTimer / blinkRecoverTime);
@@ -235,6 +244,7 @@ namespace Retro.ThirdPersonCharacter
         private IEnumerator DashCoroutine(Vector3 dashDir)
         {
             isDashing = true;
+            dashAttackWindowTimer = dashAttackInputWindow;
 
             if (_trailRenderer != null) _trailRenderer.enabled = true;
             if (_particleSystem != null) _particleSystem.Play();
@@ -264,6 +274,7 @@ namespace Retro.ThirdPersonCharacter
             _animator.SetBool("IsInAir", false);
 
             isDashing = false;
+            dashAttackWindowTimer = dashAttackInputWindow;
         }
 
         private void Move()

@@ -1,13 +1,22 @@
 using TMPro;
 using UnityEngine;
+using System.Collections;
 
 public class ScoreManager : MonoBehaviour
 {
     public static ScoreManager Instance;
 
-    [Header("UI")]
+    [Header("In Game UI")]
     [SerializeField] private TextMeshProUGUI inGameScoreText;
-    [SerializeField] private TextMeshProUGUI clearScoreText;
+
+    [Header("Clear Result UI")]
+    [SerializeField] private TextMeshProUGUI clearTimeText;
+    [SerializeField] private TextMeshProUGUI startScoreText;
+    [SerializeField] private TextMeshProUGUI timePenaltyText;
+    [SerializeField] private TextMeshProUGUI crystalBonusText;
+    [SerializeField] private TextMeshProUGUI deathPenaltyText;
+    [SerializeField] private TextMeshProUGUI finalScoreText;
+    [SerializeField] private TextMeshProUGUI rankText;
 
     [Header("スコア設定")]
     [SerializeField] private int startScore = 11200;
@@ -15,9 +24,16 @@ public class ScoreManager : MonoBehaviour
     [SerializeField] private int crystalBreakBonus = 1500;
     [SerializeField] private int deathPenalty = 1000;
 
+    [Header("演出設定")]
+    [SerializeField] private float showDelay = 0.35f;
+    [SerializeField] private float typeInterval = 0.03f;
+    [SerializeField] private float rankTypeInterval = 0.08f;
+    [SerializeField] private float countDuration = 0.8f;
+
     private int partBonus = 0;
     private int deathCount = 0;
     private bool crystalBonusAdded = false;
+    private bool resultShowing = false;
 
     void Awake()
     {
@@ -28,11 +44,15 @@ public class ScoreManager : MonoBehaviour
     void Start()
     {
         UpdateInGameScoreUI();
+        ResetClearResultUI();
     }
 
     void Update()
     {
-        UpdateInGameScoreUI();
+        if (!resultShowing)
+        {
+            UpdateInGameScoreUI();
+        }
     }
 
     public void AddCrystalBreakBonus()
@@ -87,18 +107,159 @@ public class ScoreManager : MonoBehaviour
 
     public void ShowFinalScore(float clearTime)
     {
+        if (resultShowing) return;
+
+        resultShowing = true;
+        StartCoroutine(ShowFinalScoreRoutine(clearTime));
+    }
+
+    private IEnumerator ShowFinalScoreRoutine(float clearTime)
+    {
+        ResetClearResultUI();
+
         int timePenalty = Mathf.RoundToInt(clearTime * scoreDecreasePerSecond);
         int deathTotalPenalty = deathCount * deathPenalty;
         int finalScore = GetFinalScore(clearTime);
+        string rank = GetRank(clearTime);
 
-        if (clearScoreText != null)
+        yield return new WaitForSeconds(showDelay);
+
+        yield return StartCoroutine(TypeText(
+            clearTimeText,
+            "Clear Time      " + FormatTime(clearTime),
+            typeInterval
+        ));
+
+        yield return new WaitForSeconds(showDelay);
+
+        yield return StartCoroutine(TypeText(
+            startScoreText,
+            "Start Score     " + startScore,
+            typeInterval
+        ));
+
+        yield return new WaitForSeconds(showDelay);
+
+        yield return StartCoroutine(TypeText(
+            timePenaltyText,
+            "Time Penalty    -" + timePenalty,
+            typeInterval
+        ));
+
+        yield return new WaitForSeconds(showDelay);
+
+        yield return StartCoroutine(TypeText(
+            crystalBonusText,
+            "Crystal Bonus   +" + partBonus,
+            typeInterval
+        ));
+
+        yield return new WaitForSeconds(showDelay);
+
+        yield return StartCoroutine(TypeText(
+            deathPenaltyText,
+            "Death Penalty   -" + deathTotalPenalty,
+            typeInterval
+        ));
+
+        yield return new WaitForSeconds(showDelay);
+
+        if (finalScoreText != null)
         {
-            clearScoreText.text =
-                "Score : " + finalScore +
-                "\nStart : " + startScore +
-                "\nTime Penalty : -" + timePenalty +
-                "\nCrystal Bonus : +" + partBonus +
-                "\nDeath Penalty : -" + deathTotalPenalty;
+            finalScoreText.gameObject.SetActive(true);
+            yield return StartCoroutine(CountFinalScore(finalScore));
+        }
+
+        yield return new WaitForSeconds(showDelay);
+
+        yield return StartCoroutine(TypeText(
+            rankText,
+            "Rank            " + rank,
+            rankTypeInterval
+        ));
+    }
+
+    private IEnumerator TypeText(TextMeshProUGUI targetText, string message, float interval)
+    {
+        if (targetText == null) yield break;
+
+        targetText.gameObject.SetActive(true);
+        targetText.text = "";
+
+        for (int i = 0; i < message.Length; i++)
+        {
+            targetText.text += message[i];
+            yield return new WaitForSeconds(interval);
+        }
+    }
+
+    private IEnumerator CountFinalScore(int finalScore)
+    {
+        float timer = 0f;
+
+        while (timer < countDuration)
+        {
+            timer += Time.deltaTime;
+            float rate = timer / countDuration;
+
+            int currentScore = Mathf.RoundToInt(Mathf.Lerp(0, finalScore, rate));
+
+            if (finalScoreText != null)
+            {
+                finalScoreText.text = "Final Score     " + currentScore;
+            }
+
+            yield return null;
+        }
+
+        if (finalScoreText != null)
+        {
+            finalScoreText.text = "Final Score     " + finalScore;
+        }
+    }
+
+    private void ResetClearResultUI()
+    {
+        if (clearTimeText != null)
+        {
+            clearTimeText.text = "";
+            clearTimeText.gameObject.SetActive(false);
+        }
+
+        if (startScoreText != null)
+        {
+            startScoreText.text = "";
+            startScoreText.gameObject.SetActive(false);
+        }
+
+        if (timePenaltyText != null)
+        {
+            timePenaltyText.text = "";
+            timePenaltyText.gameObject.SetActive(false);
+        }
+
+        if (crystalBonusText != null)
+        {
+            crystalBonusText.text = "";
+            crystalBonusText.gameObject.SetActive(false);
+        }
+
+        if (deathPenaltyText != null)
+        {
+            deathPenaltyText.text = "";
+            deathPenaltyText.gameObject.SetActive(false);
+        }
+
+        if (finalScoreText != null)
+        {
+            finalScoreText.text = "";
+            finalScoreText.gameObject.SetActive(false);
+        }
+
+        if (rankText != null)
+        {
+            rankText.text = "";
+            rankText.gameObject.SetActive(false);
         }
     }
 
@@ -107,5 +268,13 @@ public class ScoreManager : MonoBehaviour
         if (inGameScoreText == null) return;
 
         inGameScoreText.text = "Score : " + GetCurrentScore();
+    }
+
+    private string FormatTime(float time)
+    {
+        int minutes = Mathf.FloorToInt(time / 60f);
+        int seconds = Mathf.FloorToInt(time % 60f);
+
+        return minutes.ToString("00") + ":" + seconds.ToString("00");
     }
 }

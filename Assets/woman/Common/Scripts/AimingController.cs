@@ -10,11 +10,8 @@ namespace Retro.ThirdPersonCharacter
         private Aiming _aiming;
         private PlayerInput _playerInput;
 
-        #pragma warning disable 0649
         [SerializeField] private bool _isAiming;
         [SerializeField] private SpringArm _springArm;
-        
-        #pragma warning restore 0649
 
         [Header("Settings")]
         [SerializeField] private float _aimCameraDistance = 3;
@@ -25,12 +22,20 @@ namespace Retro.ThirdPersonCharacter
             _aiming = GetComponent<Aiming>();
             _playerInput = GetComponent<PlayerInput>();
 
+            if (_springArm == null)
+            {
+                _springArm = FindAnyObjectByType<SpringArm>();
+            }
+
             OnStateChanged();
         }
 
         private void Update()
         {
-            if(_playerInput.ChangeCameraModeInput) SwitchAim();
+            if (_playerInput != null && _playerInput.ChangeCameraModeInput)
+            {
+                SwitchAim();
+            }
         }
 
         private void SwitchAim()
@@ -41,7 +46,16 @@ namespace Retro.ThirdPersonCharacter
 
         private void OnStateChanged()
         {
-            if(_isAiming)
+            if (_aiming == null) return;
+
+            if (_springArm == null)
+            {
+                Debug.LogWarning("AimingController: SpringArm が設定されていません。CameraRigかPivotのSpringArmを入れてください。");
+                _aiming.enabled = _isAiming;
+                return;
+            }
+
+            if (_isAiming)
             {
                 _springArm.TargetLength = _aimCameraDistance;
                 _aiming.enabled = true;

@@ -25,6 +25,11 @@ namespace Retro.ThirdPersonCharacter
 
         public bool isAttacking = false;
 
+        [Header("Attack Movement")]
+        public bool canMoveWhileAttacking = false;
+        [SerializeField] private float attackMoveSpeedMultiplier = 0.35f;
+        [SerializeField] private float attackTurnSpeedMultiplier = 0.7f;
+
         [Header("Movement Settings")]
         public float gravity = 10;
         public float jumpSpeed = 4;
@@ -77,10 +82,7 @@ namespace Retro.ThirdPersonCharacter
             _trailRenderer = GetComponentInChildren<TrailRenderer>();
             _particleSystem = GetComponentInChildren<ParticleSystem>();
 
-            if (_trailRenderer != null)
-            {
-                _trailRenderer.enabled = false;
-            }
+            ForceStopTrail();
 
             if (_cameraTransform == null && Camera.main != null)
             {
@@ -99,6 +101,27 @@ namespace Retro.ThirdPersonCharacter
             }
 
             UpdateBlinkUI();
+        }
+
+        private void OnDisable()
+        {
+            ForceStopTrail();
+        }
+
+        public void ForceStopTrail()
+        {
+            if (_trailRenderer != null)
+            {
+                _trailRenderer.enabled = false;
+                _trailRenderer.Clear();
+            }
+
+            if (_particleSystem != null)
+            {
+                _particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+
+            isDashing = false;
         }
 
         private void Update()
@@ -246,8 +269,16 @@ namespace Retro.ThirdPersonCharacter
             isDashing = true;
             dashAttackWindowTimer = dashAttackInputWindow;
 
-            if (_trailRenderer != null) _trailRenderer.enabled = true;
-            if (_particleSystem != null) _particleSystem.Play();
+            if (_trailRenderer != null)
+            {
+                _trailRenderer.Clear();
+                _trailRenderer.enabled = true;
+            }
+
+            if (_particleSystem != null)
+            {
+                _particleSystem.Play();
+            }
 
             _animator.SetFloat("InputX", 0);
             _animator.SetFloat("InputY", 0);
@@ -266,14 +297,10 @@ namespace Retro.ThirdPersonCharacter
                 yield return null;
             }
 
-            if (_trailRenderer != null)
-            {
-                _trailRenderer.enabled = false;
-            }
+            ForceStopTrail();
 
             _animator.SetBool("IsInAir", false);
 
-            isDashing = false;
             dashAttackWindowTimer = dashAttackInputWindow;
         }
 
@@ -320,11 +347,21 @@ namespace Retro.ThirdPersonCharacter
 
             if (isAttacking)
             {
-                inputDirection = Vector3.zero;
+                if (canMoveWhileAttacking)
+                {
+                    inputDirection *= attackMoveSpeedMultiplier;
 
-                float deceleration = 10.0f;
-                moveDirection.x = Mathf.Lerp(moveDirection.x, 0, deceleration * Time.deltaTime);
-                moveDirection.z = Mathf.Lerp(moveDirection.z, 0, deceleration * Time.deltaTime);
+                    moveDirection.x = inputDirection.x;
+                    moveDirection.z = inputDirection.z;
+                }
+                else
+                {
+                    inputDirection = Vector3.zero;
+
+                    float deceleration = 10.0f;
+                    moveDirection.x = Mathf.Lerp(moveDirection.x, 0, deceleration * Time.deltaTime);
+                    moveDirection.z = Mathf.Lerp(moveDirection.z, 0, deceleration * Time.deltaTime);
+                }
             }
             else if (grounded)
             {
@@ -347,12 +384,27 @@ namespace Retro.ThirdPersonCharacter
 
             Vector3 lookDirection = new Vector3(moveDirection.x, 0, moveDirection.z);
 
-            if (lookDirection != Vector3.zero && !isAttacking)
+            if (lookDirection != Vector3.zero)
             {
-                Quaternion targetRotation = Quaternion.LookRotation(lookDirection);
+                bool canTurnNow = !isAttacking || canMoveWhileAttacking;
 
-                float currentRotationSpeed = grounded ? rotationSpeed : airRotationSpeed;
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, currentRotationSpeed * Time.deltaTime);
+                if (canTurnNow)
+                {
+                    Quaternion targetRotation = Quaternion.LookRotation(lookDirection);
+
+                    float currentRotationSpeed = grounded ? rotationSpeed : airRotationSpeed;
+
+                    if (isAttacking && canMoveWhileAttacking)
+                    {
+                        currentRotationSpeed *= attackTurnSpeedMultiplier;
+                    }
+
+                    transform.rotation = Quaternion.Slerp(
+                        transform.rotation,
+                        targetRotation,
+                        currentRotationSpeed * Time.deltaTime
+                    );
+                }
             }
 
             moveDirection.y -= gravity * Time.deltaTime;
@@ -360,8 +412,17 @@ namespace Retro.ThirdPersonCharacter
 
             float inputMagnitude = new Vector2(x, y).magnitude;
 
-            _animator.SetFloat("InputX", 0);
-            _animator.SetFloat("InputY", isAttacking ? 0 : inputMagnitude);
+            if (isAttacking && canMoveWhileAttacking)
+            {
+                _animator.SetFloat("InputX", 0);
+                _animator.SetFloat("InputY", inputMagnitude * 0.5f);
+            }
+            else
+            {
+                _animator.SetFloat("InputX", 0);
+                _animator.SetFloat("InputY", isAttacking ? 0 : inputMagnitude);
+            }
+
             _animator.SetBool("IsInAir", !grounded);
         }
 

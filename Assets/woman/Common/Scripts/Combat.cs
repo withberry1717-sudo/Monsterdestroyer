@@ -51,7 +51,9 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private float quickHeavyStart = 0.10f;
         [SerializeField] private float quickHeavyEnd = 0.45f;
         [SerializeField] private float quickHeavyDamageMultiplier = 1.35f;
-        [SerializeField] private float quickHeavyEndDelay = 0.75f;
+
+        [Tooltip("強攻撃単押し後の硬直。重くしたいなら1.1〜1.3")]
+        [SerializeField] private float quickHeavyEndDelay = 1.10f;
 
         [Header("Charge Heavy / 右クリック長押し")]
         [SerializeField] private float chargeRequiredTime = 0.45f;
@@ -197,12 +199,13 @@ namespace Retro.ThirdPersonCharacter
             currentAttackBlocksLightBuffer = false;
             chargeReadyEffectPlayed = false;
 
-            StartChargeEffect();
-
             if (_movement != null)
             {
                 _movement.isAttacking = true;
+                _movement.canMoveWhileAttacking = false;
             }
+
+            StartChargeEffect();
 
             if (_animator != null)
             {
@@ -286,6 +289,12 @@ namespace Retro.ThirdPersonCharacter
 
             currentAttackBlocksLightBuffer = isSecondLight;
 
+            if (_movement != null)
+            {
+                _movement.isAttacking = true;
+                _movement.canMoveWhileAttacking = true;
+            }
+
             Debug.Log("弱攻撃 " + lightComboStep + "段目");
 
             PlayAttackAnimation(attackStateName, 0f);
@@ -308,6 +317,12 @@ namespace Retro.ThirdPersonCharacter
             lightComboStep = 0;
             comboTimer = 0f;
             currentAttackBlocksLightBuffer = false;
+
+            if (_movement != null)
+            {
+                _movement.isAttacking = true;
+                _movement.canMoveWhileAttacking = false;
+            }
 
             Debug.Log("ダッシュ攻撃");
 
@@ -334,6 +349,12 @@ namespace Retro.ThirdPersonCharacter
             comboTimer = 0f;
             currentAttackBlocksLightBuffer = false;
 
+            if (_movement != null)
+            {
+                _movement.isAttacking = true;
+                _movement.canMoveWhileAttacking = false;
+            }
+
             PlayAttackAnimation(abilityStateName, quickHeavyAnimationStartNormalized);
 
             currentAttackRoutine = StartCoroutine(
@@ -356,6 +377,12 @@ namespace Retro.ThirdPersonCharacter
             lightComboStep = 0;
             comboTimer = 0f;
             currentAttackBlocksLightBuffer = false;
+
+            if (_movement != null)
+            {
+                _movement.isAttacking = true;
+                _movement.canMoveWhileAttacking = false;
+            }
 
             float chargeRate = Mathf.Clamp01(chargeTime / maxChargeTime);
             float multiplier = Mathf.Lerp(chargedHeavyMinMultiplier, chargedHeavyMaxMultiplier, chargeRate);
@@ -456,6 +483,7 @@ namespace Retro.ThirdPersonCharacter
             if (_movement != null)
             {
                 _movement.isAttacking = false;
+                _movement.canMoveWhileAttacking = false;
             }
 
             if (daggerHitbox != null)
@@ -672,6 +700,7 @@ namespace Retro.ThirdPersonCharacter
             if (_movement != null)
             {
                 _movement.isAttacking = true;
+                _movement.canMoveWhileAttacking = false;
             }
         }
 

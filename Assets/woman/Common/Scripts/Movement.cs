@@ -46,6 +46,7 @@ namespace Retro.ThirdPersonCharacter
         [Header("Blink Charge Settings")]
         [SerializeField] private int maxBlinkCharges = 2;
         [SerializeField] private float blinkRecoverTime = 1.5f;
+        [SerializeField] private float blinkRecoverDelay = 0.4f;
 
         [Header("Blink UI")]
         [SerializeField] private Image blinkSlot1Fill;
@@ -53,6 +54,7 @@ namespace Retro.ThirdPersonCharacter
 
         private int currentBlinkCharges;
         private float blinkRecoverTimer = 0f;
+        private float blinkRecoverDelayTimer = 0f;
         private bool isDashing = false;
 
         private void Start()
@@ -78,6 +80,9 @@ namespace Retro.ThirdPersonCharacter
             }
 
             currentBlinkCharges = maxBlinkCharges;
+            blinkRecoverTimer = 0f;
+            blinkRecoverDelayTimer = 0f;
+
             UpdateBlinkUI();
         }
 
@@ -115,18 +120,42 @@ namespace Retro.ThirdPersonCharacter
         {
             currentBlinkCharges--;
 
-            if (currentBlinkCharges < maxBlinkCharges && blinkRecoverTimer <= 0f)
+            if (currentBlinkCharges < 0)
             {
+                currentBlinkCharges = 0;
+            }
+
+            // すでに回復中じゃない場合だけ、回復開始をセットする
+            if (currentBlinkCharges < maxBlinkCharges)
+            {
+                blinkRecoverDelayTimer = blinkRecoverDelay;
                 blinkRecoverTimer = blinkRecoverTime;
             }
 
             UpdateBlinkUI();
+
+            Debug.Log("Blink Used. Current Charges: " + currentBlinkCharges);
         }
 
         private void RecoverBlinkCharge()
         {
-            if (currentBlinkCharges >= maxBlinkCharges) return;
+            if (currentBlinkCharges >= maxBlinkCharges)
+            {
+                blinkRecoverTimer = 0f;
+                blinkRecoverDelayTimer = 0f;
+                UpdateBlinkUI();
+                return;
+            }
 
+            // 回復開始までの遅延
+            if (blinkRecoverDelayTimer > 0f)
+            {
+                blinkRecoverDelayTimer -= Time.deltaTime;
+                UpdateBlinkUI();
+                return;
+            }
+
+            // 遅延後、ゲージ回復開始
             blinkRecoverTimer -= Time.deltaTime;
 
             if (blinkRecoverTimer <= 0f)
@@ -136,10 +165,12 @@ namespace Retro.ThirdPersonCharacter
                 if (currentBlinkCharges < maxBlinkCharges)
                 {
                     blinkRecoverTimer = blinkRecoverTime;
+                    blinkRecoverDelayTimer = 0f;
                 }
                 else
                 {
                     blinkRecoverTimer = 0f;
+                    blinkRecoverDelayTimer = 0f;
                 }
             }
 
@@ -161,10 +192,15 @@ namespace Retro.ThirdPersonCharacter
                 slot2Amount = 1f;
             }
 
-            // 回復中のゲージをじわっと増やす
             if (currentBlinkCharges < maxBlinkCharges && blinkRecoverTime > 0f)
             {
-                float recoverProgress = 1f - Mathf.Clamp01(blinkRecoverTimer / blinkRecoverTime);
+                float recoverProgress = 0f;
+
+                // 遅延中はゲージを増やさない
+                if (blinkRecoverDelayTimer <= 0f)
+                {
+                    recoverProgress = 1f - Mathf.Clamp01(blinkRecoverTimer / blinkRecoverTime);
+                }
 
                 if (currentBlinkCharges == 0)
                 {
@@ -200,7 +236,10 @@ namespace Retro.ThirdPersonCharacter
             _animator.SetFloat("InputY", 0);
             _animator.SetBool("IsInAir", true);
 
-            if (CameraShake.Instance != null) CameraShake.Instance.Shake(0.1f, 0.5f);
+            if (CameraShake.Instance != null)
+            {
+                CameraShake.Instance.Shake(0.1f, 0.5f);
+            }
 
             float startTime = Time.time;
 
@@ -210,7 +249,10 @@ namespace Retro.ThirdPersonCharacter
                 yield return null;
             }
 
-            if (_trailRenderer != null) _trailRenderer.enabled = false;
+            if (_trailRenderer != null)
+            {
+                _trailRenderer.enabled = false;
+            }
 
             _animator.SetBool("IsInAir", false);
 
@@ -230,12 +272,15 @@ namespace Retro.ThirdPersonCharacter
             {
                 Vector3 camForward = _cameraTransform.forward;
                 Vector3 camRight = _cameraTransform.right;
+
                 camForward.y = 0;
                 camRight.y = 0;
+
                 camForward.Normalize();
                 camRight.Normalize();
 
                 Vector3 targetDirection = camForward * y + camRight * x;
+
                 if (targetDirection.magnitude > 1.0f)
                 {
                     targetDirection.Normalize();
@@ -246,6 +291,7 @@ namespace Retro.ThirdPersonCharacter
             else
             {
                 Vector3 targetDirection = new Vector3(x, 0, y);
+
                 if (targetDirection.magnitude > 1.0f)
                 {
                     targetDirection.Normalize();
@@ -268,7 +314,9 @@ namespace Retro.ThirdPersonCharacter
                 moveDirection.z = inputDirection.z;
 
                 if (Input.GetKeyDown(jumpKey))
+                {
                     moveDirection.y = jumpSpeed;
+                }
             }
             else
             {

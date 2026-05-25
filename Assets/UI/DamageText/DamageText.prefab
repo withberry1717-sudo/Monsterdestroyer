@@ -151,7 +151,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DamageText
   lifeTime: 0.8
-  moveSpeed: 80
+  moveSpeed: 10
   minDamage: 8
   maxDamage: 45
   minScale: 1.5

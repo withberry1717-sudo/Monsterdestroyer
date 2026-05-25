@@ -466,7 +466,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &67639263
 RectTransform:
   m_ObjectHideFlags: 0
@@ -622,7 +622,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1 &101645236
@@ -691,7 +691,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 1
   isCrystalPart: 1
 --- !u!1 &113509906
@@ -1046,7 +1046,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 1
   isCrystalPart: 1
 --- !u!1 &134763826
@@ -1115,7 +1115,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 1.5
   isCrystalPart: 0
 --- !u!1 &139783532
@@ -1709,7 +1709,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 1.5
   isCrystalPart: 0
 --- !u!1 &300237835
@@ -2831,7 +2831,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1 &476560598
@@ -2900,7 +2900,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1 &478668671
@@ -2997,7 +2997,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 1
   isCrystalPart: 0
 --- !u!1 &535884532
@@ -3112,7 +3112,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 1.2
   isCrystalPart: 0
 --- !u!1 &559545622
@@ -3126,6 +3126,7 @@ GameObject:
   - component: {fileID: 559545623}
   - component: {fileID: 559545625}
   - component: {fileID: 559545624}
+  - component: {fileID: 559545626}
   m_Layer: 5
   m_Name: GameOverPanel
   m_TagString: Untagged
@@ -3193,6 +3194,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 559545622}
   m_CullTransparentMesh: 1
+--- !u!225 &559545626
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 559545622}
+  m_Enabled: 1
+  m_Alpha: 0
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
 --- !u!1 &615957374
 GameObject:
   m_ObjectHideFlags: 0
@@ -3259,7 +3272,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1 &627449050 stripped
@@ -8792,7 +8805,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1 &709078152
@@ -9407,7 +9420,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1001 &849625512
@@ -9554,7 +9567,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1 &864354339
@@ -9651,7 +9664,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 1
   isCrystalPart: 0
 --- !u!1001 &871700988
@@ -9798,7 +9811,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 1
   isCrystalPart: 0
 --- !u!1 &883327494
@@ -9867,7 +9880,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1 &892692332
@@ -10085,7 +10098,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1 &1002429369
@@ -10393,7 +10406,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.14829917, g: 0.990566, b: 0, a: 1}
+  m_Color: {r: 1, g: 0, b: 0.019385934, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -10752,7 +10765,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1 &1081450770
@@ -11209,7 +11222,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 0, g: 0, b: 0, a: 0.0627451}
     m_HighlightedColor: {r: 0, g: 0, b: 0, a: 0.2}
-    m_PressedColor: {r: 0, g: 0, b: 0, a: 0.41960785}
+    m_PressedColor: {r: 0, g: 0, b: 0, a: 0.3254902}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
@@ -12738,7 +12751,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1001 &1302950813
@@ -13063,6 +13076,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1999101713}
+  - {fileID: 1775728926}
   - {fileID: 1044487868}
   - {fileID: 1407729887}
   m_Father: {fileID: 709078156}
@@ -13138,7 +13152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 1
   isCrystalPart: 0
 --- !u!1 &1397508443
@@ -13451,7 +13465,7 @@ MonoBehaviour:
   m_Colors:
     m_NormalColor: {r: 0, g: 0, b: 0, a: 0.05490196}
     m_HighlightedColor: {r: 0, g: 0, b: 0, a: 0.2627451}
-    m_PressedColor: {r: 0, g: 0, b: 0, a: 0.5019608}
+    m_PressedColor: {r: 0, g: 0, b: 0, a: 0.39607844}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
@@ -13725,7 +13739,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1001 &1457659661
@@ -13884,7 +13898,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1 &1493109083
@@ -13953,7 +13967,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1001 &1493973706
@@ -14303,7 +14317,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1 &1549365190
@@ -14372,7 +14386,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1 &1572162854 stripped
@@ -14398,6 +14412,9 @@ MonoBehaviour:
   gameClearPanel: {fileID: 67639262}
   hpBarFill: {fileID: 1044487866}
   hpHighlightFill: {fileID: 1407729888}
+  hpDelayFill: {fileID: 1775728924}
+  hpDelayWait: 0.8
+  hpDelaySpeed: 0.5
   heavyDamageThreshold: 25
   lightInvincibleTime: 0.5
   lightControlLockTime: 0.25
@@ -14407,6 +14424,12 @@ MonoBehaviour:
   knockbackUpPower: 0
   knockbackDuration: 0.8
   blinkInterval: 0.08
+  gameOverCanvasGroup: {fileID: 559545626}
+  gameOverFadeDelay: 0.8
+  gameOverFadeDuration: 2
+  gameOverButtons:
+  - {fileID: 1419521493}
+  - {fileID: 1160931302}
 --- !u!1 &1584206853
 GameObject:
   m_ObjectHideFlags: 0
@@ -14473,7 +14496,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1 &1589575099
@@ -14678,7 +14701,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 1
   isCrystalPart: 1
 --- !u!1 &1697357962
@@ -15085,6 +15108,81 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e783205990986e64b98f5fa2cabc6d67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameButtonManager
+--- !u!1 &1775728923
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1775728926}
+  - component: {fileID: 1775728925}
+  - component: {fileID: 1775728924}
+  m_Layer: 5
+  m_Name: HPBar_Delay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1775728924
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1775728923}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 0, b: 0.019385934, a: 0.4117647}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 3
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 0
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1775728925
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1775728923}
+  m_CullTransparentMesh: 1
+--- !u!224 &1775728926
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1775728923}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1373032030}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -1120, y: 1020}
+  m_SizeDelta: {x: 1800, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1802556821
 GameObject:
   m_ObjectHideFlags: 0
@@ -15179,7 +15277,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 1
   isCrystalPart: 0
 --- !u!1 &1908235966
@@ -15900,7 +15998,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 1
   isCrystalPart: 0
 --- !u!1 &2081299981
@@ -16236,7 +16334,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9f2296645bd71346969bc6a9e9fc2c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonHurtbox
-  dragonHP: {fileID: 0}
+  dragonHP: {fileID: 892692334}
   damageMultiplier: 0.8
   isCrystalPart: 0
 --- !u!1 &2120810687 stripped
@@ -16345,15 +16443,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8007148097399943871, guid: b96af91580d8d7d48ad2f9c93245e002, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 8007148097399943871, guid: b96af91580d8d7d48ad2f9c93245e002, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 8007148097399943871, guid: b96af91580d8d7d48ad2f9c93245e002, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 8007148097399943871, guid: b96af91580d8d7d48ad2f9c93245e002, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

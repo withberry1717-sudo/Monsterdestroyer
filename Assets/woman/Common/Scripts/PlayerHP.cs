@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Collections;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class PlayerHP : MonoBehaviour
 {
@@ -12,6 +14,13 @@ public class PlayerHP : MonoBehaviour
     [SerializeField] private GameObject gameClearPanel;
     [SerializeField] private UnityEngine.UI.Image hpBarFill;
     [SerializeField] private UnityEngine.UI.Image hpHighlightFill;
+    [SerializeField] private UnityEngine.UI.Image hpDelayFill;
+
+    [Header("HP遅延バー")]
+    [SerializeField] private float hpDelayWait = 0.35f;
+    [SerializeField] private float hpDelaySpeed = 1.5f;
+
+    private Coroutine hpDelayCoroutine;
 
     [Header("被弾設定")]
     [SerializeField] private float heavyDamageThreshold = 25f;
@@ -30,6 +39,14 @@ public class PlayerHP : MonoBehaviour
     [Header("点滅")]
     [SerializeField] private float blinkInterval = 0.08f;
 
+    [Header("Game Over 演出")]
+    [SerializeField] private CanvasGroup gameOverCanvasGroup;
+    [SerializeField] private float gameOverFadeDelay = 0.8f;
+    [SerializeField] private float gameOverFadeDuration = 2.0f;
+
+    [Header("Game Over Buttons")]
+    [SerializeField] private Button[] gameOverButtons;
+
     private float currentHp;
     private bool isGameOver = false;
     private bool isGameClear = false;
@@ -47,9 +64,26 @@ public class PlayerHP : MonoBehaviour
         _movement = GetComponent<Retro.ThirdPersonCharacter.Movement>();
         _characterController = GetComponent<CharacterController>();
         _renderers = GetComponentsInChildren<Renderer>();
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(false);
+        }
+
+        if (gameOverCanvasGroup != null)
+        {
+            gameOverCanvasGroup.alpha = 0f;
+            gameOverCanvasGroup.interactable = false;
+            gameOverCanvasGroup.blocksRaycasts = false;
+        }
 
         UpdateHPUI();
         Debug.Log("Game Start! Player HP: " + currentHp);
+        float hpRatio = currentHp / maxHp;
+
+        if (hpDelayFill != null)
+        {
+            hpDelayFill.fillAmount = hpRatio;
+        }
     }
 
     public void TakeDamage(float damage)
@@ -165,26 +199,50 @@ public class PlayerHP : MonoBehaviour
             hpText.text = "HP: " + Mathf.CeilToInt(currentHp);
         }
 
-        float hpRatio = currentHp / maxHp;
+        float hpRatio = Mathf.Clamp01(currentHp / maxHp);
 
+        // 本体HPバーは即座に減る
         if (hpBarFill != null)
         {
             hpBarFill.fillAmount = hpRatio;
         }
 
+        // ハイライトも即座に減る
         if (hpHighlightFill != null)
         {
             hpHighlightFill.fillAmount = hpRatio;
+        }
+
+        // 遅延バーは後からじわっと減る
+        if (hpDelayFill != null)
+        {
+            if (hpDelayCoroutine != null)
+            {
+                StopCoroutine(hpDelayCoroutine);
+            }
+
+            hpDelayCoroutine = StartCoroutine(DelayHPBarRoutine(hpRatio));
         }
     }
 
     public void Revive()
     {
+        ResetGameOverButtons();
         isGameOver = false;
         isInvincible = false;
 
-        currentHp = maxHp * 1f; 
+        currentHp = maxHp * 1f;
         UpdateHPUI();
+        if (hpDelayCoroutine != null)
+        {
+            StopCoroutine(hpDelayCoroutine);
+            hpDelayCoroutine = null;
+        }
+
+        if (hpDelayFill != null)
+        {
+            hpDelayFill.fillAmount = currentHp / maxHp;
+        }
 
         SetRenderersVisible(true);
 
@@ -232,7 +290,7 @@ public class PlayerHP : MonoBehaviour
             _animator.SetTrigger("Die");
         }
 
-        if (gameOverPanel != null) gameOverPanel.SetActive(true);
+        StartCoroutine(GameOverFadeRoutine());
 
         Debug.Log("GAME OVER. Restarting...");
     }
@@ -240,5 +298,88 @@ public class PlayerHP : MonoBehaviour
     void RestartGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+    private IEnumerator GameOverFadeRoutine()
+    {
+        yield return new WaitForSeconds(gameOverFadeDelay);
+
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(true);
+        }
+
+        if (gameOverCanvasGroup != null)
+        {
+            gameOverCanvasGroup.alpha = 0f;
+            gameOverCanvasGroup.interactable = false;
+            gameOverCanvasGroup.blocksRaycasts = false;
+        }
+
+        float timer = 0f;
+
+        while (timer < gameOverFadeDuration)
+        {
+            timer += Time.deltaTime;
+            float t = timer / gameOverFadeDuration;
+
+            // 最初ゆっくり、後半じわっと出る
+            float eased = Mathf.SmoothStep(0f, 1f, t);
+
+            if (gameOverCanvasGroup != null)
+            {
+                gameOverCanvasGroup.alpha = eased;
+            }
+
+            yield return null;
+        }
+
+        if (gameOverCanvasGroup != null)
+        {
+            gameOverCanvasGroup.alpha = 1f;
+
+            ResetGameOverButtons();
+            gameOverCanvasGroup.interactable = true;
+            gameOverCanvasGroup.blocksRaycasts = true;
+        }
+    }
+    private void ResetGameOverButtons()
+    {
+        // 選択中のUIを解除する
+        if (EventSystem.current != null)
+        {
+            EventSystem.current.SetSelectedGameObject(null);
+        }
+
+        if (gameOverButtons == null) return;
+
+        foreach (Button button in gameOverButtons)
+        {
+            if (button == null) continue;
+
+            // Buttonの状態を強制リセット
+            button.interactable = false;
+            button.interactable = true;
+        }
+    }
+    private IEnumerator DelayHPBarRoutine(float targetFillAmount)
+    {
+        // 少し待ってから減り始める
+        yield return new WaitForSeconds(hpDelayWait);
+
+        while (hpDelayFill != null && hpDelayFill.fillAmount > targetFillAmount)
+        {
+            hpDelayFill.fillAmount = Mathf.MoveTowards(
+                hpDelayFill.fillAmount,
+                targetFillAmount,
+                hpDelaySpeed * Time.deltaTime
+            );
+
+            yield return null;
+        }
+
+        if (hpDelayFill != null)
+        {
+            hpDelayFill.fillAmount = targetFillAmount;
+        }
     }
 }

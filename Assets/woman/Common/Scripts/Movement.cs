@@ -16,7 +16,10 @@ namespace Retro.ThirdPersonCharacter
         private Combat _combat;
         private CharacterController _characterController;
         private TrailRenderer _trailRenderer;
-        private ParticleSystem _particleSystem;
+
+        [Header("Dash Effect")]
+        [Tooltip("回避専用のParticleがある場合だけ入れる。chargeEffect / chargeReadyEffect は絶対に入れない")]
+        [SerializeField] private ParticleSystem dashParticleSystem;
 
         [SerializeField] private Transform _cameraTransform;
 
@@ -79,8 +82,9 @@ namespace Retro.ThirdPersonCharacter
 
             InputSystem.settings.maxEventBytesPerUpdate = 0;
 
+            // TrailRendererだけ拾う
+            // ParticleSystemは拾わない。chargeEffectを誤取得する原因になるため。
             _trailRenderer = GetComponentInChildren<TrailRenderer>();
-            _particleSystem = GetComponentInChildren<ParticleSystem>();
 
             ForceStopTrail();
 
@@ -116,9 +120,9 @@ namespace Retro.ThirdPersonCharacter
                 _trailRenderer.Clear();
             }
 
-            if (_particleSystem != null)
+            if (dashParticleSystem != null)
             {
-                _particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                dashParticleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             }
 
             isDashing = false;
@@ -275,9 +279,11 @@ namespace Retro.ThirdPersonCharacter
                 _trailRenderer.enabled = true;
             }
 
-            if (_particleSystem != null)
+            // 回避専用Particleだけ再生する
+            // chargeEffect / chargeReadyEffect はCombat側が管理する
+            if (dashParticleSystem != null)
             {
-                _particleSystem.Play();
+                dashParticleSystem.Play();
             }
 
             _animator.SetFloat("InputX", 0);

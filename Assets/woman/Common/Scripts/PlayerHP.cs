@@ -93,6 +93,11 @@ public class PlayerHP : MonoBehaviour
             gameOverCanvasGroup.blocksRaycasts = false;
         }
 
+        if (_movement != null)
+        {
+            _movement.ForceStopTrail();
+        }
+
         BattleCursorManager.LockCursor();
 
         UpdateHPUI();
@@ -108,6 +113,12 @@ public class PlayerHP : MonoBehaviour
     public void TakeDamage(float damage)
     {
         if (isGameOver || isGameClear || isInvincible) return;
+
+        // 重要：被弾した瞬間にBlink用Trailを完全に消す
+        if (_movement != null)
+        {
+            _movement.ForceStopTrail();
+        }
 
         currentHp -= damage;
         UpdateHPUI();
@@ -134,19 +145,33 @@ public class PlayerHP : MonoBehaviour
     {
         isInvincible = true;
 
-        if (_movement != null) _movement.enabled = false;
-        if (_animator != null) _animator.SetTrigger("TakingDamage");
+        if (_movement != null)
+        {
+            _movement.ForceStopTrail();
+            _movement.enabled = false;
+        }
+
+        if (_animator != null)
+        {
+            _animator.SetTrigger("TakingDamage");
+        }
 
         yield return new WaitForSeconds(lightControlLockTime);
 
         if (!isGameOver && _movement != null)
         {
+            _movement.ForceStopTrail();
             _movement.enabled = true;
         }
 
         yield return StartCoroutine(BlinkRoutine(lightInvincibleTime - lightControlLockTime));
 
         SetRenderersVisible(true);
+
+        if (_movement != null)
+        {
+            _movement.ForceStopTrail();
+        }
 
         if (!isGameOver)
         {
@@ -158,8 +183,16 @@ public class PlayerHP : MonoBehaviour
     {
         isInvincible = true;
 
-        if (_movement != null) _movement.enabled = false;
-        if (_animator != null) _animator.SetTrigger("KnockDown");
+        if (_movement != null)
+        {
+            _movement.ForceStopTrail();
+            _movement.enabled = false;
+        }
+
+        if (_animator != null)
+        {
+            _animator.SetTrigger("KnockDown");
+        }
 
         yield return StartCoroutine(KnockbackRoutine());
 
@@ -167,12 +200,18 @@ public class PlayerHP : MonoBehaviour
 
         if (!isGameOver && _movement != null)
         {
+            _movement.ForceStopTrail();
             _movement.enabled = true;
         }
 
         yield return StartCoroutine(BlinkRoutine(heavyInvincibleTime - heavyControlLockTime));
 
         SetRenderersVisible(true);
+
+        if (_movement != null)
+        {
+            _movement.ForceStopTrail();
+        }
 
         if (!isGameOver)
         {
@@ -283,6 +322,12 @@ public class PlayerHP : MonoBehaviour
         SetRenderersVisible(true);
 
         SetGameOverScriptsEnabled(true);
+
+        if (_movement != null)
+        {
+            _movement.ForceStopTrail();
+        }
+
         BattleCursorManager.LockCursor();
 
         if (gameOverCanvasGroup != null)
@@ -325,6 +370,11 @@ public class PlayerHP : MonoBehaviour
 
         isGameOver = true;
         isInvincible = true;
+
+        if (_movement != null)
+        {
+            _movement.ForceStopTrail();
+        }
 
         if (hpText != null)
         {
@@ -379,10 +429,9 @@ public class PlayerHP : MonoBehaviour
             }
         }
 
-        // 修正点：Unityの最新の推奨コードに変更（FindObjectsSortModeの引数を削除）
         MonoBehaviour[] allScripts = Object.FindObjectsByType<MonoBehaviour>(
-            FindObjectsInactive.Exclude
-        );
+                    FindObjectsInactive.Exclude
+                );
 
         foreach (MonoBehaviour script in allScripts)
         {
@@ -398,7 +447,16 @@ public class PlayerHP : MonoBehaviour
 
     private void SetGameOverScriptsEnabled(bool enabled)
     {
-        if (_movement != null) _movement.enabled = enabled;
+        if (_movement != null)
+        {
+            if (!enabled)
+            {
+                _movement.ForceStopTrail();
+            }
+
+            _movement.enabled = enabled;
+        }
+
         if (_combat != null) _combat.enabled = enabled;
         if (_aiming != null) _aiming.enabled = enabled;
         if (_aimingController != null) _aimingController.enabled = enabled;

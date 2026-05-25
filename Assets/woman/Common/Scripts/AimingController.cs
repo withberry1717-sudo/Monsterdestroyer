@@ -14,14 +14,17 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private SpringArm _springArm;
 
         [Header("Settings")]
-        [SerializeField] private float _aimCameraDistance = 3;
+        [SerializeField] private float _aimCameraDistance = 3f;
         [SerializeField] private float _regularCameraDistance = 1f;
 
-        private void Start()
+        private void Awake()
         {
             _aiming = GetComponent<Aiming>();
             _playerInput = GetComponent<PlayerInput>();
+        }
 
+        private void Start()
+        {
             if (_springArm == null)
             {
                 _springArm = FindAnyObjectByType<SpringArm>();
@@ -50,7 +53,7 @@ namespace Retro.ThirdPersonCharacter
 
             if (_springArm == null)
             {
-                Debug.LogWarning("AimingController: SpringArm が設定されていません。CameraRigかPivotのSpringArmを入れてください。");
+                Debug.LogWarning("AimingController: SpringArm が設定されていません。CameraRig / Pivot / SpringArm を確認してください。");
                 _aiming.enabled = _isAiming;
                 return;
             }
@@ -65,6 +68,43 @@ namespace Retro.ThirdPersonCharacter
                 _springArm.TargetLength = _regularCameraDistance;
                 _aiming.enabled = false;
             }
+        }
+
+        private void OnDisable()
+        {
+            // GameOverやPauseでAimingControllerがOFFになった時、
+            // AimingだけONで残るのを防ぐ
+            if (_aiming != null)
+            {
+                _aiming.enabled = false;
+            }
+
+            if (_springArm != null)
+            {
+                _springArm.TargetLength = _regularCameraDistance;
+            }
+
+            _isAiming = false;
+        }
+
+        private void OnEnable()
+        {
+            if (_aiming == null)
+            {
+                _aiming = GetComponent<Aiming>();
+            }
+
+            if (_playerInput == null)
+            {
+                _playerInput = GetComponent<PlayerInput>();
+            }
+
+            if (_springArm == null)
+            {
+                _springArm = FindAnyObjectByType<SpringArm>();
+            }
+
+            OnStateChanged();
         }
     }
 }

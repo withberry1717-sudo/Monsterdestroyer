@@ -36,7 +36,6 @@ public class PauseManager : MonoBehaviour
             playerMovement = playerObject.GetComponent<Movement>();
             playerCombat = playerObject.GetComponent<Combat>();
 
-            // 名前で探す。Aiming系の型名が違っても拾えるようにする
             MonoBehaviour[] scripts = playerObject.GetComponents<MonoBehaviour>();
 
             foreach (MonoBehaviour script in scripts)
@@ -57,7 +56,10 @@ public class PauseManager : MonoBehaviour
         }
 
         Time.timeScale = 1f;
+        isPaused = false;
+
         SetGameplayEnabled(true);
+        BattleCursorManager.LockCursor();
     }
 
     private void Update()
@@ -78,37 +80,35 @@ public class PauseManager : MonoBehaviour
     public void OpenPauseMenu()
     {
         isPaused = true;
-        Time.timeScale = 0f;
 
+        Time.timeScale = 0f;
         SetGameplayEnabled(false);
+        BattleCursorManager.UnlockCursor();
 
         if (pausePanel != null) pausePanel.SetActive(true);
         if (controlsPanel != null) controlsPanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
-
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
     }
 
     public void ResumeGame()
     {
         isPaused = false;
-        Time.timeScale = 1f;
 
+        Time.timeScale = 1f;
         SetGameplayEnabled(true);
+        BattleCursorManager.LockCursor();
 
         if (pausePanel != null) pausePanel.SetActive(false);
         if (controlsPanel != null) controlsPanel.SetActive(false);
         if (settingsPanel != null) settingsPanel.SetActive(false);
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
     }
 
     public void BackToTitle()
     {
         Time.timeScale = 1f;
         SetGameplayEnabled(true);
+        BattleCursorManager.UnlockCursor();
+
         SceneManager.LoadScene("TitleScene");
     }
 
@@ -116,22 +116,32 @@ public class PauseManager : MonoBehaviour
     {
         if (controlsPanel != null) controlsPanel.SetActive(true);
         if (settingsPanel != null) settingsPanel.SetActive(false);
+
+        BattleCursorManager.UnlockCursor();
     }
 
     public void CloseControls()
     {
         if (controlsPanel != null) controlsPanel.SetActive(false);
+
+        // Pause画面中なのでカーソルは出したまま
+        BattleCursorManager.UnlockCursor();
     }
 
     public void OpenSettings()
     {
         if (settingsPanel != null) settingsPanel.SetActive(true);
         if (controlsPanel != null) controlsPanel.SetActive(false);
+
+        BattleCursorManager.UnlockCursor();
     }
 
     public void CloseSettings()
     {
         if (settingsPanel != null) settingsPanel.SetActive(false);
+
+        // Pause画面中なのでカーソルは出したまま
+        BattleCursorManager.UnlockCursor();
     }
 
     private void SetGameplayEnabled(bool enabled)
@@ -145,7 +155,10 @@ public class PauseManager : MonoBehaviour
         {
             foreach (MonoBehaviour script in cameraScripts)
             {
-                if (script != null) script.enabled = enabled;
+                if (script != null)
+                {
+                    script.enabled = enabled;
+                }
             }
         }
 
@@ -153,7 +166,10 @@ public class PauseManager : MonoBehaviour
         {
             foreach (MonoBehaviour script in enemyScripts)
             {
-                if (script != null) script.enabled = enabled;
+                if (script != null)
+                {
+                    script.enabled = enabled;
+                }
             }
         }
     }
@@ -161,6 +177,8 @@ public class PauseManager : MonoBehaviour
     public void ExitGame()
     {
         Time.timeScale = 1f;
+        SetGameplayEnabled(true);
+        BattleCursorManager.UnlockCursor();
 
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;

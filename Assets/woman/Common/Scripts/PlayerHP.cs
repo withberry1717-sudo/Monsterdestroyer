@@ -20,8 +20,6 @@ public class PlayerHP : MonoBehaviour
     [SerializeField] private float hpDelayWait = 0.35f;
     [SerializeField] private float hpDelaySpeed = 1.5f;
 
-    private Coroutine hpDelayCoroutine;
-
     [Header("被弾設定")]
     [SerializeField] private float heavyDamageThreshold = 25f;
 
@@ -47,26 +45,45 @@ public class PlayerHP : MonoBehaviour
     [Header("Game Over Buttons")]
     [SerializeField] private Button[] gameOverButtons;
 
+    [Header("Game Over時に止めるスクリプト 手動追加用")]
+    [SerializeField] private MonoBehaviour[] disableOnGameOver;
+
     private float currentHp;
     private bool isGameOver = false;
     private bool isGameClear = false;
     private bool isInvincible = false;
+
+    private Coroutine hpDelayCoroutine;
 
     private Animator _animator;
     private Retro.ThirdPersonCharacter.Movement _movement;
     private CharacterController _characterController;
     private Renderer[] _renderers;
 
+    private MonoBehaviour _combat;
+    private MonoBehaviour _aiming;
+    private MonoBehaviour _aimingController;
+    private MonoBehaviour _safePlayerCamera;
+
     void Start()
     {
         currentHp = maxHp;
+
         _animator = GetComponent<Animator>();
         _movement = GetComponent<Retro.ThirdPersonCharacter.Movement>();
         _characterController = GetComponent<CharacterController>();
         _renderers = GetComponentsInChildren<Renderer>();
+
+        FindScriptsForGameOver();
+
         if (gameOverPanel != null)
         {
             gameOverPanel.SetActive(false);
+        }
+
+        if (gameOverCanvasGroup == null && gameOverPanel != null)
+        {
+            gameOverCanvasGroup = gameOverPanel.GetComponent<CanvasGroup>();
         }
 
         if (gameOverCanvasGroup != null)
@@ -76,14 +93,16 @@ public class PlayerHP : MonoBehaviour
             gameOverCanvasGroup.blocksRaycasts = false;
         }
 
+        BattleCursorManager.LockCursor();
+
         UpdateHPUI();
-        Debug.Log("Game Start! Player HP: " + currentHp);
-        float hpRatio = currentHp / maxHp;
 
         if (hpDelayFill != null)
         {
-            hpDelayFill.fillAmount = hpRatio;
+            hpDelayFill.fillAmount = currentHp / maxHp;
         }
+
+        Debug.Log("Game Start! Player HP: " + currentHp);
     }
 
     public void TakeDamage(float damage)
@@ -120,12 +139,19 @@ public class PlayerHP : MonoBehaviour
 
         yield return new WaitForSeconds(lightControlLockTime);
 
-        if (_movement != null) _movement.enabled = true;
+        if (!isGameOver && _movement != null)
+        {
+            _movement.enabled = true;
+        }
 
         yield return StartCoroutine(BlinkRoutine(lightInvincibleTime - lightControlLockTime));
 
         SetRenderersVisible(true);
-        isInvincible = false;
+
+        if (!isGameOver)
+        {
+            isInvincible = false;
+        }
     }
 
     private IEnumerator HeavyDamageRoutine()
@@ -139,13 +165,19 @@ public class PlayerHP : MonoBehaviour
 
         yield return new WaitForSeconds(heavyControlLockTime);
 
-
-        if (_movement != null) _movement.enabled = true;
+        if (!isGameOver && _movement != null)
+        {
+            _movement.enabled = true;
+        }
 
         yield return StartCoroutine(BlinkRoutine(heavyInvincibleTime - heavyControlLockTime));
 
         SetRenderersVisible(true);
-        isInvincible = false;
+
+        if (!isGameOver)
+        {
+            isInvincible = false;
+        }
     }
 
     private IEnumerator KnockbackRoutine()
@@ -186,9 +218,14 @@ public class PlayerHP : MonoBehaviour
 
     private void SetRenderersVisible(bool visible)
     {
+        if (_renderers == null) return;
+
         foreach (Renderer r in _renderers)
         {
-            r.enabled = visible;
+            if (r != null)
+            {
+                r.enabled = visible;
+            }
         }
     }
 
@@ -196,24 +233,21 @@ public class PlayerHP : MonoBehaviour
     {
         if (hpText != null)
         {
-            hpText.text = "HP: " + Mathf.CeilToInt(currentHp);
+            hpText.text = "HP: " + Mathf.CeilToInt(Mathf.Max(0, currentHp));
         }
 
         float hpRatio = Mathf.Clamp01(currentHp / maxHp);
 
-        // 本体HPバーは即座に減る
         if (hpBarFill != null)
         {
             hpBarFill.fillAmount = hpRatio;
         }
 
-        // ハイライトも即座に減る
         if (hpHighlightFill != null)
         {
             hpHighlightFill.fillAmount = hpRatio;
         }
 
-        // 遅延バーは後からじわっと減る
         if (hpDelayFill != null)
         {
             if (hpDelayCoroutine != null)
@@ -228,11 +262,13 @@ public class PlayerHP : MonoBehaviour
     public void Revive()
     {
         ResetGameOverButtons();
+
         isGameOver = false;
         isInvincible = false;
 
-        currentHp = maxHp * 1f;
+        currentHp = maxHp;
         UpdateHPUI();
+
         if (hpDelayCoroutine != null)
         {
             StopCoroutine(hpDelayCoroutine);
@@ -246,27 +282,40 @@ public class PlayerHP : MonoBehaviour
 
         SetRenderersVisible(true);
 
-        if (_movement != null) _movement.enabled = true;
+        SetGameOverScriptsEnabled(true);
+        BattleCursorManager.LockCursor();
 
-        if (gameOverPanel != null) gameOverPanel.SetActive(false);
-
-        if (GameManager.Instance != null)
+        if (gameOverCanvasGroup != null)
         {
-            if (ScoreManager.Instance != null)
-            {
-                ScoreManager.Instance.AddDeathPenalty();
-            }
+            gameOverCanvasGroup.alpha = 0f;
+            gameOverCanvasGroup.interactable = false;
+            gameOverCanvasGroup.blocksRaycasts = false;
         }
+
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(false);
+        }
+
+        if (ScoreManager.Instance != null)
+        {
+            ScoreManager.Instance.AddDeathPenalty();
+        }
+
         if (_animator != null)
         {
             _animator.Play("RFA_Movement");
         }
+
         Debug.Log("Player Revived");
     }
 
     public void BackToTitle()
     {
         Time.timeScale = 1f;
+        SetGameOverScriptsEnabled(true);
+        BattleCursorManager.UnlockCursor();
+
         SceneManager.LoadScene("TitleScene");
     }
 
@@ -277,11 +326,15 @@ public class PlayerHP : MonoBehaviour
         isGameOver = true;
         isInvincible = true;
 
-        if (hpText != null) hpText.text = "HP: 0";
+        if (hpText != null)
+        {
+            hpText.text = "HP: 0";
+        }
 
         SetRenderersVisible(true);
 
-        if (_movement != null) _movement.enabled = false;
+        SetGameOverScriptsEnabled(false);
+        BattleCursorManager.UnlockCursor();
 
         if (_animator != null)
         {
@@ -292,13 +345,77 @@ public class PlayerHP : MonoBehaviour
 
         StartCoroutine(GameOverFadeRoutine());
 
-        Debug.Log("GAME OVER. Restarting...");
+        Debug.Log("GAME OVER.");
     }
 
     void RestartGame()
     {
+        Time.timeScale = 1f;
+        BattleCursorManager.LockCursor();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
+
+    private void FindScriptsForGameOver()
+    {
+        MonoBehaviour[] playerScripts = GetComponents<MonoBehaviour>();
+
+        foreach (MonoBehaviour script in playerScripts)
+        {
+            if (script == null) continue;
+
+            string scriptName = script.GetType().Name;
+
+            if (scriptName == "Combat")
+            {
+                _combat = script;
+            }
+            else if (scriptName == "Aiming")
+            {
+                _aiming = script;
+            }
+            else if (scriptName == "AimingController")
+            {
+                _aimingController = script;
+            }
+        }
+
+        // 修正点：Unityの最新の推奨コードに変更（FindObjectsSortModeの引数を削除）
+        MonoBehaviour[] allScripts = Object.FindObjectsByType<MonoBehaviour>(
+            FindObjectsInactive.Exclude
+        );
+
+        foreach (MonoBehaviour script in allScripts)
+        {
+            if (script == null) continue;
+
+            if (script.GetType().Name == "SafePlayerCamera")
+            {
+                _safePlayerCamera = script;
+                break;
+            }
+        }
+    }
+
+    private void SetGameOverScriptsEnabled(bool enabled)
+    {
+        if (_movement != null) _movement.enabled = enabled;
+        if (_combat != null) _combat.enabled = enabled;
+        if (_aiming != null) _aiming.enabled = enabled;
+        if (_aimingController != null) _aimingController.enabled = enabled;
+        if (_safePlayerCamera != null) _safePlayerCamera.enabled = enabled;
+
+        if (disableOnGameOver != null)
+        {
+            foreach (MonoBehaviour script in disableOnGameOver)
+            {
+                if (script != null)
+                {
+                    script.enabled = enabled;
+                }
+            }
+        }
+    }
+
     private IEnumerator GameOverFadeRoutine()
     {
         yield return new WaitForSeconds(gameOverFadeDelay);
@@ -308,12 +425,20 @@ public class PlayerHP : MonoBehaviour
             gameOverPanel.SetActive(true);
         }
 
-        if (gameOverCanvasGroup != null)
+        if (gameOverCanvasGroup == null && gameOverPanel != null)
         {
-            gameOverCanvasGroup.alpha = 0f;
-            gameOverCanvasGroup.interactable = false;
-            gameOverCanvasGroup.blocksRaycasts = false;
+            gameOverCanvasGroup = gameOverPanel.GetComponent<CanvasGroup>();
         }
+
+        if (gameOverCanvasGroup == null)
+        {
+            Debug.LogWarning("GameOverPanelにCanvasGroupがありません。フェードなしで表示します。");
+            yield break;
+        }
+
+        gameOverCanvasGroup.alpha = 0f;
+        gameOverCanvasGroup.interactable = false;
+        gameOverCanvasGroup.blocksRaycasts = false;
 
         float timer = 0f;
 
@@ -322,29 +447,22 @@ public class PlayerHP : MonoBehaviour
             timer += Time.deltaTime;
             float t = timer / gameOverFadeDuration;
 
-            // 最初ゆっくり、後半じわっと出る
             float eased = Mathf.SmoothStep(0f, 1f, t);
-
-            if (gameOverCanvasGroup != null)
-            {
-                gameOverCanvasGroup.alpha = eased;
-            }
+            gameOverCanvasGroup.alpha = eased;
 
             yield return null;
         }
 
-        if (gameOverCanvasGroup != null)
-        {
-            gameOverCanvasGroup.alpha = 1f;
+        gameOverCanvasGroup.alpha = 1f;
 
-            ResetGameOverButtons();
-            gameOverCanvasGroup.interactable = true;
-            gameOverCanvasGroup.blocksRaycasts = true;
-        }
+        ResetGameOverButtons();
+
+        gameOverCanvasGroup.interactable = true;
+        gameOverCanvasGroup.blocksRaycasts = true;
     }
+
     private void ResetGameOverButtons()
     {
-        // 選択中のUIを解除する
         if (EventSystem.current != null)
         {
             EventSystem.current.SetSelectedGameObject(null);
@@ -356,14 +474,13 @@ public class PlayerHP : MonoBehaviour
         {
             if (button == null) continue;
 
-            // Buttonの状態を強制リセット
             button.interactable = false;
             button.interactable = true;
         }
     }
+
     private IEnumerator DelayHPBarRoutine(float targetFillAmount)
     {
-        // 少し待ってから減り始める
         yield return new WaitForSeconds(hpDelayWait);
 
         while (hpDelayFill != null && hpDelayFill.fillAmount > targetFillAmount)

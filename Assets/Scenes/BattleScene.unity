@@ -1536,7 +1536,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 189416, guid: 80844b2319340044da27db99208a9eac, type: 3}
       propertyPath: m_Name
-      value: CameraRig
+      value: PlayerCamera
       objectReference: {fileID: 0}
     - target: {fileID: 423682, guid: 80844b2319340044da27db99208a9eac, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1586,10 +1586,14 @@ PrefabInstance:
       propertyPath: ControlRotationSensitivity
       value: 4
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 6048109559728643373, guid: 80844b2319340044da27db99208a9eac, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 189416, guid: 80844b2319340044da27db99208a9eac, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1254087228}
     - targetCorrespondingSourceObject: {fileID: 3306100764376975615, guid: 80844b2319340044da27db99208a9eac, type: 3}
       insertIndex: -1
       addedObject: {fileID: 627449056}
@@ -2888,6 +2892,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 300237835}
   m_CullTransparentMesh: 1
+--- !u!1 &322212535
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 322212537}
+  - component: {fileID: 322212536}
+  m_Layer: 0
+  m_Name: BattleCursorManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &322212536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 322212535}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3996b5bc10a56d468a2fc90b443a41f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BattleCursorManager
+--- !u!4 &322212537
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 322212535}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1887.3652, y: 0.00001, z: 1649.429}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &322919017
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3826,7 +3874,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 21, y: -125}
+  m_AnchoredPosition: {x: 21, y: 244}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &441143393
@@ -3875,7 +3923,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1148623336}
         m_TargetAssemblyTypeName: PauseManager, Assembly-CSharp
-        m_MethodName: OpenPauseMenu
+        m_MethodName: OpenControls
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3923,6 +3971,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 441143391}
   m_CullTransparentMesh: 1
+--- !u!1 &444671251 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 189416, guid: 80844b2319340044da27db99208a9eac, type: 3}
+  m_PrefabInstance: {fileID: 131519520}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &446893111
 GameObject:
   m_ObjectHideFlags: 0
@@ -4893,6 +4946,11 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!20 &627449057 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 4479908057211236910, guid: 80844b2319340044da27db99208a9eac, type: 3}
+  m_PrefabInstance: {fileID: 131519520}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &633046385
 GameObject:
   m_ObjectHideFlags: 0
@@ -10259,6 +10317,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 653409694}
   m_CullTransparentMesh: 1
+--- !u!4 &670598650 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 497028, guid: 80844b2319340044da27db99208a9eac, type: 3}
+  m_PrefabInstance: {fileID: 131519520}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &675192165
 GameObject:
   m_ObjectHideFlags: 0
@@ -10720,7 +10783,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 7.991455, y: 266}
+  m_AnchoredPosition: {x: 66, y: -160}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &709461614
@@ -15594,7 +15657,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.95686275}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -16136,17 +16199,28 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 423682, guid: 80844b2319340044da27db99208a9eac, type: 3}
   m_PrefabInstance: {fileID: 131519520}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1254087228 stripped
+--- !u!114 &1254087228
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6048109559728643373, guid: 80844b2319340044da27db99208a9eac, type: 3}
-  m_PrefabInstance: {fileID: 131519520}
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 444671251}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c13ee35010795cc40a47bd37c09f0215, type: 3}
+  m_Script: {fileID: 11500000, guid: 8c59781c5dc2bf2428ff1e132c1aeb85, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::NaughtyCharacter.SafePlayerCamera
+  Rig: {fileID: 1254087227}
+  Pivot: {fileID: 670598650}
+  Target: {fileID: 426628364}
+  Camera: {fileID: 627449057}
+  sensitivityX: 2
+  sensitivityY: 1.4
+  rotationSmoothTime: 0.06
+  followSmoothTime: 0.04
+  minPitch: -25
+  maxPitch: 55
 --- !u!1 &1274667855
 GameObject:
   m_ObjectHideFlags: 0
@@ -16880,7 +16954,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0.5529412}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.78039217}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -19030,6 +19104,12 @@ MonoBehaviour:
   gameOverButtons:
   - {fileID: 1419521493}
   - {fileID: 1160931302}
+  disableOnGameOver:
+  - {fileID: 1254087228}
+  - {fileID: 1254087228}
+  - {fileID: 1254087228}
+  - {fileID: 1254087228}
+  - {fileID: 1254087228}
 --- !u!1 &1584206853
 GameObject:
   m_ObjectHideFlags: 0
@@ -22411,3 +22491,4 @@ SceneRoots:
   - {fileID: 675192169}
   - {fileID: 113509910}
   - {fileID: 772781602}
+  - {fileID: 322212537}

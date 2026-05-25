@@ -11,6 +11,7 @@ public class PlayerHP : MonoBehaviour
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private GameObject gameClearPanel;
     [SerializeField] private UnityEngine.UI.Image hpBarFill;
+    [SerializeField] private UnityEngine.UI.Image hpHighlightFill;
 
     [Header("îÌíeê›íË")]
     [SerializeField] private float heavyDamageThreshold = 25f;
@@ -164,9 +165,16 @@ public class PlayerHP : MonoBehaviour
             hpText.text = "HP: " + Mathf.CeilToInt(currentHp);
         }
 
+        float hpRatio = currentHp / maxHp;
+
         if (hpBarFill != null)
         {
-            hpBarFill.fillAmount = currentHp / maxHp;
+            hpBarFill.fillAmount = hpRatio;
+        }
+
+        if (hpHighlightFill != null)
+        {
+            hpHighlightFill.fillAmount = hpRatio;
         }
     }
 

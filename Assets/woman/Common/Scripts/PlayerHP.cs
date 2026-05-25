@@ -37,6 +37,19 @@ public class PlayerHP : MonoBehaviour
     [Header("点滅")]
     [SerializeField] private float blinkInterval = 0.08f;
 
+    [Header("被弾画面フラッシュ")]
+    [SerializeField] private CanvasGroup damageFlashCanvasGroup;
+    [SerializeField] private float damageFlashMaxAlpha = 0.7f;
+    [SerializeField] private float heavyDamageFlashMaxAlpha = 0.9f;
+    [SerializeField] private float damageFlashFadeInTime = 0.03f;
+    [SerializeField] private float damageFlashHoldTime = 0.04f;
+    [SerializeField] private float damageFlashFadeOutTime = 0.35f;
+
+    [Header("赤ふち自動生成")]
+    [SerializeField] private bool autoCreateDamageFlashEdges = true;
+    [SerializeField] private float damageEdgeThickness = 120f;
+    [SerializeField] private Color damageEdgeColor = new Color(1f, 0f, 0f, 0.8f);
+
     [Header("Game Over 演出")]
     [SerializeField] private CanvasGroup gameOverCanvasGroup;
     [SerializeField] private float gameOverFadeDelay = 0.8f;
@@ -54,6 +67,7 @@ public class PlayerHP : MonoBehaviour
     private bool isInvincible = false;
 
     private Coroutine hpDelayCoroutine;
+    private Coroutine damageFlashCoroutine;
 
     private Animator _animator;
     private Retro.ThirdPersonCharacter.Movement _movement;
@@ -93,6 +107,8 @@ public class PlayerHP : MonoBehaviour
             gameOverCanvasGroup.blocksRaycasts = false;
         }
 
+        SetupDamageFlash();
+
         if (_movement != null)
         {
             _movement.ForceStopTrail();
@@ -110,11 +126,137 @@ public class PlayerHP : MonoBehaviour
         Debug.Log("Game Start! Player HP: " + currentHp);
     }
 
+    private void SetupDamageFlash()
+    {
+        if (damageFlashCanvasGroup == null)
+        {
+            Debug.LogWarning("Damage Flash Canvas Group が未設定です。PlayerHPのInspectorにDamageFlashPanelを入れてください。");
+            return;
+        }
+
+        damageFlashCanvasGroup.alpha = 0f;
+        damageFlashCanvasGroup.interactable = false;
+        damageFlashCanvasGroup.blocksRaycasts = false;
+
+        Image parentImage = damageFlashCanvasGroup.GetComponent<Image>();
+        if (parentImage != null)
+        {
+            parentImage.enabled = false;
+        }
+
+        if (autoCreateDamageFlashEdges)
+        {
+            CreateDamageFlashEdgesIfNeeded();
+        }
+    }
+
+    private void CreateDamageFlashEdgesIfNeeded()
+    {
+        if (damageFlashCanvasGroup == null) return;
+
+        Transform parent = damageFlashCanvasGroup.transform;
+
+        CreateOrUpdateEdge(
+            parent,
+            "TopRed",
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(0.5f, 1f),
+            new Vector2(0f, 0f),
+            new Vector2(0f, damageEdgeThickness)
+        );
+
+        CreateOrUpdateEdge(
+            parent,
+            "BottomRed",
+            new Vector2(0f, 0f),
+            new Vector2(1f, 0f),
+            new Vector2(0.5f, 0f),
+            new Vector2(0f, 0f),
+            new Vector2(0f, damageEdgeThickness)
+        );
+
+        CreateOrUpdateEdge(
+            parent,
+            "LeftRed",
+            new Vector2(0f, 0f),
+            new Vector2(0f, 1f),
+            new Vector2(0f, 0.5f),
+            new Vector2(0f, 0f),
+            new Vector2(damageEdgeThickness, 0f)
+        );
+
+        CreateOrUpdateEdge(
+            parent,
+            "RightRed",
+            new Vector2(1f, 0f),
+            new Vector2(1f, 1f),
+            new Vector2(1f, 0.5f),
+            new Vector2(0f, 0f),
+            new Vector2(damageEdgeThickness, 0f)
+        );
+    }
+
+    private void CreateOrUpdateEdge(
+        Transform parent,
+        string edgeName,
+        Vector2 anchorMin,
+        Vector2 anchorMax,
+        Vector2 pivot,
+        Vector2 anchoredPosition,
+        Vector2 sizeDelta
+    )
+    {
+        Transform existing = parent.Find(edgeName);
+        GameObject edgeObject;
+
+        if (existing != null)
+        {
+            edgeObject = existing.gameObject;
+        }
+        else
+        {
+            edgeObject = new GameObject(edgeName);
+            edgeObject.transform.SetParent(parent, false);
+        }
+
+        RectTransform rect = edgeObject.GetComponent<RectTransform>();
+        if (rect == null)
+        {
+            rect = edgeObject.AddComponent<RectTransform>();
+        }
+
+        CanvasRenderer canvasRenderer = edgeObject.GetComponent<CanvasRenderer>();
+        if (canvasRenderer == null)
+        {
+            canvasRenderer = edgeObject.AddComponent<CanvasRenderer>();
+        }
+
+        Image image = edgeObject.GetComponent<Image>();
+        if (image == null)
+        {
+            image = edgeObject.AddComponent<Image>();
+        }
+
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.pivot = pivot;
+        rect.anchoredPosition = anchoredPosition;
+        rect.sizeDelta = sizeDelta;
+
+        image.color = damageEdgeColor;
+        image.raycastTarget = false;
+        image.enabled = true;
+
+        edgeObject.SetActive(true);
+    }
+
     public void TakeDamage(float damage)
     {
         if (isGameOver || isGameClear || isInvincible) return;
 
-        // 重要：被弾した瞬間にBlink用Trailを完全に消す
+        PlayDamageFlash(damage);
+
         if (_movement != null)
         {
             _movement.ForceStopTrail();
@@ -139,6 +281,58 @@ public class PlayerHP : MonoBehaviour
         {
             StartCoroutine(LightDamageRoutine());
         }
+    }
+
+    private void PlayDamageFlash(float damage)
+    {
+        if (damageFlashCanvasGroup == null)
+        {
+            Debug.LogWarning("Damage Flash Canvas Group が未設定なので赤ふちを表示できません。");
+            return;
+        }
+
+        if (damageFlashCoroutine != null)
+        {
+            StopCoroutine(damageFlashCoroutine);
+        }
+
+        float targetAlpha = damage >= heavyDamageThreshold
+            ? heavyDamageFlashMaxAlpha
+            : damageFlashMaxAlpha;
+
+        damageFlashCoroutine = StartCoroutine(DamageFlashRoutine(targetAlpha));
+    }
+
+    private IEnumerator DamageFlashRoutine(float targetAlpha)
+    {
+        damageFlashCanvasGroup.alpha = 0f;
+
+        float timer = 0f;
+
+        while (timer < damageFlashFadeInTime)
+        {
+            timer += Time.deltaTime;
+            float t = damageFlashFadeInTime <= 0f ? 1f : timer / damageFlashFadeInTime;
+            damageFlashCanvasGroup.alpha = Mathf.Lerp(0f, targetAlpha, t);
+            yield return null;
+        }
+
+        damageFlashCanvasGroup.alpha = targetAlpha;
+
+        yield return new WaitForSeconds(damageFlashHoldTime);
+
+        timer = 0f;
+
+        while (timer < damageFlashFadeOutTime)
+        {
+            timer += Time.deltaTime;
+            float t = damageFlashFadeOutTime <= 0f ? 1f : timer / damageFlashFadeOutTime;
+            damageFlashCanvasGroup.alpha = Mathf.Lerp(targetAlpha, 0f, t);
+            yield return null;
+        }
+
+        damageFlashCanvasGroup.alpha = 0f;
+        damageFlashCoroutine = null;
     }
 
     private IEnumerator LightDamageRoutine()
@@ -314,6 +508,17 @@ public class PlayerHP : MonoBehaviour
             hpDelayCoroutine = null;
         }
 
+        if (damageFlashCoroutine != null)
+        {
+            StopCoroutine(damageFlashCoroutine);
+            damageFlashCoroutine = null;
+        }
+
+        if (damageFlashCanvasGroup != null)
+        {
+            damageFlashCanvasGroup.alpha = 0f;
+        }
+
         if (hpDelayFill != null)
         {
             hpDelayFill.fillAmount = currentHp / maxHp;
@@ -376,6 +581,11 @@ public class PlayerHP : MonoBehaviour
             _movement.ForceStopTrail();
         }
 
+        if (damageFlashCanvasGroup != null)
+        {
+            damageFlashCanvasGroup.alpha = 0f;
+        }
+
         if (hpText != null)
         {
             hpText.text = "HP: 0";
@@ -430,8 +640,8 @@ public class PlayerHP : MonoBehaviour
         }
 
         MonoBehaviour[] allScripts = Object.FindObjectsByType<MonoBehaviour>(
-                    FindObjectsInactive.Exclude
-                );
+            FindObjectsInactive.Exclude
+        );
 
         foreach (MonoBehaviour script in allScripts)
         {

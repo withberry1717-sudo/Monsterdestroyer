@@ -83,6 +83,13 @@ namespace Retro.ThirdPersonCharacter
             blinkRecoverTimer = 0f;
             blinkRecoverDelayTimer = 0f;
 
+            string savedBlinkKey = PlayerPrefs.GetString("BlinkKey", dashKey.ToString());
+
+            if (System.Enum.TryParse(savedBlinkKey, out KeyCode loadedKey))
+            {
+                dashKey = loadedKey;
+            }
+
             UpdateBlinkUI();
         }
 

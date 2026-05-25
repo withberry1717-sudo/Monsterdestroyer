@@ -70,6 +70,8 @@ namespace Retro.ThirdPersonCharacter
         private bool isDashing = false;
         private float dashAttackWindowTimer = 0f;
 
+        private Coroutine attackForwardMoveRoutine;
+
         public bool IsDashing => isDashing;
         public bool CanDashAttack => isDashing || dashAttackWindowTimer > 0f;
 
@@ -82,8 +84,6 @@ namespace Retro.ThirdPersonCharacter
 
             InputSystem.settings.maxEventBytesPerUpdate = 0;
 
-            // TrailRendererだけ拾う
-            // ParticleSystemは拾わない。chargeEffectを誤取得する原因になるため。
             _trailRenderer = GetComponentInChildren<TrailRenderer>();
 
             ForceStopTrail();
@@ -110,6 +110,7 @@ namespace Retro.ThirdPersonCharacter
         private void OnDisable()
         {
             ForceStopTrail();
+            StopAttackForwardMove();
         }
 
         public void ForceStopTrail()
@@ -126,6 +127,100 @@ namespace Retro.ThirdPersonCharacter
             }
 
             isDashing = false;
+        }
+
+        public void StartAttackForwardMove(
+            float distance,
+            float duration,
+            float accelerationTime,
+            float decelerationTime
+        )
+        {
+            if (_characterController == null) return;
+            if (distance <= 0f) return;
+            if (duration <= 0f) return;
+
+            if (attackForwardMoveRoutine != null)
+            {
+                StopCoroutine(attackForwardMoveRoutine);
+            }
+
+            attackForwardMoveRoutine = StartCoroutine(
+                AttackForwardMoveRoutine(distance, duration, accelerationTime, decelerationTime)
+            );
+        }
+
+        public void StopAttackForwardMove()
+        {
+            if (attackForwardMoveRoutine != null)
+            {
+                StopCoroutine(attackForwardMoveRoutine);
+                attackForwardMoveRoutine = null;
+            }
+        }
+
+        private IEnumerator AttackForwardMoveRoutine(
+            float distance,
+            float duration,
+            float accelerationTime,
+            float decelerationTime
+        )
+        {
+            float timer = 0f;
+            float movedDistance = 0f;
+
+            Vector3 forwardDirection = transform.forward;
+            forwardDirection.y = 0f;
+            forwardDirection.Normalize();
+
+            float baseSpeed = distance / duration;
+
+            while (timer < duration && movedDistance < distance)
+            {
+                if (_characterController == null)
+                {
+                    yield break;
+                }
+
+                float deltaTime = Time.deltaTime;
+                timer += deltaTime;
+
+                float accelMultiplier = 1f;
+                float decelMultiplier = 1f;
+
+                if (accelerationTime > 0f)
+                {
+                    accelMultiplier = Mathf.Clamp01(timer / accelerationTime);
+                    accelMultiplier = Mathf.SmoothStep(0f, 1f, accelMultiplier);
+                }
+
+                if (decelerationTime > 0f)
+                {
+                    float timeUntilEnd = duration - timer;
+                    decelMultiplier = Mathf.Clamp01(timeUntilEnd / decelerationTime);
+                    decelMultiplier = Mathf.SmoothStep(0f, 1f, decelMultiplier);
+                }
+
+                float inertiaMultiplier = Mathf.Min(accelMultiplier, decelMultiplier);
+                float moveAmount = baseSpeed * inertiaMultiplier * deltaTime;
+
+                float remainingDistance = distance - movedDistance;
+
+                if (moveAmount > remainingDistance)
+                {
+                    moveAmount = remainingDistance;
+                }
+
+                Vector3 move = forwardDirection * moveAmount;
+
+                _characterController.Move(move);
+
+                movedDistance += moveAmount;
+
+                yield return null;
+            }
+
+            attackForwardMoveRoutine = null;
         }
 
         private void Update()
@@ -279,8 +374,6 @@ namespace Retro.ThirdPersonCharacter
                 _trailRenderer.enabled = true;
             }
 
-            // 回避専用Particleだけ再生する
-            // chargeEffect / chargeReadyEffect はCombat側が管理する
             if (dashParticleSystem != null)
             {
                 dashParticleSystem.Play();

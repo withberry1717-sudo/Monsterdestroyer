@@ -28,6 +28,33 @@ namespace Retro.ThirdPersonCharacter
 
         private bool chargeReadyEffectPlayed = false;
 
+        [Header("Attack Forward Movement")]
+        [SerializeField] private bool useAttackForwardMove = true;
+
+        [Tooltip("弱攻撃1段目で前に進む距離")]
+        [SerializeField] private float light1ForwardDistance = 0.35f;
+
+        [Tooltip("弱攻撃2段目で前に進む距離")]
+        [SerializeField] private float light2ForwardDistance = 0.45f;
+
+        [Tooltip("ダッシュ攻撃で前に進む距離")]
+        [SerializeField] private float dashAttackForwardDistance = 0.35f;
+
+        [Tooltip("強攻撃単押しで前に進む距離")]
+        [SerializeField] private float quickHeavyForwardDistance = 0.65f;
+
+        [Tooltip("溜め強攻撃で前に進む距離")]
+        [SerializeField] private float chargedHeavyForwardDistance = 0.9f;
+
+        [Tooltip("前進にかける時間。短いほどシュッと進む")]
+        [SerializeField] private float attackForwardDuration = 0.22f;
+
+        [Tooltip("前進し始めの慣性。大きいほどゆっくり加速")]
+        [SerializeField] private float attackForwardAccelerationTime = 0.05f;
+
+        [Tooltip("前進終わりの慣性。大きいほどぬるっと止まる")]
+        [SerializeField] private float attackForwardDecelerationTime = 0.10f;
+
         [Header("Light Attack")]
         [SerializeField] private float light1Start = 0.12f;
         [SerializeField] private float light1End = 0.36f;
@@ -293,6 +320,9 @@ namespace Retro.ThirdPersonCharacter
             {
                 _movement.isAttacking = true;
                 _movement.canMoveWhileAttacking = true;
+
+                float forwardDistance = isSecondLight ? light2ForwardDistance : light1ForwardDistance;
+                StartAttackForwardMove(forwardDistance);
             }
 
             Debug.Log("弱攻撃 " + lightComboStep + "段目");
@@ -322,6 +352,7 @@ namespace Retro.ThirdPersonCharacter
             {
                 _movement.isAttacking = true;
                 _movement.canMoveWhileAttacking = false;
+                StartAttackForwardMove(dashAttackForwardDistance);
             }
 
             Debug.Log("ダッシュ攻撃");
@@ -353,6 +384,7 @@ namespace Retro.ThirdPersonCharacter
             {
                 _movement.isAttacking = true;
                 _movement.canMoveWhileAttacking = false;
+                StartAttackForwardMove(quickHeavyForwardDistance);
             }
 
             PlayAttackAnimation(abilityStateName, quickHeavyAnimationStartNormalized);
@@ -382,6 +414,7 @@ namespace Retro.ThirdPersonCharacter
             {
                 _movement.isAttacking = true;
                 _movement.canMoveWhileAttacking = false;
+                StartAttackForwardMove(chargedHeavyForwardDistance);
             }
 
             float chargeRate = Mathf.Clamp01(chargeTime / maxChargeTime);
@@ -399,6 +432,19 @@ namespace Retro.ThirdPersonCharacter
                     1f,
                     false
                 )
+            );
+        }
+
+        private void StartAttackForwardMove(float distance)
+        {
+            if (!useAttackForwardMove) return;
+            if (_movement == null) return;
+
+            _movement.StartAttackForwardMove(
+                distance,
+                attackForwardDuration,
+                attackForwardAccelerationTime,
+                attackForwardDecelerationTime
             );
         }
 
@@ -484,6 +530,7 @@ namespace Retro.ThirdPersonCharacter
             {
                 _movement.isAttacking = false;
                 _movement.canMoveWhileAttacking = false;
+                _movement.StopAttackForwardMove();
             }
 
             if (daggerHitbox != null)
@@ -554,12 +601,12 @@ namespace Retro.ThirdPersonCharacter
         {
             if (chargeEffect != null)
             {
-                chargeEffect.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                chargeEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             }
 
             if (chargeReadyEffect != null)
             {
-                chargeReadyEffect.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                chargeReadyEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             }
 
             chargeReadyEffectPlayed = false;

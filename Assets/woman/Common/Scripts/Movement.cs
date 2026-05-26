@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using NaughtyCharacter;
 
 namespace Retro.ThirdPersonCharacter
 {
@@ -63,6 +64,12 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private Image blinkSlot1Fill;
         [SerializeField] private Image blinkSlot2Fill;
 
+        [Header("Dragon Stagger")]
+        [SerializeField] private bool canBeStaggeredByDragon = true;
+        [SerializeField] private float staggerStopPower = 0.15f;
+        [SerializeField] private string staggerAnimatorTrigger = "BigHit";
+        [SerializeField] private bool stopAttackWhenStaggered = true;
+
         private int currentBlinkCharges;
         private float blinkRecoverTimer = 0f;
         private float blinkRecoverDelayTimer = 0f;
@@ -70,10 +77,13 @@ namespace Retro.ThirdPersonCharacter
         private bool isDashing = false;
         private float dashAttackWindowTimer = 0f;
 
+        private bool isDragonStaggered = false;
+        private Coroutine dragonStaggerRoutine;
         private Coroutine attackForwardMoveRoutine;
 
         public bool IsDashing => isDashing;
         public bool CanDashAttack => isDashing || dashAttackWindowTimer > 0f;
+        public bool IsDragonStaggered => isDragonStaggered;
 
         private void Start()
         {
@@ -111,6 +121,14 @@ namespace Retro.ThirdPersonCharacter
         {
             ForceStopTrail();
             StopAttackForwardMove();
+
+            if (dragonStaggerRoutine != null)
+            {
+                StopCoroutine(dragonStaggerRoutine);
+                dragonStaggerRoutine = null;
+            }
+
+            isDragonStaggered = false;
         }
 
         public void ForceStopTrail()
@@ -139,6 +157,7 @@ namespace Retro.ThirdPersonCharacter
             if (_characterController == null) return;
             if (distance <= 0f) return;
             if (duration <= 0f) return;
+            if (isDragonStaggered) return;
 
             if (attackForwardMoveRoutine != null)
             {
@@ -178,6 +197,11 @@ namespace Retro.ThirdPersonCharacter
             while (timer < duration && movedDistance < distance)
             {
                 if (_characterController == null)
+                {
+                    yield break;
+                }
+
+                if (isDragonStaggered)
                 {
                     yield break;
                 }
@@ -234,6 +258,11 @@ namespace Retro.ThirdPersonCharacter
 
             RecoverBlinkCharge();
 
+            if (isDragonStaggered)
+            {
+                return;
+            }
+
             if (Input.GetKeyDown(dashKey) && CanBlink())
             {
                 Vector3 dashDir = transform.forward;
@@ -255,7 +284,7 @@ namespace Retro.ThirdPersonCharacter
 
         private bool CanBlink()
         {
-            return !isDashing && !isAttacking && currentBlinkCharges > 0;
+            return !isDashing && !isAttacking && !isDragonStaggered && currentBlinkCharges > 0;
         }
 
         private void UseBlink()
@@ -383,15 +412,20 @@ namespace Retro.ThirdPersonCharacter
             _animator.SetFloat("InputY", 0);
             _animator.SetBool("IsInAir", true);
 
-            if (CameraShake.Instance != null)
+            if (SafePlayerCamera.Instance != null)
             {
-                CameraShake.Instance.Shake(0.1f, 0.5f);
+                SafePlayerCamera.Instance.Shake(0.1f, 0.5f);
             }
 
             float startTime = Time.time;
 
             while (Time.time < startTime + dashTime)
             {
+                if (isDragonStaggered)
+                {
+                    break;
+                }
+
                 _characterController.Move(dashDir * dashSpeed * Time.deltaTime);
                 yield return null;
             }
@@ -400,11 +434,23 @@ namespace Retro.ThirdPersonCharacter
 
             _animator.SetBool("IsInAir", false);
 
-            dashAttackWindowTimer = dashAttackInputWindow;
+            if (!isDragonStaggered)
+            {
+                dashAttackWindowTimer = dashAttackInputWindow;
+            }
+            else
+            {
+                dashAttackWindowTimer = 0f;
+            }
         }
 
         private void Move()
         {
+            if (isDragonStaggered)
+            {
+                return;
+            }
+
             var x = _playerInput.MovementInput.x;
             var y = _playerInput.MovementInput.y;
 
@@ -523,6 +569,55 @@ namespace Retro.ThirdPersonCharacter
             }
 
             _animator.SetBool("IsInAir", !grounded);
+        }
+
+        public void DragonStagger(float time)
+        {
+            if (!canBeStaggeredByDragon) return;
+            if (time <= 0f) return;
+
+            if (dragonStaggerRoutine != null)
+            {
+                StopCoroutine(dragonStaggerRoutine);
+            }
+
+            dragonStaggerRoutine = StartCoroutine(DragonStaggerRoutine(time));
+        }
+
+        private IEnumerator DragonStaggerRoutine(float time)
+        {
+            isDragonStaggered = true;
+
+            ForceStopTrail();
+            StopAttackForwardMove();
+
+            if (stopAttackWhenStaggered)
+            {
+                isAttacking = false;
+            }
+
+            isDashing = false;
+            dashAttackWindowTimer = 0f;
+
+            moveDirection.x *= staggerStopPower;
+            moveDirection.z *= staggerStopPower;
+
+            if (_animator != null)
+            {
+                _animator.SetFloat("InputX", 0f);
+                _animator.SetFloat("InputY", 0f);
+                _animator.SetBool("IsInAir", false);
+
+                if (!string.IsNullOrEmpty(staggerAnimatorTrigger))
+                {
+                    _animator.SetTrigger(staggerAnimatorTrigger);
+                }
+            }
+
+            yield return new WaitForSeconds(time);
+
+            isDragonStaggered = false;
+            dragonStaggerRoutine = null;
         }
 
         private void StopMovementOnAttack()

@@ -972,6 +972,109 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 67639262}
   m_CullTransparentMesh: 1
+--- !u!1 &78498548 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1014250286646108974, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+  m_PrefabInstance: {fileID: 2907610694389043460}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &78498549 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+  m_PrefabInstance: {fileID: 2907610694389043460}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 78498548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 091636b6d46cff54c9cf63826b8b13f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonCore
+--- !u!114 &78498551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 78498548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b4c1d000227ad3488418819c764885e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonAI
+  animator: {fileID: 356980420}
+  dragonHP: {fileID: 78498549}
+  player: {fileID: 426628364}
+  idleAnim: Idle_Battle
+  walkAnim: walk
+  runAnim: Running
+  roarAnim: Roar
+  breathAnim: Breath
+  leftSwipeAnim: Arm Swipe_Left
+  rightSwipeAnim: Arm Swipe_Right
+  bigHitAnim: Big hit
+  deathAnim: Death
+  downAnim: Down
+  stepAnim: Step_L_R_B
+  tailSlamAnim: Tail Slam
+  tailSwipeAnim: Tail Swipe
+  crossFadeTime: 0.12
+  animationFPS: 30
+  closeRange: 5
+  middleRange: 12
+  farRange: 20
+  minActionInterval: 0.4
+  maxActionInterval: 1
+  turnSpeed: 8
+  alwaysFacePlayerWhileIdle: 1
+  walkSpeed: 2
+  runSpeed: 7
+  chargeSpeed: 12
+  chargeDuration: 1.2
+  chargeStopDistance: 2.5
+  stepDistance: 4
+  stepDuration: 0.45
+  swipeForwardDistance: 1.2
+  swipeForwardTime: 0.18
+  swipeReturnTime: 0.25
+  breathHitbox: {fileID: 0}
+  breathStartFrame: 30
+  breathEndFrame: 120
+  breathDuration: 4.2
+  leftArmHitbox: {fileID: 0}
+  rightArmHitbox: {fileID: 0}
+  swipeHitStartFrame: 35
+  swipeHitEndFrame: 55
+  swipeAnimDuration: 2
+  tailHitbox: {fileID: 0}
+  tailSlamDuration: 4.8
+  tailSlamAimStartFrame: 5
+  tailSlamAimEndFrame: 31
+  tailSlamHitStartFrame: 73
+  tailSlamHitEndFrame: 82
+  tailSlamReturnStartFrame: 105
+  tailSlamReturnEndFrame: 138
+  tailSlamAngleOffset: -15
+  tailSwipeDuration: 4.6
+  tailSwipeAimStartFrame: 8
+  tailSwipeAimEndFrame: 31
+  tailSwipeSlamHitStartFrame: 77
+  tailSwipeSlamHitEndFrame: 87
+  tailSwipeSecondHitStartFrame: 104
+  tailSwipeSecondHitEndFrame: 133
+  tailSwipeLeftOffset: -35
+  tailSwipeRightOffset: 35
+  chooseTailSwipeDirectionByPlayerPosition: 1
+  roarDuration: 2.8
+  roarStaggerRadius: 15
+  roarStaggerTime: 1
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  roarCameraShakeDuration: 0.5
+  roarCameraShakeStrength: 0.15
+  downDuration: 9.11
+  isPhase2: 0
+  phase2SpeedMultiplier: 1.2
+  phase2ActionIntervalMultiplier: 0.7
 --- !u!1 &102027703
 GameObject:
   m_ObjectHideFlags: 0
@@ -19396,6 +19499,10 @@ MonoBehaviour:
   followSmoothTime: 0.04
   minPitch: -25
   maxPitch: 55
+  enableCameraShake: 1
+  shakeTarget: {fileID: 0}
+  defaultShakeDuration: 0.25
+  defaultShakeStrength: 0.15
 --- !u!1 &1274667855
 GameObject:
   m_ObjectHideFlags: 0
@@ -29510,6 +29617,9 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1014250286646108974, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 78498551}
     - targetCorrespondingSourceObject: {fileID: 6141418602240484905, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 356980420}

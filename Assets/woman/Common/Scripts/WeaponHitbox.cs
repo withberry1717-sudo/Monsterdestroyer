@@ -8,26 +8,33 @@ public class WeaponHitbox : MonoBehaviour
     private float currentDamageMultiplier = 1f;
 
     [Header("攻撃設定")]
+    [Tooltip("基本ダメージ")]
     public float damage = 10f;
 
     [Header("ダメージ乱数")]
+    [Tooltip("ダメージのブレ幅。0.15なら±15%でダメージが変わります。")]
     [Range(0f, 1f)]
     public float damageVariation = 0.15f;
 
     [Header("演出設定")]
+    [Tooltip("攻撃ヒット時に一瞬止める時間")]
     public float hitStopDuration = 0.1f;
 
     [Header("サイズ自由調整（アニメーション対策）")]
+    [Tooltip("オンにすると毎フレーム武器判定のScaleを固定します。")]
     public bool fixScale = true;
+
+    [Tooltip("武器判定の固定Scale")]
     public Vector3 weaponScale = new Vector3(1.5f, 1.5f, 1.5f);
 
-    void Start()
+    private void Start()
     {
         _collider = GetComponent<Collider>();
 
         if (_collider != null)
         {
             _collider.enabled = false;
+            _collider.isTrigger = true;
         }
     }
 
@@ -59,7 +66,20 @@ public class WeaponHitbox : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (_hasHit || !other.CompareTag("Enemy")) return;
+        if (_hasHit) return;
+        if (!other.CompareTag("Enemy")) return;
+
+        DragonHurtbox dragonHurtbox = other.GetComponent<DragonHurtbox>();
+
+        if (dragonHurtbox == null)
+        {
+            dragonHurtbox = other.GetComponentInParent<DragonHurtbox>();
+        }
+
+        if (dragonHurtbox == null)
+        {
+            return;
+        }
 
         _hasHit = true;
 
@@ -70,29 +90,17 @@ public class WeaponHitbox : MonoBehaviour
 
         float finalDamage = damage * currentDamageMultiplier * randomMultiplier;
 
-        Debug.Log(gameObject.name + " が命中！ Damage: " + finalDamage);
+        Debug.Log($"{gameObject.name} が命中！ Damage: {finalDamage}");
 
-        DragonHurtbox dragonHurtbox = other.GetComponent<DragonHurtbox>();
-
-        if (dragonHurtbox != null)
-        {
-            dragonHurtbox.OnHit(finalDamage);
-        }
-        else
-        {
-            EnemyHP enemyHP = other.GetComponent<EnemyHP>();
-
-            if (enemyHP != null)
-            {
-                enemyHP.TakeDamage(finalDamage);
-            }
-        }
+        dragonHurtbox.OnHit(finalDamage);
 
         StartCoroutine(DoHitStop(hitStopDuration));
     }
 
     private IEnumerator DoHitStop(float duration)
     {
+        if (duration <= 0f) yield break;
+
         float previousTimeScale = Time.timeScale;
 
         Time.timeScale = 0.02f;
@@ -104,7 +112,7 @@ public class WeaponHitbox : MonoBehaviour
         }
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
         if (fixScale)
         {

@@ -15,24 +15,18 @@ public class DragonHurtbox : MonoBehaviour
     public bool isCrystalPart = false;
 
     [Header("Hit VFX")]
-    [Tooltip("本体にダメージが入った時のエフェクト")]
     public ParticleSystem bodyHitParticle;
-
-    [Tooltip("クリスタルにダメージが入った時のエフェクト")]
     public ParticleSystem crystalHitParticle;
 
     [Header("Hit SFX")]
-    [Tooltip("AudioSource。未設定なら自分か親から探す")]
     public AudioSource audioSource;
-
-    [Tooltip("本体にダメージが入った時のSE")]
     public AudioClip bodyHitSfx;
-
-    [Tooltip("クリスタルにダメージが入った時のSE")]
     public AudioClip crystalHitSfx;
 
     [Range(0f, 1f)]
     public float hitSfxVolume = 1f;
+
+    private DragonDamageTextSettings damageTextSettings;
 
     private void Awake()
     {
@@ -50,9 +44,16 @@ public class DragonHurtbox : MonoBehaviour
         {
             audioSource = GetComponentInParent<AudioSource>();
         }
+
+        damageTextSettings = GetComponentInParent<DragonDamageTextSettings>();
     }
 
     public void OnHit(float baseDamage)
+    {
+        OnHit(baseDamage, transform.position);
+    }
+
+    public void OnHit(float baseDamage, Vector3 hitPosition)
     {
         float finalDamage = baseDamage * damageMultiplier;
 
@@ -61,6 +62,8 @@ public class DragonHurtbox : MonoBehaviour
             Debug.LogWarning($"{name}: DragonHPがセットされていません");
             return;
         }
+
+        ShowDamageText(finalDamage, hitPosition);
 
         if (isCrystalPart)
         {
@@ -71,6 +74,16 @@ public class DragonHurtbox : MonoBehaviour
 
         dragonHP.TakeDamage(finalDamage);
         PlayBodyHitFeedback();
+    }
+
+    private void ShowDamageText(float damage, Vector3 hitPosition)
+    {
+        if (damageTextSettings == null) return;
+        if (damageTextSettings.damageTextSpawner == null) return;
+
+        Vector3 spawnPosition = hitPosition + Vector3.up * damageTextSettings.heightOffset;
+
+        damageTextSettings.damageTextSpawner.SpawnDamageText(damage, spawnPosition);
     }
 
     private void PlayBodyHitFeedback()

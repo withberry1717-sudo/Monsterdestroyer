@@ -2,10 +2,10 @@ using UnityEngine;
 
 public class DragonDamageTextSettings : MonoBehaviour
 {
-    [Header("Damage Text Spawner")]
-    [Tooltip("Scene上にあるDamageTextSpawnerを入れてください。Project内のPrefabではなく、Hierarchyに置いたものを入れます。")]
-    public GameObject damageTextSpawner;
+    [Header("Damage Text")]
+    [Tooltip("Scene上にあるDamageTextSpawnerを入れる")]
+    public DamageTextSpawner damageTextSpawner;
 
-    [Tooltip("ダメージ数字を出す高さ補正です。大きくすると数字が上に出ます。")]
-    public float defaultHeightOffset = 0.8f;
+    [Tooltip("ダメージ数字を出す高さ。大きくすると上に出ます")]
+    public float heightOffset = 1.0f;
 }

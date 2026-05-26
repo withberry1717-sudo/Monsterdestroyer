@@ -2690,13 +2690,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b4c1d000227ad3488418819c764885e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonAI
-  motion: {fileID: 0}
-  phase: {fileID: 0}
+  motion: {fileID: 356980424}
+  phase: {fileID: 356980423}
   dragonHP: {fileID: 78498549}
-  effectPlayer: {fileID: 0}
+  effectPlayer: {fileID: 356980425}
   player: {fileID: 426628364}
-  introIdleBeforeRoarTime: 3
-  closeRange: 7
+  enableApproachAction: 1
+  enableSwipeCounterAction: 1
+  enableTailSlamAction: 1
+  enableTailSwipeAction: 1
+  enableBackStepTailAction: 1
+  enableBackStepBreathAction: 1
+  enableWideBreathAction: 1
+  enableBeamBreathAction: 1
+  enableChargeAction: 1
+  enableDoubleChargeAction: 1
+  introIdleBeforeRoarTime: 0
+  closeRange: 6
   middleRange: 15
   farRange: 25
   approachStopDistance: 6
@@ -2704,49 +2714,63 @@ MonoBehaviour:
   runChaseSpeed: 6.2
   switchToRunDistance: 8
   runChaseStopDistance: 5
-  approachBeforeNonBreathAttack: 1
-  meleeAttackStartDistance: 4
-  meleeApproachSpeed: 3
-  meleeApproachTurnSpeed: 6
-  meleeApproachTimeout: 3
-  minActionInterval: 0.4
+  minActionInterval: 0.6
   maxActionInterval: 1
-  useOpeningIdle: 1
+  useOpeningIdle: 0
   openingIdleChance: 0.18
   openingIdleMinTime: 1
   openingIdleMaxTime: 2.2
   lookAtPlayerDuringOpening: 1
-  closeSwipeWeight: 4
   closeTailSlamWeight: 2
   closeTailSwipeWeight: 2
-  closeSideStepSwipeWeight: 2
-  closeBackStepBreathWeight: 2
   closeChargeWeight: 1
-  middleSwipeWeight: 3
-  middleBreathWeight: 2
-  middleTailWeight: 2
-  middleStepWeight: 2
-  middleChargeWeight: 1
-  farBreathWeight: 3
-  farApproachWeight: 3
-  farChargeWeight: 1
+  closeBackStepTailSlamWeight: 1
+  closeBackStepTailSwipeWeight: 1
+  closeBackStepWideBreathWeight: 0
+  closeBackStepBeamBreathWeight: 1
+  middleTailSlamWeight: 2
+  middleTailSwipeWeight: 2
+  middleWideBreathWeight: 0
+  middleBeamBreathWeight: 2
+  middleChargeWeight: 3
+  farApproachWeight: 5
+  farWideBreathWeight: 2
+  farBeamBreathWeight: 3
+  farChargeWeight: 2
+  swipeCounterReachDistance: 4.2
+  swipeCounterChance: 0.35
+  swipeCounterFaceTime: 0.12
+  swipeForwardDistance: 1
+  swipeLungeStartFrame: 2
+  swipeLungeEndFrame: 15
+  swipeLungeTurnSpeed: 7
+  swipeHitStartFrame: 35
+  swipeHitEndFrame: 55
+  swipeAnimDuration: 1.5
+  leftArmHitbox: {fileID: 0}
+  rightArmHitbox: {fileID: 0}
+  swipeParticle: {fileID: 0}
+  swipeSfx: {fileID: 0}
+  randomBackStepMinCount: 1
+  randomBackStepMaxCount: 3
+  backStepDistance: 3
+  backStepDuration: 0.38
+  backStepInterval: 0.08
+  closeSpecialBackStepCount: 2
+  breathBackStepIfCloserThan: 10
   chargeHitbox: {fileID: 0}
-  useChargeAsAttack: 1
   chargeCooldown: 10
   chargeSpeed: 24
   chargeOvershootDistance: 4
   chargeMinDuration: 0.75
   chargeMaxDuration: 1.8
-  chargeMinStartDistance: 8
+  chargeBackStepIfCloserThan: 9
   chargeTellTime: 3
   chargeTellAnimationSpeed: 0.18
   chargeReadyPauseTime: 0.15
   chargeRecoveryTime: 0.5
   doubleChargeInterval: 0.55
   doubleChargeRecovery: 1.4
-  closeChargeBackStepDistance: 5
-  closeChargeBackStepDuration: 0.45
-  closeChargeBackStepCount: 2
   chargeAccelerationRatio: 0.18
   chargeDecelerationRatio: 0.22
   chargeHoldParticle: {fileID: 585711684}
@@ -2756,63 +2780,47 @@ MonoBehaviour:
   chargeReadySfx: {fileID: 0}
   chargeRunSfx: {fileID: 0}
   chargeEndSfx: {fileID: 0}
-  sideStepDistance: 2
-  backStepDistance: 3
-  stepDuration: 0.45
-  afterBackStepBreathChance: 0.85
-  afterBackStepChargeChance: 0.55
-  swipeForwardDistance: 0.5
-  swipeLungeStartFrame: 18
-  swipeLungeEndFrame: 48
-  swipeReturnTime: 0.18
-  swipeReturnToStartPosition: 1
-  swipeLungeTowardPlayer: 1
-  swipeLungeTurnSpeed: 7
-  leftArmHitbox: {fileID: 0}
-  rightArmHitbox: {fileID: 0}
-  swipeHitStartFrame: 35
-  swipeHitEndFrame: 55
-  swipeAnimDuration: 2
-  swipeParticle: {fileID: 0}
-  swipeSfx: {fileID: 0}
   breathTurnTime: 0.35
   breathDuration: 4.2
   breathAnimatorSpeed: 1
-  wideBreathHitbox: {fileID: 0}
+  wideBreathHitbox: {fileID: 2134306641}
+  wideBreathStartFrame: 35
+  wideBreathEndFrame: 120
+  wideBreathRecovery: 0.8
   wideBreathChargeParticle: {fileID: 0}
   wideBreathFireParticle: {fileID: 0}
   wideBreathChargeSfx: {fileID: 0}
   wideBreathFireSfx: {fileID: 0}
-  wideBreathStartFrame: 35
-  wideBreathEndFrame: 120
-  wideBreathRecovery: 0.8
-  beamBreathHitbox: {fileID: 0}
-  beamBreathPivot: {fileID: 0}
-  beamBreathAimer: {fileID: 0}
-  beamBreathChargeParticle: {fileID: 0}
-  beamBreathFireParticle: {fileID: 0}
-  beamBreathChargeSfx: {fileID: 0}
-  beamBreathFireSfx: {fileID: 0}
+  beamBreathHitbox: {fileID: 370577767}
+  beamBreathPivot: {fileID: 464567946}
+  beamBreathAimer: {fileID: 464567947}
   beamBreathStartFrame: 45
   beamBreathEndFrame: 135
   beamTrackStartFrame: 40
   beamTrackEndFrame: 120
   beamBreathRecovery: 1
+  beamBreathChargeParticle: {fileID: 0}
+  beamBreathFireParticle: {fileID: 0}
+  beamBreathChargeSfx: {fileID: 0}
+  beamBreathFireSfx: {fileID: 0}
   tailHitbox: {fileID: 0}
+  tailSlamReachDistance: 8.5
+  tailSwipeReachDistance: 8.5
   tailAttacksTurnTailToPlayer: 1
   tailFacePlayerOffsetY: 49
   tailSlamAttackOffsetY: 0
-  tailSwipeLeftAttackOffsetY: 15
-  tailSwipeRightAttackOffsetY: 35
-  tailTrackingTurnSpeed: 12
+  tailSwipeFixedAttackOffsetY: -10
+  tailTrackingTurnSpeed: 7
   tailSlamDuration: 4.8
   tailSlamAimStartFrame: 5
-  tailSlamTrackUntilFrame: 73
+  tailSlamTrackUntilFrame: 76
   tailSlamHitStartFrame: 73
   tailSlamHitEndFrame: 82
   tailSlamReturnStartFrame: 105
   tailSlamReturnEndFrame: 138
-  tailSlamAngleOffset: -15
+  tailSlamAngleOffset: 0
+  tailSlamParticle: {fileID: 0}
+  tailSlamSfx: {fileID: 0}
   tailSwipeDuration: 4.6
   tailSwipeAimStartFrame: 8
   tailSwipeTrackUntilFrame: 77
@@ -2820,17 +2828,18 @@ MonoBehaviour:
   tailSwipeSlamHitEndFrame: 87
   tailSwipeSecondHitStartFrame: 104
   tailSwipeSecondHitEndFrame: 133
-  chooseTailSwipeDirectionByPlayerPosition: 1
-  tailSlamParticle: {fileID: 0}
-  tailSwipeParticle: {fileID: 0}
-  tailSlamSfx: {fileID: 0}
+  tailSwipeSecondHitExtraCounterClockwiseAngle: -310
+  tailSwipeSecondHitTurnSpeed: 900
+  tailSwipeSecondTurnStartFrame: 100
+  tailSwipeSecondTurnEndFrame: 135
+  tailSwipeParticle: {fileID: 585711684}
   tailSwipeSfx: {fileID: 0}
   roarDuration: 2.8
   roarStaggerRadius: 15
   roarStaggerTime: 1
   playerLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
   roarParticle: {fileID: 0}
   roarSfx: {fileID: 0}
   downDuration: 9.11
@@ -2860,7 +2869,7 @@ MonoBehaviour:
   rapidComboChance: 0.3
   rapidComboInterval: 0.15
   rapidComboRecovery: 1.2
-  phase2OpeningChance: 0.16
+  phase2OpeningChance: 0
   phase2OpeningMinTime: 0.9
   phase2OpeningMaxTime: 1.8
 --- !u!114 &356980424
@@ -2898,6 +2907,44 @@ MonoBehaviour:
   tailSwipeAnim: Tail Swipe
   idleTurnSpeed: 8
   actionTurnSpeed: 6
+--- !u!114 &356980425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 356980418}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a013b0dd9f5e524b98c8a5438dd0bb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonAnimationEffectPlayer
+  audioSource: {fileID: 0}
+  defaultVolume: 1
+  roarSfx: {fileID: 0}
+  downSfx: {fileID: 0}
+  deathSfx: {fileID: 0}
+  stepSfx: {fileID: 0}
+  swipeSfx: {fileID: 0}
+  tailSlamSfx: {fileID: 0}
+  tailSwipeSfx: {fileID: 0}
+  breathChargeSfx: {fileID: 0}
+  breathFireSfx: {fileID: 0}
+  chargeStartSfx: {fileID: 0}
+  chargeRunSfx: {fileID: 0}
+  chargeEndSfx: {fileID: 0}
+  roarParticle: {fileID: 0}
+  downParticle: {fileID: 0}
+  deathParticle: {fileID: 0}
+  stepParticle: {fileID: 0}
+  swipeParticle: {fileID: 0}
+  tailSlamParticle: {fileID: 0}
+  tailSwipeParticle: {fileID: 0}
+  breathChargeParticle: {fileID: 0}
+  breathFireParticle: {fileID: 0}
+  chargeStartParticle: {fileID: 0}
+  chargeRunParticle: {fileID: 0}
+  chargeEndParticle: {fileID: 0}
 --- !u!1 &366261100
 GameObject:
   m_ObjectHideFlags: 0
@@ -2940,6 +2987,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 370577766}
+  - component: {fileID: 370577767}
   m_Layer: 0
   m_Name: BeamBreathHitbox
   m_TagString: Untagged
@@ -2962,6 +3010,32 @@ Transform:
   m_Children: []
   m_Father: {fileID: 464567946}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &370577767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 370577765}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e39226cd7178e6d47bf014ce32086d39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonAttackHitbox
+  damage: 20
+  knockbackPower: 5
+  staggerTime: 0.5
+  targetLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  hitOnlyOncePerActivation: 1
+  activationParticle: {fileID: 0}
+  loopParticle: {fileID: 0}
+  activationSfx: {fileID: 0}
+  hitParticlePrefab: {fileID: 0}
+  hitSfx: {fileID: 0}
+  audioSource: {fileID: 0}
+  sfxVolume: 1
 --- !u!1 &393661992
 GameObject:
   m_ObjectHideFlags: 0
@@ -3804,6 +3878,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 464567946}
+  - component: {fileID: 464567947}
   m_Layer: 0
   m_Name: BeamBreathPivot
   m_TagString: Untagged
@@ -3828,6 +3903,24 @@ Transform:
   - {fileID: 370577766}
   m_Father: {fileID: 356980421}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &464567947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 464567945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a8544e56c5d33648af99b2c46286d42, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonBeamBreathAimer
+  player: {fileID: 0}
+  predictTime: 0.45
+  aimAheadDistance: 1.2
+  aimHeightOffset: 1
+  trackingTurnSpeed: 5.5
+  beamForwardOffsetY: 0
 --- !u!114 &508818314 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6869523744398176947, guid: 80844b2319340044da27db99208a9eac, type: 3}
@@ -8845,8 +8938,7 @@ Transform:
   m_LocalPosition: {x: 0.001, y: 0.105, z: 0.046}
   m_LocalScale: {x: 0.500194, y: 0.57105, z: 0.53956944}
   m_ConstrainProportionsScale: 1
-  m_Children:
-  - {fileID: 1358320790}
+  m_Children: []
   m_Father: {fileID: 356980421}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &591276157
@@ -29867,12 +29959,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1358320787}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3, y: 3, z: 3}
+  m_LocalRotation: {x: -0, y: -0.99084455, z: -0, w: 0.13500796}
+  m_LocalPosition: {x: 0.0009998247, y: 0.104999974, z: 0.046000015}
+  m_LocalScale: {x: 1.500582, y: 1.71315, z: 1.6187081}
   m_ConstrainProportionsScale: 1
   m_Children: []
-  m_Father: {fileID: 585711686}
+  m_Father: {fileID: 356980421}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1371140000
 GameObject:
@@ -39649,6 +39741,9 @@ PrefabInstance:
       insertIndex: 0
       addedObject: {fileID: 585711686}
     - targetCorrespondingSourceObject: {fileID: 6805329374342380691, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+      insertIndex: 1
+      addedObject: {fileID: 1358320790}
+    - targetCorrespondingSourceObject: {fileID: 6805329374342380691, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2134306640}
     - targetCorrespondingSourceObject: {fileID: 6805329374342380691, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
@@ -39667,6 +39762,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6141418602240484905, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 356980422}
+    - targetCorrespondingSourceObject: {fileID: 6141418602240484905, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 356980425}
   m_SourcePrefab: {fileID: 100100000, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
 --- !u!1001 &6883584083847837337
 PrefabInstance:

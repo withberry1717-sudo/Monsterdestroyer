@@ -4,56 +4,96 @@ using System.Collections.Generic;
 
 public class DragonAI : MonoBehaviour
 {
-    private enum DragonState { Intro, Idle, Acting, Opening, Down, Dead }
+    private enum DragonState
+    {
+        Intro,
+        Idle,
+        Acting,
+        Opening,
+        Down,
+        Dead
+    }
+
     private enum DragonAction
     {
+        None,
         Opening,
+        Approach,
+        SwipeCounter,
+        TailSlam,
+        TailSwipe,
+        BackStepTailSlam,
+        BackStepTailSwipe,
+        BackStepWideBreath,
+        BackStepBeamBreath,
         WideBreath,
         BeamBreath,
         Charge,
-        DoubleCharge,
-        Swipe,
-        TailSlam,
-        TailSwipe,
-        BackStepBreath,
-        SideStepSwipe,
-        SideStepTailSlam,
-        SideStepBreath,
-        RapidCombo,
-        Approach
+        DoubleCharge
     }
 
     [Header("参照設定")]
-    [Tooltip("Dragon_AllObjectsについているDragonDragonMotionを入れてください。移動、回転、アニメーション再生を担当します。")]
+    [Tooltip("Dragon_AllObjectsに付いているDragonDragonMotionを入れてください。移動、回転、アニメーション再生を担当します。")]
     public DragonDragonMotion motion;
 
-    [Tooltip("Dragon_AllObjectsについているDragonPhaseControllerを入れてください。HP50%以下の強化状態を管理します。")]
+    [Tooltip("Dragon_AllObjectsに付いているDragonPhaseControllerを入れてください。HP50%以下の強化状態を管理します。")]
     public DragonPhaseController phase;
 
-    [Tooltip("DragonCoreについているDragonHPを入れてください。本体HP、尻尾クリスタル破壊、死亡イベントを受け取ります。")]
+    [Tooltip("DragonCoreに付いているDragonHPを入れてください。本体HP、尻尾クリスタル破壊、死亡イベントを受け取ります。")]
     public DragonHP dragonHP;
 
-    [Tooltip("Dragon_AllObjectsについているDragonAnimationEffectPlayerを入れてください。未設定でもAudioSourceがあればSE再生できます。")]
+    [Tooltip("Dragon_AllObjectsに付いているDragonAnimationEffectPlayerを入れてください。SEをまとめて再生したい場合に使います。未設定でもAudioSourceがあれば再生できます。")]
     public DragonAnimationEffectPlayer effectPlayer;
 
-    [Tooltip("プレイヤー本体のTransformを入れてください。ドラゴンの追跡、向き調整、攻撃対象の基準になります。")]
+    [Tooltip("プレイヤー本体のTransformを入れてください。ドラゴンが向く方向、追跡、攻撃対象の基準になります。")]
     public Transform player;
+
+    [Header("デバッグ用：行動オンオフ")]
+    [Tooltip("接近行動を使うかどうかです。オフにすると遠距離で近づかなくなるため、単体テスト時以外はオン推奨です。")]
+    public bool enableApproachAction = true;
+
+    [Tooltip("懐にいるプレイヤーへのひっかき反撃を使うかどうかです。オンでも、プレイヤーが届く範囲にいる時だけ候補になります。")]
+    public bool enableSwipeCounterAction = true;
+
+    [Tooltip("Tail Slamを使うかどうかです。尻尾クリスタル破壊後は自動で使わなくなります。")]
+    public bool enableTailSlamAction = true;
+
+    [Tooltip("Tail Swipeを使うかどうかです。尻尾クリスタル破壊後は自動で使わなくなります。")]
+    public bool enableTailSwipeAction = true;
+
+    [Tooltip("近距離でバックステップしてから尻尾攻撃する行動を使うかどうかです。密着対策として使います。")]
+    public bool enableBackStepTailAction = true;
+
+    [Tooltip("近距離でバックステップしてからブレスする行動を使うかどうかです。密着され続ける時の距離取りとして使います。")]
+    public bool enableBackStepBreathAction = true;
+
+    [Tooltip("扇状ブレスを使うかどうかです。近距離では直接使わず、必要ならバックステップ後に使います。")]
+    public bool enableWideBreathAction = true;
+
+    [Tooltip("ビームブレスを使うかどうかです。近距離では使いません。")]
+    public bool enableBeamBreathAction = true;
+
+    [Tooltip("突進を使うかどうかです。近距離から突進する場合は先にバックステップします。")]
+    public bool enableChargeAction = true;
+
+    [Tooltip("HP50%以下で二連突進を使うかどうかです。使う場合も突進クールタイムの影響を受けます。")]
+    public bool enableDoubleChargeAction = true;
 
     [Header("イントロ")]
     [Tooltip("戦闘開始後、咆哮する前に待機する秒数です。大きくすると戦闘開始までの間が長くなります。")]
     public float introIdleBeforeRoarTime = 3f;
 
     [Header("距離判定")]
-    [Tooltip("近距離判定の距離です。プレイヤーとの距離がこの値未満なら近距離行動を選びます。大きくすると近距離攻撃を始めやすくなります。")]
+    [Tooltip("近距離判定の距離です。この距離未満では近距離行動を選びます。近距離ではブレスを吐きません。")]
     public float closeRange = 7f;
 
-    [Tooltip("中距離判定の距離です。この距離以上で遠距離未満なら中距離行動を選びます。大きくすると中距離行動の範囲が広くなります。")]
+    [Tooltip("中距離判定の距離です。この距離以上で遠距離未満なら中距離行動を選びます。")]
     public float middleRange = 15f;
 
-    [Tooltip("遠距離判定の距離です。この距離より遠いと遠距離行動や接近を選びます。大きくすると遠くからでもブレスや接近を選びやすくなります。")]
+    [Tooltip("遠距離判定の距離です。この距離より遠いと遠距離行動や接近を選びます。")]
     public float farRange = 25f;
 
-    [Tooltip("接近行動をやめる距離です。大きくするとプレイヤーから離れた位置で止まり、小さくすると近くまで詰めます。")]
+    [Tooltip("接近行動をやめる距離です。大きくすると離れた位置で止まり、小さくすると近くまで詰めます。")]
     public float approachStopDistance = 8f;
 
     [Header("接近行動")]
@@ -69,134 +109,148 @@ public class DragonAI : MonoBehaviour
     [Tooltip("走り追跡をやめて歩きに戻す距離です。大きくすると早めに歩きへ戻ります。")]
     public float runChaseStopDistance = 8f;
 
-    [Header("近接攻撃前の位置調整")]
-    [Tooltip("オンにすると、ブレス以外の攻撃前に近接攻撃が届く距離まで接近します。オフにするとその場で攻撃しやすくなります。")]
-    public bool approachBeforeNonBreathAttack = true;
-
-    [Tooltip("近接攻撃を開始する距離です。大きくすると遠めから攻撃し、小さくすると近くまで寄ってから攻撃します。")]
-    public float meleeAttackStartDistance = 5.5f;
-
-    [Tooltip("近接攻撃前に距離を詰める速度です。大きくすると攻撃前の接近が速くなります。")]
-    public float meleeApproachSpeed = 4.0f;
-
-    [Tooltip("近接攻撃前にプレイヤーへ向き直る速度です。大きくすると素早くプレイヤーを向きます。")]
-    public float meleeApproachTurnSpeed = 7f;
-
-    [Tooltip("近接攻撃前の接近を諦めるまでの秒数です。大きくすると長く追い、小さくすると早めに攻撃へ移ります。")]
-    public float meleeApproachTimeout = 4f;
-
     [Header("行動間隔")]
     [Tooltip("行動後に次の行動まで待つ最短秒数です。大きくすると攻撃頻度が下がります。")]
-    public float minActionInterval = 0.6f;
+    public float minActionInterval = 0.45f;
 
     [Tooltip("行動後に次の行動まで待つ最長秒数です。大きくすると攻撃の間が長くなります。")]
-    public float maxActionInterval = 1.3f;
+    public float maxActionInterval = 1.0f;
 
     [Header("待機・隙行動")]
     [Tooltip("オンにすると、確率で何もせず待機する隙行動を行います。不要ならオフにしてください。")]
     public bool useOpeningIdle = false;
 
     [Tooltip("通常時に隙行動を選ぶ確率です。0なら出ません。大きくするとプレイヤーが攻撃できる隙が増えます。")]
-    [Range(0f, 1f)] public float openingIdleChance = 0f;
+    [Range(0f, 1f)]
+    public float openingIdleChance = 0f;
 
     [Tooltip("隙行動の最短時間です。大きくすると短い隙でも長くなります。")]
-    public float openingIdleMinTime = 1.0f;
+    public float openingIdleMinTime = 0.8f;
 
     [Tooltip("隙行動の最長時間です。大きくすると長い隙が発生しやすくなります。")]
-    public float openingIdleMaxTime = 2.2f;
+    public float openingIdleMaxTime = 1.6f;
 
     [Tooltip("オンにすると、隙行動中もプレイヤーの方を向きます。オフにすると向きを固定します。")]
     public bool lookAtPlayerDuringOpening = true;
 
-    [Header("行動抽選の重み")]
-    [Tooltip("近距離で腕攻撃を選ぶ重みです。大きくすると腕攻撃が出やすくなります。")]
-    public int closeSwipeWeight = 4;
-
+    [Header("シンプル行動抽選の重み")]
     [Tooltip("近距離でTail Slamを選ぶ重みです。大きくすると尻尾叩きつけが出やすくなります。")]
-    public int closeTailSlamWeight = 2;
+    public int closeTailSlamWeight = 3;
 
     [Tooltip("近距離でTail Swipeを選ぶ重みです。大きくすると尻尾なぎ払いが出やすくなります。")]
-    public int closeTailSwipeWeight = 2;
+    public int closeTailSwipeWeight = 3;
 
-    [Tooltip("近距離で横ステップ後の腕攻撃を選ぶ重みです。大きくすると回り込み攻撃が増えます。")]
-    public int closeSideStepSwipeWeight = 2;
-
-    [Tooltip("近距離でバックステップ後ブレスを選ぶ重みです。大きくすると距離を取ってからブレスを使いやすくなります。")]
-    public int closeBackStepBreathWeight = 2;
-
-    [Tooltip("近距離で突進を選ぶ重みです。大きくすると近距離でも突進しやすくなります。突進頻度はCharge Cooldownにも制限されます。")]
+    [Tooltip("近距離で突進を選ぶ重みです。近距離突進は先にバックステップします。高すぎると理不尽になりやすいです。")]
     public int closeChargeWeight = 1;
 
-    [Tooltip("中距離で腕攻撃を選ぶ重みです。大きくすると接近して腕攻撃しやすくなります。")]
-    public int middleSwipeWeight = 3;
+    [Tooltip("近距離で2回バックステップしてからTail Slamを選ぶ重みです。密着された時に距離を作って尻尾攻撃を出します。")]
+    public int closeBackStepTailSlamWeight = 2;
 
-    [Tooltip("中距離でブレスを選ぶ重みです。大きくするとブレス攻撃が増えます。")]
-    public int middleBreathWeight = 2;
+    [Tooltip("近距離で2回バックステップしてからTail Swipeを選ぶ重みです。密着された時に距離を作って薙ぎ払いを出します。")]
+    public int closeBackStepTailSwipeWeight = 2;
 
-    [Tooltip("中距離で尻尾攻撃を選ぶ重みです。大きくするとTail SlamやTail Swipeが増えます。")]
-    public int middleTailWeight = 2;
+    [Tooltip("近距離で2回バックステップしてから扇状ブレスを選ぶ重みです。近距離で直接ブレスを吐かずに距離を取ってから使います。")]
+    public int closeBackStepWideBreathWeight = 2;
 
-    [Tooltip("中距離でステップ系行動を選ぶ重みです。大きくすると横ステップやステップ後攻撃が増えます。")]
-    public int middleStepWeight = 2;
+    [Tooltip("近距離で2回バックステップしてからビームブレスを選ぶ重みです。近距離で直接ブレスを吐かずに距離を取ってから使います。")]
+    public int closeBackStepBeamBreathWeight = 2;
 
-    [Tooltip("中距離で突進を選ぶ重みです。大きくすると突進が増えます。突進頻度はCharge Cooldownにも制限されます。")]
+    [Tooltip("中距離でTail Slamを選ぶ重みです。尻尾が届く距離でのみ候補になります。")]
+    public int middleTailSlamWeight = 2;
+
+    [Tooltip("中距離でTail Swipeを選ぶ重みです。尻尾が届く距離でのみ候補になります。")]
+    public int middleTailSwipeWeight = 2;
+
+    [Tooltip("中距離で扇状ブレスを選ぶ重みです。大きくすると広範囲ブレスが増えます。")]
+    public int middleWideBreathWeight = 2;
+
+    [Tooltip("中距離でビームブレスを選ぶ重みです。大きくすると追尾ビームが増えます。")]
+    public int middleBeamBreathWeight = 2;
+
+    [Tooltip("中距離で突進を選ぶ重みです。大きくすると中距離から突進しやすくなります。")]
     public int middleChargeWeight = 1;
 
-    [Tooltip("遠距離でブレスを選ぶ重みです。大きくすると遠距離からブレスを使いやすくなります。")]
-    public int farBreathWeight = 3;
-
-    [Tooltip("遠距離で接近行動を選ぶ重みです。大きくすると遠距離で走って近づきやすくなります。")]
+    [Tooltip("遠距離で接近行動を選ぶ重みです。大きくすると遠距離で近づきやすくなります。")]
     public int farApproachWeight = 3;
+
+    [Tooltip("遠距離で扇状ブレスを選ぶ重みです。大きくすると遠距離から広範囲ブレスを使いやすくなります。")]
+    public int farWideBreathWeight = 2;
+
+    [Tooltip("遠距離でビームブレスを選ぶ重みです。大きくすると遠距離からビームブレスを使いやすくなります。")]
+    public int farBeamBreathWeight = 3;
 
     [Tooltip("遠距離で突進を選ぶ重みです。大きくすると遠距離から突進しやすくなります。")]
     public int farChargeWeight = 1;
 
-    [Header("デバッグ用：行動オンオフ")]
-    [Tooltip("オンにすると接近行動を使います。オフにすると遠距離でも歩き・走り接近を選ばなくなります。")]
-    public bool enableApproachAction = true;
+    [Header("ひっかき反撃")]
+    [Tooltip("ひっかき反撃が発生する最大距離です。この距離以内にプレイヤーがいる時だけ、ひっかきが候補になります。")]
+    public float swipeCounterReachDistance = 4.2f;
 
-    [Tooltip("オンにすると腕攻撃を使います。オフにするとSwipeと横ステップ後の腕攻撃、腕攻撃を含む連続攻撃を使いません。")]
-    public bool enableSwipeAction = true;
+    [Tooltip("プレイヤーが懐にいる時に、ひっかき反撃を出す確率です。0.35なら中確率です。")]
+    [Range(0f, 1f)]
+    public float swipeCounterChance = 0.35f;
 
-    [Tooltip("オンにするとTail Slamを使います。オフにすると尻尾叩きつけを使いません。")]
-    public bool enableTailSlamAction = true;
+    [Tooltip("ひっかき反撃前にプレイヤーへ向き直る時間です。大きくすると発生前にしっかり向き直ります。")]
+    public float swipeCounterFaceTime = 0.12f;
 
-    [Tooltip("オンにするとTail Swipeを使います。オフにすると尻尾なぎ払いを使いません。")]
-    public bool enableTailSwipeAction = true;
+    [Tooltip("ひっかき中に前進する距離です。今回は距離詰め用途ではないため、0から1程度がおすすめです。")]
+    public float swipeForwardDistance = 0f;
 
-    [Tooltip("オンにすると扇状ブレスを使います。オフにすると広範囲ブレスを使いません。")]
-    public bool enableWideBreathAction = true;
+    [Tooltip("ひっかき前進を開始するフレームです。Swipe Forward Distanceが0ならほぼ影響しません。")]
+    public int swipeLungeStartFrame = 18;
 
-    [Tooltip("オンにするとビームブレスを使います。オフにすると追尾ビームブレスを使いません。")]
-    public bool enableBeamBreathAction = true;
+    [Tooltip("ひっかき前進を終了するフレームです。Swipe Forward Distanceが0ならほぼ影響しません。")]
+    public int swipeLungeEndFrame = 45;
 
-    [Tooltip("オンにすると突進攻撃を使います。Use Charge As Attackもオンである必要があります。")]
-    public bool enableChargeAction = true;
+    [Tooltip("ひっかき中の向き補正の強さです。大きくすると攻撃中にプレイヤー方向へ向きやすくなります。")]
+    public float swipeLungeTurnSpeed = 5f;
 
-    [Tooltip("オンにすると第2形態の二連突進を使います。突進攻撃がオフの場合は使われません。")]
-    public bool enableDoubleChargeAction = true;
+    [Tooltip("ひっかき判定を出し始めるフレームです。小さくすると早く当たり判定が出ます。")]
+    public int swipeHitStartFrame = 28;
 
-    [Tooltip("オンにするとバックステップ後ブレスを使います。オフにするとBackStepBreathを選ばなくなります。")]
-    public bool enableBackStepBreathAction = true;
+    [Tooltip("ひっかき判定を消すフレームです。大きくすると判定が長く残ります。")]
+    public int swipeHitEndFrame = 55;
 
-    [Tooltip("オンにすると横ステップ後の腕攻撃を使います。腕攻撃がオフの場合は使われません。")]
-    public bool enableSideStepSwipeAction = true;
+    [Tooltip("ひっかきアニメーション全体の長さです。実際のアニメーション長に合わせてください。")]
+    public float swipeAnimDuration = 1.6f;
 
-    [Tooltip("オンにすると横ステップ後のTail Slamを使います。Tail Slamがオフの場合は使われません。")]
-    public bool enableSideStepTailSlamAction = true;
+    [Tooltip("左腕攻撃の判定を入れてください。未設定なら左腕攻撃にダメージ判定は出ません。")]
+    public DragonAttackHitbox leftArmHitbox;
 
-    [Tooltip("オンにすると横ステップ後ブレスを使います。ブレス2種が両方オフの場合は使われません。")]
-    public bool enableSideStepBreathAction = true;
+    [Tooltip("右腕攻撃の判定を入れてください。未設定なら右腕攻撃にダメージ判定は出ません。")]
+    public DragonAttackHitbox rightArmHitbox;
 
-    [Tooltip("オンにすると第2形態の連続攻撃を使います。腕攻撃がオフの場合は使われません。")]
-    public bool enableRapidComboAction = true;
+    [Tooltip("腕攻撃開始時に再生するパーティクルです。未設定なら何も再生されません。")]
+    public ParticleSystem swipeParticle;
+
+    [Tooltip("腕攻撃開始時に再生するSEです。未設定なら鳴りません。")]
+    public AudioClip swipeSfx;
+
+    [Header("バックステップ")]
+    [Tooltip("ブレスや近距離突進の前に行うバックステップの最小回数です。")]
+    public int randomBackStepMinCount = 1;
+
+    [Tooltip("ブレスや近距離突進の前に行うバックステップの最大回数です。")]
+    public int randomBackStepMaxCount = 3;
+
+    [Tooltip("バックステップ1回分の距離です。大きくすると大きく後退します。")]
+    public float backStepDistance = 4f;
+
+    [Tooltip("バックステップ1回分の時間です。大きくするとゆっくり後退します。")]
+    public float backStepDuration = 0.38f;
+
+    [Tooltip("バックステップ同士の間隔です。大きくすると連続バックステップの間が長くなります。")]
+    public float backStepInterval = 0.08f;
+
+    [Tooltip("近距離から尻尾攻撃やブレスへ移る時の固定バックステップ回数です。2なら必ず2回下がってから攻撃します。")]
+    public int closeSpecialBackStepCount = 2;
+
+    [Tooltip("ブレス前にバックステップする距離判定です。この距離未満でブレスを選んだ場合、先に1から3回バックステップします。")]
+    public float breathBackStepIfCloserThan = 10f;
 
     [Header("突進攻撃")]
     [Tooltip("突進中だけ有効にする攻撃判定を入れてください。未設定なら突進してもダメージ判定は出ません。")]
     public DragonAttackHitbox chargeHitbox;
-
-    [Tooltip("オンにすると突進攻撃を使います。オフにすると行動抽選から突進を外します。")]
-    public bool useChargeAsAttack = true;
 
     [Tooltip("突進の最低インターバルです。大きくすると突進頻度が下がり、小さくすると突進しやすくなります。推奨値は10秒前後です。")]
     public float chargeCooldown = 10f;
@@ -204,7 +258,7 @@ public class DragonAI : MonoBehaviour
     [Tooltip("突進の基準速度です。大きくすると突進が速くなり、避けにくくなります。")]
     public float chargeSpeed = 24f;
 
-    [Tooltip("突進でプレイヤーを通り過ぎる距離です。大きくするとプレイヤーの奥まで走り抜けます。")]
+    [Tooltip("プレイヤーをどれくらい通り過ぎるかです。大きくするとプレイヤーの奥まで走り抜けます。")]
     public float chargeOvershootDistance = 4f;
 
     [Tooltip("突進時間の最小値です。小さすぎると短距離突進が一瞬で終わります。")]
@@ -213,8 +267,8 @@ public class DragonAI : MonoBehaviour
     [Tooltip("突進時間の最大値です。大きくすると遠距離突進が長く続きます。")]
     public float chargeMaxDuration = 1.8f;
 
-    [Tooltip("この距離未満から突進する場合は、先にバックステップして距離を取ります。大きくするとバックステップしやすくなります。")]
-    public float chargeMinStartDistance = 8f;
+    [Tooltip("この距離未満から突進する場合は、先に1から3回バックステップします。")]
+    public float chargeBackStepIfCloserThan = 9f;
 
     [Tooltip("突進前の溜め時間です。大きくすると予兆が長くなり、避けやすくなります。")]
     public float chargeTellTime = 1.0f;
@@ -234,22 +288,15 @@ public class DragonAI : MonoBehaviour
     [Tooltip("二連突進後の大きめの隙です。大きくすると第2形態の二連突進後に反撃しやすくなります。")]
     public float doubleChargeRecovery = 1.4f;
 
-    [Tooltip("近距離突進前のバックステップ距離です。大きくすると突進前に大きく後退します。")]
-    public float closeChargeBackStepDistance = 5f;
-
-    [Tooltip("近距離突進前のバックステップ1回分の時間です。大きくするとゆっくり後退します。")]
-    public float closeChargeBackStepDuration = 0.38f;
-
-    [Tooltip("近距離突進前のバックステップ回数です。大きくすると突進前に何度も後退します。")]
-    public int closeChargeBackStepCount = 2;
-
     [Tooltip("突進序盤の加速割合です。大きくすると加速時間が長くなり、出始めが緩やかになります。")]
-    [Range(0.01f, 0.5f)] public float chargeAccelerationRatio = 0.18f;
+    [Range(0.01f, 0.5f)]
+    public float chargeAccelerationRatio = 0.18f;
 
     [Tooltip("突進終盤の減速割合です。大きくすると減速時間が長くなり、止まり方が緩やかになります。")]
-    [Range(0.01f, 0.5f)] public float chargeDecelerationRatio = 0.22f;
+    [Range(0.01f, 0.5f)]
+    public float chargeDecelerationRatio = 0.22f;
 
-    [Header("突進パーティクル")]
+    [Header("突進演出")]
     [Tooltip("突進の溜め中に再生するパーティクルです。未設定なら何も再生されません。")]
     public ParticleSystem chargeHoldParticle;
 
@@ -259,7 +306,6 @@ public class DragonAI : MonoBehaviour
     [Tooltip("突進中に再生するパーティクルです。未設定なら何も再生されません。")]
     public ParticleSystem chargeRunParticle;
 
-    [Header("突進サウンド")]
     [Tooltip("突進の溜め中に再生するSEです。未設定なら鳴りません。")]
     public AudioClip chargeHoldSfx;
 
@@ -271,65 +317,6 @@ public class DragonAI : MonoBehaviour
 
     [Tooltip("突進終了時に再生するSEです。未設定なら鳴りません。")]
     public AudioClip chargeEndSfx;
-
-    [Header("ステップ")]
-    [Tooltip("横ステップ距離です。大きくすると左右への移動幅が大きくなります。")]
-    public float sideStepDistance = 2f;
-
-    [Tooltip("バックステップ距離です。大きくすると後退距離が大きくなります。")]
-    public float backStepDistance = 3f;
-
-    [Tooltip("ステップにかかる時間です。大きくするとゆっくり移動し、小さくすると素早く移動します。")]
-    public float stepDuration = 0.45f;
-
-    [Tooltip("バックステップ後にブレスを使う確率です。大きくすると後退後ブレスが増えます。")]
-    [Range(0f, 1f)] public float afterBackStepBreathChance = 0.75f;
-
-    [Tooltip("バックステップ後に突進へ派生する確率です。大きくすると後退後突進が増えます。低め推奨です。")]
-    [Range(0f, 1f)] public float afterBackStepChargeChance = 0.05f;
-
-    [Header("腕攻撃")]
-    [Tooltip("ひっかき中に前進する距離です。大きくすると攻撃が届きやすくなります。")]
-    public float swipeForwardDistance = 2.4f;
-
-    [Tooltip("ひっかき前進を開始するフレームです。小さくすると早めに前進します。")]
-    public int swipeLungeStartFrame = 18;
-
-    [Tooltip("ひっかき前進を終了するフレームです。大きくすると前進時間が長くなります。")]
-    public int swipeLungeEndFrame = 48;
-
-    [Tooltip("腕攻撃後に開始位置へ戻る時間です。大きくするとゆっくり戻ります。")]
-    public float swipeReturnTime = 0.25f;
-
-    [Tooltip("オンにすると腕攻撃後に攻撃開始位置へ戻ります。オフにすると前進した位置に残ります。")]
-    public bool swipeReturnToStartPosition = true;
-
-    [Tooltip("オンにすると腕攻撃の前進方向をプレイヤー方向にします。オフにするとドラゴンの正面方向へ前進します。")]
-    public bool swipeLungeTowardPlayer = true;
-
-    [Tooltip("腕攻撃で前進している間にプレイヤー方向を追う強さです。大きくすると攻撃中の向き補正が強くなります。")]
-    public float swipeLungeTurnSpeed = 7f;
-
-    [Tooltip("左腕攻撃の判定を入れてください。未設定なら左腕攻撃にダメージ判定は出ません。")]
-    public DragonAttackHitbox leftArmHitbox;
-
-    [Tooltip("右腕攻撃の判定を入れてください。未設定なら右腕攻撃にダメージ判定は出ません。")]
-    public DragonAttackHitbox rightArmHitbox;
-
-    [Tooltip("ひっかき判定を出し始めるフレームです。小さくすると早く当たり判定が出ます。")]
-    public int swipeHitStartFrame = 35;
-
-    [Tooltip("ひっかき判定を消すフレームです。大きくすると当たり判定が長く残ります。")]
-    public int swipeHitEndFrame = 55;
-
-    [Tooltip("ひっかきアニメーション全体の長さです。実際のアニメーション長に合わせてください。")]
-    public float swipeAnimDuration = 2.0f;
-
-    [Tooltip("腕攻撃開始時に再生するパーティクルです。未設定なら何も再生されません。")]
-    public ParticleSystem swipeParticle;
-
-    [Tooltip("腕攻撃開始時に再生するSEです。未設定なら鳴りません。")]
-    public AudioClip swipeSfx;
 
     [Header("ブレス共通")]
     [Tooltip("ブレス前にプレイヤーへ向き直る時間です。大きくすると発射前にしっかり向き直ります。")]
@@ -345,6 +332,15 @@ public class DragonAI : MonoBehaviour
     [Tooltip("扇状ブレスの攻撃判定を入れてください。広いBox Colliderを使うと調整しやすいです。")]
     public DragonAttackHitbox wideBreathHitbox;
 
+    [Tooltip("扇状ブレスの判定開始フレームです。小さくすると早く判定が出ます。")]
+    public int wideBreathStartFrame = 35;
+
+    [Tooltip("扇状ブレスの判定終了フレームです。大きくすると判定が長く残ります。")]
+    public int wideBreathEndFrame = 120;
+
+    [Tooltip("扇状ブレス後の隙です。大きくするとブレス後に反撃しやすくなります。")]
+    public float wideBreathRecovery = 0.9f;
+
     [Tooltip("扇状ブレスの溜め中に再生するパーティクルです。未設定なら何も再生されません。")]
     public ParticleSystem wideBreathChargeParticle;
 
@@ -357,15 +353,6 @@ public class DragonAI : MonoBehaviour
     [Tooltip("扇状ブレスの発射時に再生するSEです。未設定なら鳴りません。")]
     public AudioClip wideBreathFireSfx;
 
-    [Tooltip("扇状ブレスの判定開始フレームです。小さくすると早く判定が出ます。")]
-    public int wideBreathStartFrame = 35;
-
-    [Tooltip("扇状ブレスの判定終了フレームです。大きくすると判定が長く残ります。")]
-    public int wideBreathEndFrame = 120;
-
-    [Tooltip("扇状ブレス後の隙です。大きくするとブレス後に反撃しやすくなります。")]
-    public float wideBreathRecovery = 0.8f;
-
     [Header("ビームブレス")]
     [Tooltip("ビームブレスの攻撃判定を入れてください。細長いBox Colliderを使うと調整しやすいです。")]
     public DragonAttackHitbox beamBreathHitbox;
@@ -373,20 +360,8 @@ public class DragonAI : MonoBehaviour
     [Tooltip("ビームの向きを制御するTransformを入れてください。通常はBeamBreathPivotを入れます。")]
     public Transform beamBreathPivot;
 
-    [Tooltip("BeamBreathPivotについているDragonBeamBreathAimerを入れてください。ビームの追尾方向を制御します。")]
+    [Tooltip("BeamBreathPivotに付いているDragonBeamBreathAimerを入れてください。ビームの追尾方向を制御します。")]
     public DragonBeamBreathAimer beamBreathAimer;
-
-    [Tooltip("ビームブレスの溜め中に再生するパーティクルです。未設定なら何も再生されません。")]
-    public ParticleSystem beamBreathChargeParticle;
-
-    [Tooltip("ビームブレスの発射中に再生するパーティクルです。未設定なら何も再生されません。")]
-    public ParticleSystem beamBreathFireParticle;
-
-    [Tooltip("ビームブレスの溜め中に再生するSEです。未設定なら鳴りません。")]
-    public AudioClip beamBreathChargeSfx;
-
-    [Tooltip("ビームブレスの発射時に再生するSEです。未設定なら鳴りません。")]
-    public AudioClip beamBreathFireSfx;
 
     [Tooltip("ビームブレスの判定開始フレームです。小さくすると早く判定が出ます。")]
     public int beamBreathStartFrame = 45;
@@ -401,12 +376,32 @@ public class DragonAI : MonoBehaviour
     public int beamTrackEndFrame = 120;
 
     [Tooltip("ビームブレス後の隙です。大きくすると発射後に反撃しやすくなります。")]
-    public float beamBreathRecovery = 1.0f;
+    public float beamBreathRecovery = 1.2f;
 
-    [Header("尻尾攻撃")]
+    [Tooltip("ビームブレスの溜め中に再生するパーティクルです。未設定なら何も再生されません。")]
+    public ParticleSystem beamBreathChargeParticle;
+
+    [Tooltip("ビームブレスの発射中に再生するパーティクルです。未設定なら何も再生されません。")]
+    public ParticleSystem beamBreathFireParticle;
+
+    [Tooltip("ビームブレスの溜め中に再生するSEです。未設定なら鳴りません。")]
+    public AudioClip beamBreathChargeSfx;
+
+    [Tooltip("ビームブレスの発射時に再生するSEです。未設定なら鳴りません。")]
+    public AudioClip beamBreathFireSfx;
+
+    [Header("尻尾攻撃の判定")]
     [Tooltip("尻尾攻撃の判定を入れてください。Tail SlamとTail Swipeで共通使用します。")]
     public DragonAttackHitbox tailHitbox;
 
+    [Header("尻尾攻撃の距離")]
+    [Tooltip("Tail Slamを選べる最大距離です。この距離より遠い場合はTail Slamを選びません。")]
+    public float tailSlamReachDistance = 8.5f;
+
+    [Tooltip("Tail Swipeを選べる最大距離です。この距離より遠い場合はTail Swipeを選びません。")]
+    public float tailSwipeReachDistance = 8.5f;
+
+    [Header("尻尾攻撃の向き調整")]
     [Tooltip("オンにすると尻尾攻撃時に尻尾側をプレイヤーへ向けます。オフにすると通常の向き補正になります。")]
     public bool tailAttacksTurnTailToPlayer = true;
 
@@ -414,13 +409,13 @@ public class DragonAI : MonoBehaviour
     public float tailFacePlayerOffsetY = 0f;
 
     [Tooltip("Tail Slamの叩きつけ位置の角度補正です。狙いが左右にずれる場合に調整してください。")]
-    public float tailSlamAttackOffsetY = -35f;
+    public float tailSlamAttackOffsetY = 0f;
 
-    [Tooltip("Tail Swipe前半で尻尾側を向ける固定角度です。現在は左右ランダムを使わず、この値だけを使います。")]
-    public float tailSwipeFixedAttackOffsetY = -55f;
+    [Tooltip("Tail Swipe前半で尻尾側を向ける固定角度です。左右ランダムは使わず、この値を基準にします。")]
+    public float tailSwipeFixedAttackOffsetY = -10f;
 
     [Tooltip("尻尾攻撃時にプレイヤー方向へ回転する速度です。大きくすると素早く向きを合わせます。")]
-    public float tailTrackingTurnSpeed = 12f;
+    public float tailTrackingTurnSpeed = 16f;
 
     [Header("Tail Slam")]
     [Tooltip("Tail Slam全体の長さです。実際のアニメーション長に合わせてください。")]
@@ -430,7 +425,7 @@ public class DragonAI : MonoBehaviour
     public int tailSlamAimStartFrame = 5;
 
     [Tooltip("Tail Slamでプレイヤー追尾を続ける最後のフレームです。大きくすると直前まで狙います。")]
-    public int tailSlamTrackUntilFrame = 73;
+    public int tailSlamTrackUntilFrame = 88;
 
     [Tooltip("Tail Slamの判定開始フレームです。")]
     public int tailSlamHitStartFrame = 73;
@@ -438,14 +433,20 @@ public class DragonAI : MonoBehaviour
     [Tooltip("Tail Slamの判定終了フレームです。大きくすると判定が長く残ります。")]
     public int tailSlamHitEndFrame = 82;
 
-    [Tooltip("Tail Slam後に正面へ戻り始めるフレームです。")]
-    public int tailSlamReturnStartFrame = 105;
+    [Tooltip("Tail Slam後にプレイヤー正面へ戻り始めるフレームです。遅くすると戻りジャンプの違和感が減ります。")]
+    public int tailSlamReturnStartFrame = 120;
 
-    [Tooltip("Tail Slam後に正面へ戻り終わるフレームです。")]
-    public int tailSlamReturnEndFrame = 138;
+    [Tooltip("Tail Slam後にプレイヤー正面へ戻り終わるフレームです。大きくするとゆっくり戻ります。")]
+    public int tailSlamReturnEndFrame = 155;
 
     [Tooltip("尻尾を直接プレイヤーに向けない設定の時に使う角度補正です。")]
-    public float tailSlamAngleOffset = -15f;
+    public float tailSlamAngleOffset = 0f;
+
+    [Tooltip("Tail Slam開始時に再生するパーティクルです。未設定なら何も再生されません。")]
+    public ParticleSystem tailSlamParticle;
+
+    [Tooltip("Tail Slam開始時に再生するSEです。未設定なら鳴りません。")]
+    public AudioClip tailSlamSfx;
 
     [Header("Tail Swipe")]
     [Tooltip("Tail Swipe全体の長さです。実際のアニメーション長に合わせてください。")]
@@ -463,37 +464,26 @@ public class DragonAI : MonoBehaviour
     [Tooltip("Tail Swipeの1段目判定終了フレームです。")]
     public int tailSwipeSlamHitEndFrame = 87;
 
-    [Tooltip("Tail Swipe後半の判定開始フレームです。通常は後半回転開始フレームと同じ値にします。")]
-    public int tailSwipeSecondHitStartFrame = 104;
+    [Tooltip("Tail Swipeの2段目判定開始フレームです。通常は後半回転開始フレームと近い値にします。")]
+    public int tailSwipeSecondHitStartFrame = 100;
 
-    [Tooltip("Tail Swipe後半の判定終了フレームです。大きくすると後半の判定が長く残ります。")]
+    [Tooltip("Tail Swipeの2段目判定終了フレームです。大きくすると後半の判定が長く残ります。")]
     public int tailSwipeSecondHitEndFrame = 135;
 
-    [Header("Tail Swipe後半回転")]
-    [Tooltip("オンにするとTail Swipe後半で体を反時計回りに回転させながら薙ぎ払います。")]
-    public bool tailSwipeSecondHitTurnToPlayer = true;
-
     [Tooltip("Tail Swipe後半で追加する回転角度です。反時計回りにしたい場合は負の値を使います。逆方向に回る場合は正負を入れ替えてください。")]
-    public float tailSwipeSecondHitExtraCounterClockwiseAngle = -80f;
+    public float tailSwipeSecondHitExtraCounterClockwiseAngle = -310f;
 
     [Tooltip("Tail Swipe後半でプレイヤー方向を追う速度です。大きくすると素早く向きを合わせます。")]
-    public float tailSwipeSecondHitTurnSpeed = 10f;
+    public float tailSwipeSecondHitTurnSpeed = 900f;
 
-    [Tooltip("Tail Swipe後半回転を開始するフレームです。104前後が目安です。")]
-    public int tailSwipeSecondTurnStartFrame = 104;
+    [Tooltip("Tail Swipe後半回転を開始するフレームです。")]
+    public int tailSwipeSecondTurnStartFrame = 100;
 
-    [Tooltip("Tail Swipe後半回転を終了するフレームです。135前後が目安です。")]
+    [Tooltip("Tail Swipe後半回転を終了するフレームです。")]
     public int tailSwipeSecondTurnEndFrame = 135;
-
-    [Header("尻尾攻撃の演出")]
-    [Tooltip("Tail Slam開始時に再生するパーティクルです。未設定なら何も再生されません。")]
-    public ParticleSystem tailSlamParticle;
 
     [Tooltip("Tail Swipe開始時に再生するパーティクルです。未設定なら何も再生されません。")]
     public ParticleSystem tailSwipeParticle;
-
-    [Tooltip("Tail Slam開始時に再生するSEです。未設定なら鳴りません。")]
-    public AudioClip tailSlamSfx;
 
     [Tooltip("Tail Swipe開始時に再生するSEです。未設定なら鳴りません。")]
     public AudioClip tailSwipeSfx;
@@ -538,54 +528,103 @@ public class DragonAI : MonoBehaviour
     public AudioSource audioSource;
 
     [Tooltip("このスクリプトから再生するSEの音量です。大きくするとSEが大きくなります。")]
-    [Range(0f, 1f)] public float sfxVolume = 1f;
+    [Range(0f, 1f)]
+    public float sfxVolume = 1f;
 
     private DragonState state = DragonState.Intro;
     private bool isBusy = false;
     private float lastChargeTime = -999f;
-    private DragonAction lastAction = DragonAction.Opening;
-    private DragonAction secondLastAction = DragonAction.Opening;
+    private DragonAction lastAction = DragonAction.None;
+    private DragonAction secondLastAction = DragonAction.None;
 
     private void Awake()
     {
-        if (motion == null) motion = GetComponent<DragonDragonMotion>();
-        if (phase == null) phase = GetComponent<DragonPhaseController>();
-        if (dragonHP == null) dragonHP = GetComponentInParent<DragonHP>();
-        if (effectPlayer == null) effectPlayer = GetComponent<DragonAnimationEffectPlayer>();
-        if (audioSource == null) audioSource = GetComponent<AudioSource>();
-        if (audioSource == null) audioSource = GetComponentInParent<AudioSource>();
-        if (beamBreathAimer == null && beamBreathPivot != null) beamBreathAimer = beamBreathPivot.GetComponent<DragonBeamBreathAimer>();
-        if (motion != null) motion.SetPlayer(player);
-        if (beamBreathAimer != null) beamBreathAimer.player = player;
+        if (motion == null)
+        {
+            motion = GetComponent<DragonDragonMotion>();
+        }
+
+        if (phase == null)
+        {
+            phase = GetComponent<DragonPhaseController>();
+        }
+
+        if (dragonHP == null)
+        {
+            dragonHP = GetComponentInParent<DragonHP>();
+        }
+
+        if (effectPlayer == null)
+        {
+            effectPlayer = GetComponent<DragonAnimationEffectPlayer>();
+        }
+
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
+
+        if (audioSource == null)
+        {
+            audioSource = GetComponentInParent<AudioSource>();
+        }
+
+        if (beamBreathAimer == null && beamBreathPivot != null)
+        {
+            beamBreathAimer = beamBreathPivot.GetComponent<DragonBeamBreathAimer>();
+        }
+
+        if (motion != null)
+        {
+            motion.SetPlayer(player);
+        }
+
+        if (beamBreathAimer != null)
+        {
+            beamBreathAimer.player = player;
+        }
     }
 
     private void OnEnable()
     {
-        if (dragonHP == null) return;
-        dragonHP.OnHalfHP += HandleHalfHP;
-        dragonHP.OnTailCrystalBroken += HandleTailCrystalBroken;
-        dragonHP.OnDeath += HandleDeath;
+        if (dragonHP != null)
+        {
+            dragonHP.OnHalfHP += HandleHalfHP;
+            dragonHP.OnTailCrystalBroken += HandleTailCrystalBroken;
+            dragonHP.OnDeath += HandleDeath;
+        }
     }
 
     private void OnDisable()
     {
-        if (dragonHP == null) return;
-        dragonHP.OnHalfHP -= HandleHalfHP;
-        dragonHP.OnTailCrystalBroken -= HandleTailCrystalBroken;
-        dragonHP.OnDeath -= HandleDeath;
+        if (dragonHP != null)
+        {
+            dragonHP.OnHalfHP -= HandleHalfHP;
+            dragonHP.OnTailCrystalBroken -= HandleTailCrystalBroken;
+            dragonHP.OnDeath -= HandleDeath;
+        }
     }
 
     private void Start()
     {
         DisableAllHitboxes();
         StopAllSpecialParticles();
-        if (motion != null) motion.ResetAnimatorSpeed();
+
+        if (motion != null)
+        {
+            motion.ResetAnimatorSpeed();
+        }
+
         StartCoroutine(IntroRoutine());
     }
 
     private void Update()
     {
-        if (state == DragonState.Dead || state == DragonState.Down || isBusy || motion == null) return;
+        if (state == DragonState.Dead) return;
+        if (state == DragonState.Down) return;
+        if (isBusy) return;
+        if (motion == null) return;
+
         motion.FacePlayerSmooth(motion.idleTurnSpeed);
     }
 
@@ -593,9 +632,11 @@ public class DragonAI : MonoBehaviour
     {
         state = DragonState.Intro;
         isBusy = true;
+
         motion.PlayAnim(motion.idleAnim, true);
 
         float timer = 0f;
+
         while (timer < introIdleBeforeRoarTime)
         {
             timer += Time.deltaTime;
@@ -604,9 +645,12 @@ public class DragonAI : MonoBehaviour
         }
 
         yield return motion.FacePlayerForSeconds(0.25f);
+
         motion.PlayAnim(motion.roarAnim, true);
         DoRoarEffect();
+
         yield return new WaitForSeconds(roarDuration);
+
         ReturnToIdle();
         StartCoroutine(AILoop());
     }
@@ -622,21 +666,53 @@ public class DragonAI : MonoBehaviour
             }
 
             float interval = Random.Range(minActionInterval, maxActionInterval);
-            if (phase != null) interval = phase.ApplyActionInterval(interval);
+
+            if (phase != null)
+            {
+                interval = phase.ApplyActionInterval(interval);
+            }
+
             yield return new WaitForSeconds(interval);
 
-            if (state == DragonState.Down || state == DragonState.Dead || isBusy) continue;
-            yield return DecideAction(motion.GetDistanceToPlayer());
+            if (state == DragonState.Down || state == DragonState.Dead || isBusy)
+            {
+                continue;
+            }
+
+            yield return DecideAction();
         }
     }
 
-    private IEnumerator DecideAction(float distance)
+    private IEnumerator DecideAction()
     {
+        float distance = motion.GetDistanceToPlayer();
+
+        if (ShouldDoOpening())
+        {
+            yield return ExecuteAction(DragonAction.Opening);
+            yield break;
+        }
+
+        if (ShouldUseSwipeCounter(distance))
+        {
+            yield return ExecuteAction(DragonAction.SwipeCounter);
+            yield break;
+        }
+
         DragonAction action;
-        if (ShouldDoOpening()) action = DragonAction.Opening;
-        else if (distance > farRange) action = PickFarAction();
-        else if (distance >= middleRange) action = PickMiddleAction();
-        else action = PickCloseAction();
+
+        if (distance < closeRange)
+        {
+            action = PickCloseAction(distance);
+        }
+        else if (distance < farRange)
+        {
+            action = PickMiddleAction(distance);
+        }
+        else
+        {
+            action = PickFarAction(distance);
+        }
 
         yield return ExecuteAction(action);
     }
@@ -644,143 +720,231 @@ public class DragonAI : MonoBehaviour
     private bool ShouldDoOpening()
     {
         if (!useOpeningIdle) return false;
-        if (phase != null && phase.ShouldUsePhase2Opening()) return true;
+
+        if (phase != null && phase.ShouldUsePhase2Opening())
+        {
+            return true;
+        }
+
         return Random.value < openingIdleChance;
     }
 
-    private DragonAction PickFarAction()
+    private bool ShouldUseSwipeCounter(float distance)
     {
-        WeightedActionPicker picker = new WeightedActionPicker();
-        AddAction(picker, DragonAction.WideBreath, farBreathWeight);
-        AddAction(picker, DragonAction.BeamBreath, farBreathWeight);
-        AddAction(picker, DragonAction.Approach, farApproachWeight);
-        if (CanUseCharge()) AddAction(picker, GetPhaseChargeAction(), farChargeWeight);
-        return PreventRepeat(picker.Pick());
+        if (!enableSwipeCounterAction) return false;
+        if (distance > swipeCounterReachDistance) return false;
+
+        return Random.value < swipeCounterChance;
     }
 
-    private DragonAction PickMiddleAction()
+    private DragonAction PickCloseAction(float distance)
     {
         WeightedActionPicker picker = new WeightedActionPicker();
-        AddAction(picker, DragonAction.Swipe, middleSwipeWeight);
-        AddAction(picker, DragonAction.WideBreath, middleBreathWeight);
-        AddAction(picker, DragonAction.BeamBreath, middleBreathWeight);
-        AddAction(picker, DragonAction.SideStepSwipe, middleStepWeight);
-        AddAction(picker, DragonAction.SideStepBreath, middleStepWeight);
 
         if (!IsTailBroken())
         {
-            AddAction(picker, DragonAction.TailSlam, middleTailWeight);
-            AddAction(picker, DragonAction.TailSwipe, middleTailWeight);
-            AddAction(picker, DragonAction.SideStepTailSlam, middleStepWeight);
+            if (enableTailSlamAction && distance <= tailSlamReachDistance)
+            {
+                picker.Add(DragonAction.TailSlam, closeTailSlamWeight);
+            }
+
+            if (enableTailSwipeAction && distance <= tailSwipeReachDistance)
+            {
+                picker.Add(DragonAction.TailSwipe, closeTailSwipeWeight);
+            }
+
+            if (enableBackStepTailAction && enableTailSlamAction)
+            {
+                picker.Add(DragonAction.BackStepTailSlam, closeBackStepTailSlamWeight);
+            }
+
+            if (enableBackStepTailAction && enableTailSwipeAction)
+            {
+                picker.Add(DragonAction.BackStepTailSwipe, closeBackStepTailSwipeWeight);
+            }
         }
 
-        if (CanUseCharge()) AddAction(picker, GetPhaseChargeAction(), middleChargeWeight);
+        if (enableBackStepBreathAction && enableWideBreathAction)
+        {
+            picker.Add(DragonAction.BackStepWideBreath, closeBackStepWideBreathWeight);
+        }
+
+        if (enableBackStepBreathAction && enableBeamBreathAction)
+        {
+            picker.Add(DragonAction.BackStepBeamBreath, closeBackStepBeamBreathWeight);
+        }
+
+        if (CanUseCharge())
+        {
+            picker.Add(GetChargeAction(), closeChargeWeight);
+        }
+
+        if (enableApproachAction)
+        {
+            picker.Add(DragonAction.Approach, 1);
+        }
+
         return PreventRepeat(picker.Pick());
     }
 
-    private DragonAction PickCloseAction()
+    private DragonAction PickMiddleAction(float distance)
     {
         WeightedActionPicker picker = new WeightedActionPicker();
 
-        if (phase != null && phase.ShouldUseRapidCombo()) AddAction(picker, DragonAction.RapidCombo, 4);
-        AddAction(picker, DragonAction.Swipe, closeSwipeWeight);
-        AddAction(picker, DragonAction.SideStepSwipe, closeSideStepSwipeWeight);
-        AddAction(picker, DragonAction.BackStepBreath, closeBackStepBreathWeight);
-        AddAction(picker, DragonAction.WideBreath, 1);
-
         if (!IsTailBroken())
         {
-            AddAction(picker, DragonAction.TailSlam, closeTailSlamWeight);
-            AddAction(picker, DragonAction.TailSwipe, closeTailSwipeWeight);
-            AddAction(picker, DragonAction.SideStepTailSlam, 1);
+            if (enableTailSlamAction && distance <= tailSlamReachDistance)
+            {
+                picker.Add(DragonAction.TailSlam, middleTailSlamWeight);
+            }
+
+            if (enableTailSwipeAction && distance <= tailSwipeReachDistance)
+            {
+                picker.Add(DragonAction.TailSwipe, middleTailSwipeWeight);
+            }
         }
 
-        if (CanUseCharge()) AddAction(picker, GetPhaseChargeAction(), closeChargeWeight);
+        if (enableWideBreathAction)
+        {
+            picker.Add(DragonAction.WideBreath, middleWideBreathWeight);
+        }
+
+        if (enableBeamBreathAction)
+        {
+            picker.Add(DragonAction.BeamBreath, middleBeamBreathWeight);
+        }
+
+        if (CanUseCharge())
+        {
+            picker.Add(GetChargeAction(), middleChargeWeight);
+        }
+
+        if (enableApproachAction && distance > approachStopDistance + 1f)
+        {
+            picker.Add(DragonAction.Approach, 1);
+        }
+
         return PreventRepeat(picker.Pick());
     }
 
-    private void AddAction(WeightedActionPicker picker, DragonAction action, int weight)
+    private DragonAction PickFarAction(float distance)
     {
-        if (!IsActionAllowed(action)) return;
-        picker.Add(action, weight);
+        WeightedActionPicker picker = new WeightedActionPicker();
+
+        if (enableApproachAction)
+        {
+            picker.Add(DragonAction.Approach, farApproachWeight);
+        }
+
+        if (enableWideBreathAction)
+        {
+            picker.Add(DragonAction.WideBreath, farWideBreathWeight);
+        }
+
+        if (enableBeamBreathAction)
+        {
+            picker.Add(DragonAction.BeamBreath, farBeamBreathWeight);
+        }
+
+        if (CanUseCharge())
+        {
+            picker.Add(GetChargeAction(), farChargeWeight);
+        }
+
+        return PreventRepeat(picker.Pick());
     }
 
-    private DragonAction GetPhaseChargeAction()
+    private DragonAction GetChargeAction()
     {
-        if (enableDoubleChargeAction && phase != null && phase.ShouldUseDoubleCharge()) return DragonAction.DoubleCharge;
+        if (enableDoubleChargeAction && phase != null && phase.ShouldUseDoubleCharge())
+        {
+            return DragonAction.DoubleCharge;
+        }
+
         return DragonAction.Charge;
     }
 
     private DragonAction PreventRepeat(DragonAction picked)
     {
-        if (!IsActionAllowed(picked)) return DragonAction.Opening;
-        if (picked != lastAction && picked != secondLastAction) return picked;
-        return DragonAction.Opening;
-    }
-
-    private bool IsActionAllowed(DragonAction action)
-    {
-        switch (action)
+        if (picked == DragonAction.None)
         {
-            case DragonAction.Opening:
-                return true;
-            case DragonAction.Approach:
-                return enableApproachAction;
-            case DragonAction.Swipe:
-                return enableSwipeAction;
-            case DragonAction.TailSlam:
-                return enableTailSlamAction && !IsTailBroken();
-            case DragonAction.TailSwipe:
-                return enableTailSwipeAction && !IsTailBroken();
-            case DragonAction.WideBreath:
-                return enableWideBreathAction;
-            case DragonAction.BeamBreath:
-                return enableBeamBreathAction;
-            case DragonAction.Charge:
-                return enableChargeAction && useChargeAsAttack;
-            case DragonAction.DoubleCharge:
-                return enableChargeAction && enableDoubleChargeAction && useChargeAsAttack;
-            case DragonAction.BackStepBreath:
-                return enableBackStepBreathAction && (enableWideBreathAction || enableBeamBreathAction);
-            case DragonAction.SideStepSwipe:
-                return enableSideStepSwipeAction && enableSwipeAction;
-            case DragonAction.SideStepTailSlam:
-                return enableSideStepTailSlamAction && enableTailSlamAction && !IsTailBroken();
-            case DragonAction.SideStepBreath:
-                return enableSideStepBreathAction && (enableWideBreathAction || enableBeamBreathAction);
-            case DragonAction.RapidCombo:
-                return enableRapidComboAction && enableSwipeAction;
-            default:
-                return true;
+            return enableApproachAction ? DragonAction.Approach : DragonAction.Opening;
         }
+
+        if (picked != lastAction && picked != secondLastAction)
+        {
+            return picked;
+        }
+
+        if (picked == DragonAction.Charge || picked == DragonAction.DoubleCharge)
+        {
+            return enableApproachAction ? DragonAction.Approach : DragonAction.Opening;
+        }
+
+        return picked;
     }
 
     private IEnumerator ExecuteAction(DragonAction action)
     {
-        if (!IsActionAllowed(action))
-        {
-            yield return OpeningIdle();
-            yield break;
-        }
-
         RegisterAction(action);
+
         switch (action)
         {
-            case DragonAction.Opening: yield return OpeningIdle(); break;
-            case DragonAction.WideBreath: yield return WideBreathAttack(); break;
-            case DragonAction.BeamBreath: yield return BeamBreathAttack(); break;
-            case DragonAction.Charge: yield return ChargeAttack(false, true); break;
-            case DragonAction.DoubleCharge: yield return DoubleChargeAttack(); break;
-            case DragonAction.Swipe: yield return SwipeAttack(Random.value > 0.5f); break;
-            case DragonAction.TailSlam: yield return TailSlam(); break;
-            case DragonAction.TailSwipe: yield return TailSwipe(); break;
-            case DragonAction.BackStepBreath: yield return BackStepThenMaybeBreath(); break;
-            case DragonAction.SideStepSwipe: yield return SideStepThenSwipe(); break;
-            case DragonAction.SideStepTailSlam: yield return SideStepThenTailSlam(); break;
-            case DragonAction.SideStepBreath: yield return SideStepThenBreath(); break;
-            case DragonAction.RapidCombo: yield return RapidCombo(); break;
-            case DragonAction.Approach: yield return ApproachPlayer(); break;
-            default: yield return OpeningIdle(); break;
+            case DragonAction.Opening:
+                yield return OpeningIdle();
+                break;
+
+            case DragonAction.Approach:
+                yield return ApproachPlayer();
+                break;
+
+            case DragonAction.SwipeCounter:
+                yield return SwipeCounterAttack();
+                break;
+
+            case DragonAction.TailSlam:
+                yield return TailSlam();
+                break;
+
+            case DragonAction.TailSwipe:
+                yield return TailSwipe();
+                break;
+
+            case DragonAction.BackStepTailSlam:
+                yield return BackStepThenTailSlam();
+                break;
+
+            case DragonAction.BackStepTailSwipe:
+                yield return BackStepThenTailSwipe();
+                break;
+
+            case DragonAction.BackStepWideBreath:
+                yield return BackStepThenWideBreath();
+                break;
+
+            case DragonAction.BackStepBeamBreath:
+                yield return BackStepThenBeamBreath();
+                break;
+
+            case DragonAction.WideBreath:
+                yield return WideBreathAttack();
+                break;
+
+            case DragonAction.BeamBreath:
+                yield return BeamBreathAttack();
+                break;
+
+            case DragonAction.Charge:
+                yield return ChargeAttack(true);
+                break;
+
+            case DragonAction.DoubleCharge:
+                yield return DoubleChargeAttack();
+                break;
+
+            default:
+                yield return OpeningIdle();
+                break;
         }
     }
 
@@ -794,19 +958,30 @@ public class DragonAI : MonoBehaviour
     {
         isBusy = true;
         state = DragonState.Opening;
+
         DisableAllHitboxes();
         StopAllSpecialParticles();
         motion.ResetAnimatorSpeed();
         motion.PlayAnim(motion.idleAnim, true);
 
         float duration = Random.Range(openingIdleMinTime, openingIdleMaxTime);
-        if (phase != null && phase.isPhase2) duration = phase.GetPhase2OpeningTime();
+
+        if (phase != null && phase.isPhase2)
+        {
+            duration = phase.GetPhase2OpeningTime();
+        }
 
         float timer = 0f;
+
         while (timer < duration)
         {
             timer += Time.deltaTime;
-            if (lookAtPlayerDuringOpening) motion.FacePlayerSmooth(motion.idleTurnSpeed);
+
+            if (lookAtPlayerDuringOpening)
+            {
+                motion.FacePlayerSmooth(motion.idleTurnSpeed);
+            }
+
             yield return null;
         }
 
@@ -818,15 +993,19 @@ public class DragonAI : MonoBehaviour
         isBusy = true;
         state = DragonState.Acting;
         DisableAllHitboxes();
+        StopAllSpecialParticles();
 
         bool running = motion.GetDistanceToPlayer() >= switchToRunDistance;
         string moveAnim = running ? motion.runAnim : motion.walkAnim;
+
         motion.PlayAnim(moveAnim, true);
+
         float checkTimer = 0f;
 
         while (player != null && motion.GetDistanceToPlayer() > approachStopDistance)
         {
             float distance = motion.GetDistanceToPlayer();
+
             if (distance >= switchToRunDistance && !running)
             {
                 running = true;
@@ -845,203 +1024,205 @@ public class DragonAI : MonoBehaviour
             checkTimer += Time.deltaTime;
             motion.KeepMoveAnim(moveAnim, ref checkTimer);
             motion.FacePlayerSmooth(motion.actionTurnSpeed);
+
             float speed = running ? runChaseSpeed : walkSpeed;
-            if (phase != null) speed = phase.ApplySpeed(speed);
+
+            if (phase != null)
+            {
+                speed = phase.ApplySpeed(speed);
+            }
+
             motion.MoveDragon(motion.GetMoveForward() * speed * Time.deltaTime);
+
             yield return null;
         }
 
         ReturnToIdle();
     }
 
-    private IEnumerator ApproachMeleeRange()
+    private IEnumerator DoRandomBackSteps()
     {
-        if (!approachBeforeNonBreathAttack || player == null) yield break;
+        int minCount = Mathf.Max(0, randomBackStepMinCount);
+        int maxCount = Mathf.Max(minCount, randomBackStepMaxCount);
+        int count = Random.Range(minCount, maxCount + 1);
 
-        float timer = 0f;
-        float checkTimer = 0f;
-        bool running = motion.GetDistanceToPlayer() >= switchToRunDistance;
-        string moveAnim = running ? motion.runAnim : motion.walkAnim;
-        motion.PlayAnim(moveAnim, true);
-
-        while (player != null && motion.GetDistanceToPlayer() > meleeAttackStartDistance)
+        for (int i = 0; i < count; i++)
         {
-            timer += Time.deltaTime;
-            checkTimer += Time.deltaTime;
-            if (timer > meleeApproachTimeout) break;
+            yield return motion.FacePlayerForSeconds(0.06f);
 
-            float distance = motion.GetDistanceToPlayer();
-            if (distance >= switchToRunDistance && !running)
-            {
-                running = true;
-                moveAnim = motion.runAnim;
-                motion.PlayAnim(moveAnim, true);
-                checkTimer = 0f;
-            }
-            else if (running && distance <= runChaseStopDistance)
-            {
-                running = false;
-                moveAnim = motion.walkAnim;
-                motion.PlayAnim(moveAnim, true);
-                checkTimer = 0f;
-            }
+            Vector3 backDirection = -motion.GetMoveForward();
 
-            motion.KeepMoveAnim(moveAnim, ref checkTimer);
-            motion.FacePlayerSmooth(meleeApproachTurnSpeed);
-            float speed = running ? runChaseSpeed : meleeApproachSpeed;
-            if (phase != null) speed = phase.ApplySpeed(speed);
-            motion.MoveDragon(motion.GetMoveForward() * speed * Time.deltaTime);
-            yield return null;
-        }
+            yield return motion.MoveInDirectionForSeconds(
+                backDirection,
+                backStepDistance,
+                backStepDuration,
+                motion.stepAnim
+            );
 
-        yield return motion.FacePlayerForSeconds(0.15f);
-    }
-
-    private IEnumerator BackStepThenMaybeBreath()
-    {
-        float r = Random.value;
-        if (CanUseCharge() && r < afterBackStepChargeChance)
-        {
-            yield return ChargeAttack(true, true);
-            yield break;
-        }
-
-        yield return StepAction(-motion.GetMoveForward());
-
-        if (r < afterBackStepChargeChance + afterBackStepBreathChance)
-        {
-            yield return new WaitForSeconds(0.12f);
-            yield return RandomEnabledBreathAttack();
-        }
-        else
-        {
-            ReturnToIdle();
+            yield return new WaitForSeconds(backStepInterval);
         }
     }
 
-    private IEnumerator SideStepThenSwipe()
+    private IEnumerator DoFixedBackSteps(int count)
     {
-        if (!enableSwipeAction)
-        {
-            yield return OpeningIdle();
-            yield break;
-        }
+        int safeCount = Mathf.Max(0, count);
 
-        yield return StepAction(motion.GetRandomSideStepDirection());
-        yield return new WaitForSeconds(Random.Range(0.05f, 0.18f));
-        yield return SwipeAttack(Random.value > 0.5f);
+        for (int i = 0; i < safeCount; i++)
+        {
+            yield return motion.FacePlayerForSeconds(0.06f);
+
+            Vector3 backDirection = -motion.GetMoveForward();
+
+            yield return motion.MoveInDirectionForSeconds(
+                backDirection,
+                backStepDistance,
+                backStepDuration,
+                motion.stepAnim
+            );
+
+            yield return new WaitForSeconds(backStepInterval);
+        }
     }
 
-    private IEnumerator SideStepThenTailSlam()
-    {
-        if (IsTailBroken() || !enableTailSlamAction)
-        {
-            if (enableSwipeAction) yield return SideStepThenSwipe();
-            else yield return OpeningIdle();
-            yield break;
-        }
-
-        yield return StepAction(motion.GetRandomSideStepDirection());
-        yield return new WaitForSeconds(Random.Range(0.05f, 0.18f));
-        yield return TailSlam();
-    }
-
-    private IEnumerator SideStepThenBreath()
-    {
-        if (!enableWideBreathAction && !enableBeamBreathAction)
-        {
-            yield return OpeningIdle();
-            yield break;
-        }
-
-        yield return StepAction(motion.GetRandomSideStepDirection());
-        yield return new WaitForSeconds(Random.Range(0.05f, 0.18f));
-        yield return RandomEnabledBreathAttack();
-    }
-
-    private IEnumerator RapidCombo()
-    {
-        if (!enableSwipeAction)
-        {
-            yield return OpeningIdle();
-            yield break;
-        }
-
-        isBusy = true;
-        state = DragonState.Acting;
-        yield return SwipeAttack(Random.value > 0.5f);
-        isBusy = true;
-        state = DragonState.Acting;
-        yield return new WaitForSeconds(phase != null ? phase.rapidComboInterval : 0.15f);
-
-        if (enableTailSwipeAction && !IsTailBroken() && Random.value > 0.4f) yield return TailSwipe();
-        else yield return SwipeAttack(Random.value > 0.5f);
-
-        isBusy = true;
-        state = DragonState.Acting;
-        yield return new WaitForSeconds(phase != null ? phase.rapidComboRecovery : 1.2f);
-        ReturnToIdle();
-    }
-
-    private IEnumerator DoubleChargeAttack()
-    {
-        if (!CanUseCharge())
-        {
-            if (enableSwipeAction) yield return SwipeAttack(Random.value > 0.5f);
-            else yield return OpeningIdle();
-            yield break;
-        }
-
-        yield return ChargeAttack(true, true);
-        isBusy = true;
-        state = DragonState.Acting;
-        yield return new WaitForSeconds(doubleChargeInterval);
-        if (state == DragonState.Dead || state == DragonState.Down) yield break;
-        yield return ChargeAttack(false, false);
-        isBusy = true;
-        state = DragonState.Acting;
-        yield return new WaitForSeconds(doubleChargeRecovery);
-        ReturnToIdle();
-    }
-
-    private IEnumerator RandomEnabledBreathAttack()
-    {
-        if (enableWideBreathAction && enableBeamBreathAction)
-        {
-            if (Random.value > 0.5f) yield return WideBreathAttack();
-            else yield return BeamBreathAttack();
-            yield break;
-        }
-
-        if (enableWideBreathAction)
-        {
-            yield return WideBreathAttack();
-            yield break;
-        }
-
-        if (enableBeamBreathAction)
-        {
-            yield return BeamBreathAttack();
-            yield break;
-        }
-
-        yield return OpeningIdle();
-    }
-
-    private IEnumerator WideBreathAttack()
+    private IEnumerator BackStepThenTailSlam()
     {
         isBusy = true;
         state = DragonState.Acting;
         DisableAllHitboxes();
         StopAllSpecialParticles();
+
+        yield return DoFixedBackSteps(closeSpecialBackStepCount);
+        yield return TailSlam();
+    }
+
+    private IEnumerator BackStepThenTailSwipe()
+    {
+        isBusy = true;
+        state = DragonState.Acting;
+        DisableAllHitboxes();
+        StopAllSpecialParticles();
+
+        yield return DoFixedBackSteps(closeSpecialBackStepCount);
+        yield return TailSwipe();
+    }
+
+    private IEnumerator BackStepThenWideBreath()
+    {
+        isBusy = true;
+        state = DragonState.Acting;
+        DisableAllHitboxes();
+        StopAllSpecialParticles();
+
+        yield return DoFixedBackSteps(closeSpecialBackStepCount);
+        yield return WideBreathAttack(false);
+    }
+
+    private IEnumerator BackStepThenBeamBreath()
+    {
+        isBusy = true;
+        state = DragonState.Acting;
+        DisableAllHitboxes();
+        StopAllSpecialParticles();
+
+        yield return DoFixedBackSteps(closeSpecialBackStepCount);
+        yield return BeamBreathAttack(false);
+    }
+
+    private IEnumerator SwipeCounterAttack()
+    {
+        isBusy = true;
+        state = DragonState.Acting;
+        DisableAllHitboxes();
+        StopAllSpecialParticles();
+
+        if (motion.GetDistanceToPlayer() > swipeCounterReachDistance)
+        {
+            ReturnToIdle();
+            yield break;
+        }
+
+        yield return motion.FacePlayerForSeconds(swipeCounterFaceTime);
+
+        bool left = Random.value > 0.5f;
+        string animName = left ? motion.leftSwipeAnim : motion.rightSwipeAnim;
+        DragonAttackHitbox hitbox = left ? leftArmHitbox : rightArmHitbox;
+
+        motion.PlayAnim(animName, true);
+
+        if (swipeParticle != null) swipeParticle.Play();
+        PlaySfx(swipeSfx);
+
+        float lungeStart = motion.FrameToSeconds(swipeLungeStartFrame);
+        float lungeEnd = motion.FrameToSeconds(swipeLungeEndFrame);
+        float hitStart = motion.FrameToSeconds(swipeHitStartFrame);
+        float hitEnd = motion.FrameToSeconds(swipeHitEndFrame);
+
+        float timer = 0f;
+        float previousLunge = 0f;
+        bool hitboxEnabled = false;
+
+        while (timer < swipeAnimDuration)
+        {
+            timer += Time.deltaTime;
+
+            if (swipeForwardDistance > 0f && timer >= lungeStart && timer <= lungeEnd)
+            {
+                motion.FacePlayerSmooth(swipeLungeTurnSpeed);
+
+                Vector3 lungeDirection = motion.GetDirectionToPlayer();
+
+                float t = Mathf.InverseLerp(lungeStart, lungeEnd, timer);
+                float eased = Mathf.SmoothStep(0f, 1f, t);
+                float currentLunge = swipeForwardDistance * eased;
+                float delta = currentLunge - previousLunge;
+                previousLunge = currentLunge;
+
+                motion.MoveDragon(lungeDirection * delta);
+            }
+
+            if (!hitboxEnabled && timer >= hitStart)
+            {
+                hitboxEnabled = true;
+                if (hitbox != null) hitbox.EnableHitbox();
+            }
+
+            if (hitboxEnabled && timer >= hitEnd)
+            {
+                hitboxEnabled = false;
+                if (hitbox != null) hitbox.DisableHitbox();
+            }
+
+            yield return null;
+        }
+
+        if (hitbox != null) hitbox.DisableHitbox();
+
+        ReturnToIdle();
+    }
+
+    private IEnumerator WideBreathAttack(bool allowAutoBackStep = true)
+    {
+        isBusy = true;
+        state = DragonState.Acting;
+        DisableAllHitboxes();
+        StopAllSpecialParticles();
+
+        if (allowAutoBackStep && motion.GetDistanceToPlayer() < breathBackStepIfCloserThan)
+        {
+            yield return DoRandomBackSteps();
+        }
+
         yield return motion.FacePlayerForSeconds(breathTurnTime);
+
         motion.SetAnimatorSpeed(breathAnimatorSpeed);
         motion.PlayAnim(motion.breathAnim, true);
+
         if (wideBreathChargeParticle != null) wideBreathChargeParticle.Play();
         PlaySfx(wideBreathChargeSfx);
 
         float start = motion.FrameToSeconds(wideBreathStartFrame);
         float end = motion.FrameToSeconds(wideBreathEndFrame);
+
         float timer = 0f;
 
         while (timer < start)
@@ -1051,25 +1232,45 @@ public class DragonAI : MonoBehaviour
             yield return null;
         }
 
-        if (wideBreathChargeParticle != null) wideBreathChargeParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        if (wideBreathChargeParticle != null)
+        {
+            wideBreathChargeParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        }
+
         if (wideBreathFireParticle != null) wideBreathFireParticle.Play();
         PlaySfx(wideBreathFireSfx);
+
         if (wideBreathHitbox != null) wideBreathHitbox.EnableHitbox();
+
         yield return new WaitForSeconds(Mathf.Max(0f, end - start));
+
         if (wideBreathHitbox != null) wideBreathHitbox.DisableHitbox();
-        if (wideBreathFireParticle != null) wideBreathFireParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+
+        if (wideBreathFireParticle != null)
+        {
+            wideBreathFireParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        }
+
         yield return new WaitForSeconds(Mathf.Max(0f, breathDuration - end));
         yield return new WaitForSeconds(wideBreathRecovery);
+
         ReturnToIdle();
     }
 
-    private IEnumerator BeamBreathAttack()
+    private IEnumerator BeamBreathAttack(bool allowAutoBackStep = true)
     {
         isBusy = true;
         state = DragonState.Acting;
         DisableAllHitboxes();
         StopAllSpecialParticles();
+
+        if (allowAutoBackStep && motion.GetDistanceToPlayer() < breathBackStepIfCloserThan)
+        {
+            yield return DoRandomBackSteps();
+        }
+
         yield return motion.FacePlayerForSeconds(breathTurnTime);
+
         motion.SetAnimatorSpeed(breathAnimatorSpeed);
         motion.PlayAnim(motion.breathAnim, true);
 
@@ -1083,9 +1284,10 @@ public class DragonAI : MonoBehaviour
         PlaySfx(beamBreathChargeSfx);
 
         float start = motion.FrameToSeconds(beamBreathStartFrame);
+        float end = motion.FrameToSeconds(beamBreathEndFrame);
         float trackStart = motion.FrameToSeconds(beamTrackStartFrame);
         float trackEnd = motion.FrameToSeconds(beamTrackEndFrame);
-        float end = motion.FrameToSeconds(beamBreathEndFrame);
+
         float timer = 0f;
         bool hitboxEnabled = false;
         bool fireParticlePlayed = false;
@@ -1094,13 +1296,28 @@ public class DragonAI : MonoBehaviour
         {
             timer += Time.deltaTime;
 
-            if (timer < trackStart) motion.FacePlayerSmooth(motion.actionTurnSpeed);
-            if (timer >= trackStart && timer <= trackEnd && beamBreathAimer != null) beamBreathAimer.AimSmooth();
+            if (timer < trackStart)
+            {
+                motion.FacePlayerSmooth(motion.actionTurnSpeed);
+            }
+
+            if (timer >= trackStart && timer <= trackEnd)
+            {
+                if (beamBreathAimer != null)
+                {
+                    beamBreathAimer.AimSmooth();
+                }
+            }
 
             if (!fireParticlePlayed && timer >= start)
             {
                 fireParticlePlayed = true;
-                if (beamBreathChargeParticle != null) beamBreathChargeParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+
+                if (beamBreathChargeParticle != null)
+                {
+                    beamBreathChargeParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                }
+
                 if (beamBreathFireParticle != null) beamBreathFireParticle.Play();
                 PlaySfx(beamBreathFireSfx);
             }
@@ -1121,59 +1338,93 @@ public class DragonAI : MonoBehaviour
         }
 
         if (beamBreathHitbox != null) beamBreathHitbox.DisableHitbox();
-        if (beamBreathFireParticle != null) beamBreathFireParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+
+        if (beamBreathFireParticle != null)
+        {
+            beamBreathFireParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        }
+
         yield return new WaitForSeconds(beamBreathRecovery);
+
         ReturnToIdle();
     }
 
-    private IEnumerator ChargeAttack(bool forceCloseBackStep, bool consumeCooldown)
+    private IEnumerator ChargeAttack(bool consumeCooldown)
     {
         isBusy = true;
         state = DragonState.Acting;
+
         DisableAllHitboxes();
         StopAllSpecialParticles();
         motion.ResetAnimatorSpeed();
-        if (consumeCooldown) lastChargeTime = Time.time;
 
-        float distance = motion.GetDistanceToPlayer();
-        if (forceCloseBackStep || distance < chargeMinStartDistance) yield return DoubleBackStepForCloseCharge();
+        if (consumeCooldown)
+        {
+            lastChargeTime = Time.time;
+        }
+
+        if (motion.GetDistanceToPlayer() < chargeBackStepIfCloserThan)
+        {
+            yield return DoRandomBackSteps();
+        }
 
         yield return motion.FacePlayerForSeconds(0.15f);
+
         motion.PlayAnim(motion.runAnim, true);
         motion.SetAnimatorSpeed(chargeTellAnimationSpeed);
+
         if (chargeHoldParticle != null) chargeHoldParticle.Play();
         PlaySfx(chargeHoldSfx);
 
         float tellTimer = 0f;
         float checkTimer = 0f;
+
         while (tellTimer < chargeTellTime)
         {
             tellTimer += Time.deltaTime;
             checkTimer += Time.deltaTime;
+
             motion.KeepMoveAnim(motion.runAnim, ref checkTimer);
             motion.SetAnimatorSpeed(chargeTellAnimationSpeed);
             motion.FacePlayerSmooth(motion.actionTurnSpeed);
+
             yield return null;
         }
 
-        if (chargeHoldParticle != null) chargeHoldParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        if (chargeHoldParticle != null)
+        {
+            chargeHoldParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        }
+
         if (chargeReadyParticle != null) chargeReadyParticle.Play();
         PlaySfx(chargeReadySfx);
+
         motion.ResetAnimatorSpeed();
         motion.PlayAnim(motion.runAnim, true);
+
         yield return new WaitForSeconds(chargeReadyPauseTime);
 
         Vector3 chargeDirection = motion.GetDirectionToPlayer();
         float targetDistance = GetChargeTargetDistance(chargeDirection);
-        float baseSpeed = phase != null ? phase.ApplyChargeSpeed(chargeSpeed) : chargeSpeed;
+
+        float baseSpeed = chargeSpeed;
+
+        if (phase != null)
+        {
+            baseSpeed = phase.ApplyChargeSpeed(baseSpeed);
+        }
+
         float chargeTime = Mathf.Clamp(targetDistance / Mathf.Max(0.01f, baseSpeed), chargeMinDuration, chargeMaxDuration);
+
         float timer = 0f;
         float previousDistance = 0f;
         float runCheckTimer = 0f;
 
         if (chargeRunParticle != null) chargeRunParticle.Play();
         PlaySfx(chargeRunSfx);
+
         if (chargeHitbox != null) chargeHitbox.EnableHitbox();
+
         motion.PlayAnim(motion.runAnim, true);
         motion.ResetAnimatorSpeed();
 
@@ -1181,39 +1432,68 @@ public class DragonAI : MonoBehaviour
         {
             timer += Time.deltaTime;
             runCheckTimer += Time.deltaTime;
+
             motion.KeepMoveAnim(motion.runAnim, ref runCheckTimer);
+
             float t = Mathf.Clamp01(timer / chargeTime);
-            float currentDistance = targetDistance * EvaluateChargeMoveCurve(t);
+            float eased = EvaluateChargeMoveCurve(t);
+            float currentDistance = targetDistance * eased;
             float deltaDistance = currentDistance - previousDistance;
             previousDistance = currentDistance;
+
             motion.MoveDragon(chargeDirection * deltaDistance);
+
             yield return null;
         }
 
         if (chargeHitbox != null) chargeHitbox.DisableHitbox();
+
         StopAllChargeParticles();
         motion.ResetAnimatorSpeed();
         PlaySfx(chargeEndSfx);
+
         yield return new WaitForSeconds(chargeRecoveryTime);
+
         ReturnToIdle();
     }
 
-    private IEnumerator DoubleBackStepForCloseCharge()
+    private IEnumerator DoubleChargeAttack()
     {
-        int count = Mathf.Max(1, closeChargeBackStepCount);
-        for (int i = 0; i < count; i++)
+        if (!CanUseCharge())
         {
-            yield return motion.FacePlayerForSeconds(0.08f);
-            yield return motion.MoveInDirectionForSeconds(-motion.GetMoveForward(), closeChargeBackStepDistance, closeChargeBackStepDuration, motion.stepAnim);
-            yield return new WaitForSeconds(0.08f);
+            yield return ApproachPlayer();
+            yield break;
         }
+
+        yield return ChargeAttack(true);
+
+        isBusy = true;
+        state = DragonState.Acting;
+
+        yield return new WaitForSeconds(doubleChargeInterval);
+
+        if (state == DragonState.Dead || state == DragonState.Down) yield break;
+
+        yield return ChargeAttack(false);
+
+        isBusy = true;
+        state = DragonState.Acting;
+
+        yield return new WaitForSeconds(doubleChargeRecovery);
+
+        ReturnToIdle();
     }
 
     private float GetChargeTargetDistance(Vector3 chargeDirection)
     {
-        if (player == null) return chargeSpeed;
+        if (player == null)
+        {
+            return chargeSpeed;
+        }
+
         Vector3 toPlayer = player.position - transform.position;
         toPlayer.y = 0f;
+
         float distanceToPlayer = Mathf.Max(0f, Vector3.Dot(toPlayer, chargeDirection.normalized));
         return distanceToPlayer + chargeOvershootDistance;
     }
@@ -1221,6 +1501,7 @@ public class DragonAI : MonoBehaviour
     private float EvaluateChargeMoveCurve(float t)
     {
         t = Mathf.Clamp01(t);
+
         float accelEnd = Mathf.Clamp01(chargeAccelerationRatio);
         float decelStart = Mathf.Clamp01(1f - chargeDecelerationRatio);
 
@@ -1241,101 +1522,99 @@ public class DragonAI : MonoBehaviour
         return t;
     }
 
-    private IEnumerator SwipeAttack(bool left)
-    {
-        isBusy = true;
-        state = DragonState.Acting;
-        DisableAllHitboxes();
-        yield return ApproachMeleeRange();
-        yield return motion.FacePlayerForSeconds(0.25f);
-
-        Vector3 startPosition = transform.position;
-        string animName = left ? motion.leftSwipeAnim : motion.rightSwipeAnim;
-        DragonAttackHitbox hitbox = left ? leftArmHitbox : rightArmHitbox;
-        motion.PlayAnim(animName, true);
-        if (swipeParticle != null) swipeParticle.Play();
-        PlaySfx(swipeSfx);
-
-        float lungeStart = motion.FrameToSeconds(swipeLungeStartFrame);
-        float lungeEnd = motion.FrameToSeconds(swipeLungeEndFrame);
-        float hitStart = motion.FrameToSeconds(swipeHitStartFrame);
-        float hitEnd = motion.FrameToSeconds(swipeHitEndFrame);
-        float timer = 0f;
-        float previousLunge = 0f;
-        bool hitboxEnabled = false;
-        Vector3 fixedLungeDirection = swipeLungeTowardPlayer ? motion.GetDirectionToPlayer() : motion.GetMoveForward();
-
-        while (timer < swipeAnimDuration)
-        {
-            timer += Time.deltaTime;
-
-            if (timer >= lungeStart && timer <= lungeEnd)
-            {
-                motion.FacePlayerSmooth(swipeLungeTurnSpeed);
-                Vector3 lungeDirection = swipeLungeTowardPlayer ? motion.GetDirectionToPlayer() : fixedLungeDirection;
-                float t = Mathf.InverseLerp(lungeStart, lungeEnd, timer);
-                float currentLunge = swipeForwardDistance * Mathf.SmoothStep(0f, 1f, t);
-                float delta = currentLunge - previousLunge;
-                previousLunge = currentLunge;
-                motion.MoveDragon(lungeDirection * delta);
-            }
-
-            if (!hitboxEnabled && timer >= hitStart)
-            {
-                hitboxEnabled = true;
-                if (hitbox != null) hitbox.EnableHitbox();
-            }
-
-            if (hitboxEnabled && timer >= hitEnd)
-            {
-                hitboxEnabled = false;
-                if (hitbox != null) hitbox.DisableHitbox();
-            }
-
-            yield return null;
-        }
-
-        if (hitbox != null) hitbox.DisableHitbox();
-        if (swipeReturnToStartPosition) yield return motion.MoveToPositionForSeconds(startPosition, swipeReturnTime);
-        ReturnToIdle();
-    }
-
     private IEnumerator TailSlam()
     {
         if (IsTailBroken())
         {
-            yield return SwipeAttack(Random.value > 0.5f);
+            yield return ApproachPlayer();
             yield break;
         }
 
         isBusy = true;
         state = DragonState.Acting;
         DisableAllHitboxes();
-        yield return ApproachMeleeRange();
-        yield return motion.FacePlayerForSeconds(0.25f);
+        StopAllSpecialParticles();
 
-        Quaternion originalRotation = transform.rotation;
+        if (motion.GetDistanceToPlayer() > tailSlamReachDistance)
+        {
+            ReturnToIdle();
+            yield break;
+        }
+
         motion.PlayAnim(motion.tailSlamAnim, true);
+
         if (tailSlamParticle != null) tailSlamParticle.Play();
         PlaySfx(tailSlamSfx);
-        yield return new WaitForSeconds(motion.FrameToSeconds(tailSlamAimStartFrame));
 
-        if (tailAttacksTurnTailToPlayer)
+        float timer = 0f;
+
+        float aimStartTime = motion.FrameToSeconds(tailSlamAimStartFrame);
+        float trackEndTime = motion.FrameToSeconds(tailSlamTrackUntilFrame);
+        float hitStartTime = motion.FrameToSeconds(tailSlamHitStartFrame);
+        float hitEndTime = motion.FrameToSeconds(tailSlamHitEndFrame);
+        float returnStartTime = motion.FrameToSeconds(tailSlamReturnStartFrame);
+        float returnEndTime = motion.FrameToSeconds(tailSlamReturnEndFrame);
+
+        bool hitboxEnabled = false;
+        bool returnStarted = false;
+        Quaternion returnStartRotation = transform.rotation;
+
+        while (timer < tailSlamDuration)
         {
-            yield return TrackTailToPlayerForDuration(motion.FramesToDuration(tailSlamAimStartFrame, tailSlamTrackUntilFrame), tailSlamAttackOffsetY);
-        }
-        else
-        {
-            yield return motion.RotateTo(motion.GetRotationToPlayerWithOffset(tailSlamAngleOffset), motion.FramesToDuration(tailSlamAimStartFrame, tailSlamTrackUntilFrame));
+            timer += Time.deltaTime;
+
+            if (timer >= aimStartTime && timer <= trackEndTime)
+            {
+                Quaternion targetRotation;
+
+                if (tailAttacksTurnTailToPlayer)
+                {
+                    targetRotation = motion.GetTailRotationToPlayer(tailFacePlayerOffsetY, tailSlamAttackOffsetY);
+                }
+                else
+                {
+                    targetRotation = motion.GetRotationToPlayerWithOffset(tailSlamAngleOffset);
+                }
+
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, tailTrackingTurnSpeed * Time.deltaTime);
+            }
+
+            if (timer >= returnStartTime && timer <= returnEndTime)
+            {
+                if (!returnStarted)
+                {
+                    returnStarted = true;
+                    returnStartRotation = transform.rotation;
+                }
+
+                Quaternion targetRotation = motion.GetRotationToPlayerWithOffset(0f);
+
+                float returnDuration = Mathf.Max(0.01f, returnEndTime - returnStartTime);
+                float t = Mathf.Clamp01((timer - returnStartTime) / returnDuration);
+                float smoothT = Mathf.SmoothStep(0f, 1f, t);
+
+                Quaternion easedRotation = Quaternion.Slerp(returnStartRotation, targetRotation, smoothT);
+                transform.rotation = Quaternion.Slerp(transform.rotation, easedRotation, tailTrackingTurnSpeed * Time.deltaTime);
+            }
+
+            bool shouldEnableHitbox = timer >= hitStartTime && timer <= hitEndTime;
+
+            if (shouldEnableHitbox && !hitboxEnabled)
+            {
+                hitboxEnabled = true;
+                if (tailHitbox != null) tailHitbox.EnableHitbox();
+            }
+            else if (!shouldEnableHitbox && hitboxEnabled)
+            {
+                hitboxEnabled = false;
+                if (tailHitbox != null) tailHitbox.DisableHitbox();
+            }
+
+            yield return null;
         }
 
-        if (tailHitbox != null) tailHitbox.EnableHitbox();
-        yield return new WaitForSeconds(motion.FramesToDuration(tailSlamHitStartFrame, tailSlamHitEndFrame));
         if (tailHitbox != null) tailHitbox.DisableHitbox();
-        yield return new WaitForSeconds(motion.FramesToDuration(tailSlamHitEndFrame, tailSlamReturnStartFrame));
-        yield return motion.RotateTo(originalRotation, motion.FramesToDuration(tailSlamReturnStartFrame, tailSlamReturnEndFrame));
-        yield return new WaitForSeconds(Mathf.Max(0f, tailSlamDuration - motion.FrameToSeconds(tailSlamReturnEndFrame)));
-        transform.rotation = originalRotation;
+
         ReturnToIdle();
     }
 
@@ -1343,93 +1622,118 @@ public class DragonAI : MonoBehaviour
     {
         if (IsTailBroken())
         {
-            yield return SwipeAttack(Random.value > 0.5f);
+            yield return ApproachPlayer();
             yield break;
         }
 
         isBusy = true;
         state = DragonState.Acting;
         DisableAllHitboxes();
-        yield return ApproachMeleeRange();
-        yield return motion.FacePlayerForSeconds(0.25f);
+        StopAllSpecialParticles();
+
+        if (motion.GetDistanceToPlayer() > tailSwipeReachDistance)
+        {
+            ReturnToIdle();
+            yield break;
+        }
 
         motion.PlayAnim(motion.tailSwipeAnim, true);
+
         if (tailSwipeParticle != null) tailSwipeParticle.Play();
         PlaySfx(tailSwipeSfx);
-        yield return new WaitForSeconds(motion.FrameToSeconds(tailSwipeAimStartFrame));
 
-        if (tailAttacksTurnTailToPlayer)
-        {
-            yield return TrackTailToPlayerForDuration(motion.FramesToDuration(tailSwipeAimStartFrame, tailSwipeTrackUntilFrame), tailSwipeFixedAttackOffsetY);
-        }
-        else
-        {
-            yield return motion.RotateTo(motion.GetRotationToPlayerWithOffset(tailSwipeFixedAttackOffsetY), motion.FramesToDuration(tailSwipeAimStartFrame, tailSwipeTrackUntilFrame));
-        }
-
-        if (tailHitbox != null) tailHitbox.EnableHitbox();
-        yield return new WaitForSeconds(motion.FramesToDuration(tailSwipeSlamHitStartFrame, tailSwipeSlamHitEndFrame));
-        if (tailHitbox != null) tailHitbox.DisableHitbox();
-
-        yield return new WaitForSeconds(motion.FramesToDuration(tailSwipeSlamHitEndFrame, tailSwipeSecondHitStartFrame));
-
-        if (tailHitbox != null) tailHitbox.EnableHitbox();
-        if (tailSwipeSecondHitTurnToPlayer) yield return TailSwipeSecondTurnToPlayer();
-        else yield return new WaitForSeconds(motion.FramesToDuration(tailSwipeSecondHitStartFrame, tailSwipeSecondHitEndFrame));
-        if (tailHitbox != null) tailHitbox.DisableHitbox();
-
-        yield return new WaitForSeconds(Mathf.Max(0f, tailSwipeDuration - motion.FrameToSeconds(tailSwipeSecondTurnEndFrame)));
-        ReturnToIdle();
-    }
-
-    private IEnumerator TailSwipeSecondTurnToPlayer()
-    {
-        int startFrame = Mathf.Min(tailSwipeSecondTurnStartFrame, tailSwipeSecondTurnEndFrame);
-        int endFrame = Mathf.Max(tailSwipeSecondTurnStartFrame, tailSwipeSecondTurnEndFrame);
-        float duration = motion.FramesToDuration(startFrame, endFrame);
         float timer = 0f;
-        Quaternion startRotation = transform.rotation;
 
-        while (timer < duration)
+        float aimStartTime = motion.FrameToSeconds(tailSwipeAimStartFrame);
+        float trackEndTime = motion.FrameToSeconds(tailSwipeTrackUntilFrame);
+        float firstHitStartTime = motion.FrameToSeconds(tailSwipeSlamHitStartFrame);
+        float firstHitEndTime = motion.FrameToSeconds(tailSwipeSlamHitEndFrame);
+        float secondHitStartTime = motion.FrameToSeconds(tailSwipeSecondHitStartFrame);
+        float secondHitEndTime = motion.FrameToSeconds(tailSwipeSecondHitEndFrame);
+        float secondTurnStartTime = motion.FrameToSeconds(tailSwipeSecondTurnStartFrame);
+        float secondTurnEndTime = motion.FrameToSeconds(tailSwipeSecondTurnEndFrame);
+
+        bool hitboxEnabled = false;
+        bool secondTurnStarted = false;
+        Quaternion secondTurnStartRotation = transform.rotation;
+
+        while (timer < tailSwipeDuration)
         {
             timer += Time.deltaTime;
-            Quaternion lookPlayer = motion.GetRotationToPlayerWithOffset(0f);
-            Quaternion counterClockwiseAdd = Quaternion.Euler(0f, tailSwipeSecondHitExtraCounterClockwiseAngle, 0f);
-            Quaternion targetRotation = lookPlayer * counterClockwiseAdd;
-            float t = Mathf.Clamp01(timer / Mathf.Max(0.01f, duration));
-            Quaternion easedRotation = Quaternion.Slerp(startRotation, targetRotation, Mathf.SmoothStep(0f, 1f, t));
-            transform.rotation = Quaternion.Slerp(transform.rotation, easedRotation, tailSwipeSecondHitTurnSpeed * Time.deltaTime);
+
+            if (timer >= aimStartTime && timer <= trackEndTime)
+            {
+                Quaternion targetRotation;
+
+                if (tailAttacksTurnTailToPlayer)
+                {
+                    targetRotation = motion.GetTailRotationToPlayer(tailFacePlayerOffsetY, tailSwipeFixedAttackOffsetY);
+                }
+                else
+                {
+                    targetRotation = motion.GetRotationToPlayerWithOffset(tailSwipeFixedAttackOffsetY);
+                }
+
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, tailTrackingTurnSpeed * Time.deltaTime);
+            }
+
+            if (timer >= secondTurnStartTime && timer <= secondTurnEndTime)
+            {
+                if (!secondTurnStarted)
+                {
+                    secondTurnStarted = true;
+                    secondTurnStartRotation = transform.rotation;
+                }
+
+                Quaternion lookPlayer = motion.GetRotationToPlayerWithOffset(0f);
+                Quaternion counterClockwiseAdd = Quaternion.Euler(0f, tailSwipeSecondHitExtraCounterClockwiseAngle, 0f);
+                Quaternion targetRotation = lookPlayer * counterClockwiseAdd;
+
+                float turnDuration = Mathf.Max(0.01f, secondTurnEndTime - secondTurnStartTime);
+                float turnT = Mathf.Clamp01((timer - secondTurnStartTime) / turnDuration);
+                float smoothT = Mathf.SmoothStep(0f, 1f, turnT);
+
+                Quaternion easedRotation = Quaternion.Slerp(secondTurnStartRotation, targetRotation, smoothT);
+
+                transform.rotation = Quaternion.Slerp(
+                    transform.rotation,
+                    easedRotation,
+                    tailSwipeSecondHitTurnSpeed * Time.deltaTime
+                );
+            }
+
+            bool shouldEnableHitbox =
+                (timer >= firstHitStartTime && timer <= firstHitEndTime) ||
+                (timer >= secondHitStartTime && timer <= secondHitEndTime);
+
+            if (shouldEnableHitbox && !hitboxEnabled)
+            {
+                hitboxEnabled = true;
+                if (tailHitbox != null) tailHitbox.EnableHitbox();
+            }
+            else if (!shouldEnableHitbox && hitboxEnabled)
+            {
+                hitboxEnabled = false;
+                if (tailHitbox != null) tailHitbox.DisableHitbox();
+            }
+
             yield return null;
         }
-    }
 
-    private IEnumerator TrackTailToPlayerForDuration(float duration, float extraOffsetY)
-    {
-        float timer = 0f;
-        while (timer < duration)
-        {
-            timer += Time.deltaTime;
-            Quaternion targetRotation = motion.GetTailRotationToPlayer(tailFacePlayerOffsetY, extraOffsetY);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, tailTrackingTurnSpeed * Time.deltaTime);
-            yield return null;
-        }
-    }
+        if (tailHitbox != null) tailHitbox.DisableHitbox();
 
-    private IEnumerator StepAction(Vector3 direction)
-    {
-        float distance = Vector3.Dot(direction.normalized, -motion.GetMoveForward()) > 0.7f ? backStepDistance : sideStepDistance;
-        isBusy = true;
-        state = DragonState.Acting;
-        DisableAllHitboxes();
-        yield return motion.FacePlayerForSeconds(0.12f);
-        yield return motion.MoveInDirectionForSeconds(direction, distance, stepDuration, motion.stepAnim);
         ReturnToIdle();
     }
 
     private void HandleHalfHP()
     {
         if (state == DragonState.Dead) return;
-        if (phase != null) phase.EnterPhase2();
+
+        if (phase != null)
+        {
+            phase.EnterPhase2();
+        }
+
         StopAllCoroutines();
         StartCoroutine(HalfHPRoarRoutine());
     }
@@ -1438,13 +1742,22 @@ public class DragonAI : MonoBehaviour
     {
         DisableAllHitboxes();
         StopAllSpecialParticles();
-        motion.ResetAnimatorSpeed();
+
+        if (motion != null)
+        {
+            motion.ResetAnimatorSpeed();
+        }
+
         isBusy = true;
         state = DragonState.Acting;
+
         yield return motion.FacePlayerForSeconds(0.3f);
+
         motion.PlayAnim(motion.roarAnim, true);
         DoRoarEffect();
+
         yield return new WaitForSeconds(roarDuration);
+
         ReturnToIdle();
         StartCoroutine(AILoop());
     }
@@ -1452,6 +1765,7 @@ public class DragonAI : MonoBehaviour
     private void HandleTailCrystalBroken()
     {
         if (state == DragonState.Dead) return;
+
         StopAllCoroutines();
         StartCoroutine(DownRoutine());
     }
@@ -1460,13 +1774,22 @@ public class DragonAI : MonoBehaviour
     {
         DisableAllHitboxes();
         StopAllSpecialParticles();
-        motion.ResetAnimatorSpeed();
+
+        if (motion != null)
+        {
+            motion.ResetAnimatorSpeed();
+        }
+
         isBusy = true;
         state = DragonState.Down;
+
         motion.PlayAnim(motion.downAnim, true);
+
         if (downParticle != null) downParticle.Play();
         PlaySfx(downSfx);
+
         yield return new WaitForSeconds(downDuration);
+
         ReturnToIdle();
         StartCoroutine(AILoop());
     }
@@ -1474,12 +1797,23 @@ public class DragonAI : MonoBehaviour
     private void HandleDeath()
     {
         StopAllCoroutines();
+
         DisableAllHitboxes();
         StopAllSpecialParticles();
-        if (motion != null) motion.ResetAnimatorSpeed();
+
+        if (motion != null)
+        {
+            motion.ResetAnimatorSpeed();
+        }
+
         state = DragonState.Dead;
         isBusy = true;
-        if (motion != null) motion.PlayAnim(motion.deathAnim, true);
+
+        if (motion != null)
+        {
+            motion.PlayAnim(motion.deathAnim, true);
+        }
+
         if (deathParticle != null) deathParticle.Play();
         PlaySfx(deathSfx);
     }
@@ -1492,14 +1826,16 @@ public class DragonAI : MonoBehaviour
     private bool CanUseCharge()
     {
         if (!enableChargeAction) return false;
-        if (!useChargeAsAttack) return false;
-        return Time.time >= lastChargeTime + chargeCooldown;
+        if (Time.time < lastChargeTime + chargeCooldown) return false;
+
+        return true;
     }
 
     private void ReturnToIdle()
     {
         DisableAllHitboxes();
         StopAllSpecialParticles();
+
         if (motion != null)
         {
             motion.ResetAnimatorSpeed();
@@ -1507,7 +1843,11 @@ public class DragonAI : MonoBehaviour
         }
 
         isBusy = false;
-        if (state != DragonState.Dead && state != DragonState.Down) state = DragonState.Idle;
+
+        if (state != DragonState.Dead && state != DragonState.Down)
+        {
+            state = DragonState.Idle;
+        }
     }
 
     private void DisableAllHitboxes()
@@ -1528,24 +1868,52 @@ public class DragonAI : MonoBehaviour
 
     private void StopAllChargeParticles()
     {
-        if (chargeHoldParticle != null) chargeHoldParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        if (chargeReadyParticle != null) chargeReadyParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        if (chargeRunParticle != null) chargeRunParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        if (chargeHoldParticle != null)
+        {
+            chargeHoldParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        if (chargeReadyParticle != null)
+        {
+            chargeReadyParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        if (chargeRunParticle != null)
+        {
+            chargeRunParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
     }
 
     private void StopAllBreathParticles()
     {
-        if (wideBreathChargeParticle != null) wideBreathChargeParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        if (wideBreathFireParticle != null) wideBreathFireParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        if (beamBreathChargeParticle != null) beamBreathChargeParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        if (beamBreathFireParticle != null) beamBreathFireParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        if (wideBreathChargeParticle != null)
+        {
+            wideBreathChargeParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        if (wideBreathFireParticle != null)
+        {
+            wideBreathFireParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        if (beamBreathChargeParticle != null)
+        {
+            beamBreathChargeParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        if (beamBreathFireParticle != null)
+        {
+            beamBreathFireParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
     }
 
     private void DoRoarEffect()
     {
         if (roarParticle != null) roarParticle.Play();
         PlaySfx(roarSfx);
+
         Collider[] hits = Physics.OverlapSphere(transform.position, roarStaggerRadius, playerLayer);
+
         foreach (Collider hit in hits)
         {
             hit.SendMessage("DragonStagger", roarStaggerTime, SendMessageOptions.DontRequireReceiver);
@@ -1555,13 +1923,17 @@ public class DragonAI : MonoBehaviour
     private void PlaySfx(AudioClip clip)
     {
         if (clip == null) return;
+
         if (effectPlayer != null)
         {
             effectPlayer.PlayCustomSfx(clip);
             return;
         }
 
-        if (audioSource != null) audioSource.PlayOneShot(clip, sfxVolume);
+        if (audioSource != null)
+        {
+            audioSource.PlayOneShot(clip, sfxVolume);
+        }
     }
 
     private class WeightedActionPicker
@@ -1571,12 +1943,20 @@ public class DragonAI : MonoBehaviour
         public void Add(DragonAction action, int weight)
         {
             int safeWeight = Mathf.Max(0, weight);
-            for (int i = 0; i < safeWeight; i++) actions.Add(action);
+
+            for (int i = 0; i < safeWeight; i++)
+            {
+                actions.Add(action);
+            }
         }
 
         public DragonAction Pick()
         {
-            if (actions.Count == 0) return DragonAction.Opening;
+            if (actions.Count == 0)
+            {
+                return DragonAction.Opening;
+            }
+
             return actions[Random.Range(0, actions.Count)];
         }
     }

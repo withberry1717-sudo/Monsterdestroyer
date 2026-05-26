@@ -29573,6 +29573,18 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+      propertyPath: isCrystalBroken
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8618759901867992113, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8618759901867992113, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8618759901867992113, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: m_LocalPosition.x
       value: 227.21982

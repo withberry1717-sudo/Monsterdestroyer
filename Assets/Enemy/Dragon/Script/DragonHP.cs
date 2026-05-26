@@ -4,26 +4,42 @@ using System;
 public class DragonHP : MonoBehaviour
 {
     [Header("ドラゴンの本体HP")]
+    [Tooltip("ドラゴン本体の最大HP")]
     public float maxHP = 3000f;
+
+    [Tooltip("現在の本体HP")]
     public float currentHP;
 
-    [Header("クリスタルの共有HP")]
-    public float maxCrystalHP = 300f;
-    public float currentCrystalHP;
+    [Header("尻尾クリスタルのHP")]
+    [Tooltip("尻尾クリスタルの最大HP。これが0になると尻尾攻撃を封印してダウンする")]
+    public float maxTailCrystalHP = 300f;
+
+    [Tooltip("現在の尻尾クリスタルHP")]
+    public float currentTailCrystalHP;
+
+    [Tooltip("尻尾クリスタルが壊れているか")]
+    public bool isTailCrystalBroken = false;
+
+    [Header("互換用：昔のCrystal変数")]
+    [Tooltip("昔のコードとの互換用。isTailCrystalBrokenと同じ意味")]
     public bool isCrystalBroken = false;
 
     [Header("状態")]
+    [Tooltip("ドラゴンが死亡しているか")]
     public bool isDead = false;
+
+    [Tooltip("HP50%イベントをすでに発動したか")]
     public bool halfHpTriggered = false;
 
     public event Action OnHalfHP;
     public event Action OnDeath;
+    public event Action OnTailCrystalBroken;
     public event Action OnCrystalBroken;
 
-    void Start()
+    private void Start()
     {
         currentHP = maxHP;
-        currentCrystalHP = maxCrystalHP;
+        currentTailCrystalHP = maxTailCrystalHP;
     }
 
     public void TakeDamage(float damage)
@@ -33,19 +49,19 @@ public class DragonHP : MonoBehaviour
         currentHP -= damage;
         currentHP = Mathf.Max(currentHP, 0f);
 
-        Debug.Log($"本体に {damage} のダメージ！ 残りHP: {currentHP}");
+        Debug.Log($"本体に {damage} ダメージ。残りHP: {currentHP}");
 
         if (!halfHpTriggered && currentHP <= maxHP * 0.5f)
         {
             halfHpTriggered = true;
-            Debug.Log("ドラゴンHP50%以下！強化フェーズへ");
+            Debug.Log("ドラゴンHP50%以下。強化フェーズへ移行");
             OnHalfHP?.Invoke();
         }
 
         if (currentHP <= 0f)
         {
             isDead = true;
-            Debug.Log("ドラゴン討伐完了！");
+            Debug.Log("ドラゴン討伐完了");
             OnDeath?.Invoke();
 
             if (GameManager.Instance != null)
@@ -55,27 +71,42 @@ public class DragonHP : MonoBehaviour
         }
     }
 
-    public void TakeCrystalDamage(float damage)
+    public void TakeTailCrystalDamage(float damage)
     {
         if (isDead) return;
-        if (isCrystalBroken) return;
+        if (isTailCrystalBroken) return;
 
-        currentCrystalHP -= damage;
-        currentCrystalHP = Mathf.Max(currentCrystalHP, 0f);
+        currentTailCrystalHP -= damage;
+        currentTailCrystalHP = Mathf.Max(currentTailCrystalHP, 0f);
 
-        Debug.Log($"クリスタル共有HPに {damage} のダメージ！ 残り耐久: {currentCrystalHP}");
+        Debug.Log($"尻尾クリスタルに {damage} ダメージ。残り耐久: {currentTailCrystalHP}");
 
-        if (currentCrystalHP <= 0f)
+        if (currentTailCrystalHP <= 0f)
         {
-            isCrystalBroken = true;
-            Debug.Log("クリスタル完全破壊！！");
-
-            if (ScoreManager.Instance != null)
-            {
-                ScoreManager.Instance.AddCrystalBreakBonus();
-            }
-
-            OnCrystalBroken?.Invoke();
+            BreakTailCrystal();
         }
+    }
+
+    public void TakeCrystalDamage(float damage)
+    {
+        TakeTailCrystalDamage(damage);
+    }
+
+    private void BreakTailCrystal()
+    {
+        if (isTailCrystalBroken) return;
+
+        isTailCrystalBroken = true;
+        isCrystalBroken = true;
+
+        Debug.Log("尻尾クリスタル破壊。尻尾攻撃を封印してダウン");
+
+        if (ScoreManager.Instance != null)
+        {
+            ScoreManager.Instance.AddCrystalBreakBonus();
+        }
+
+        OnTailCrystalBroken?.Invoke();
+        OnCrystalBroken?.Invoke();
     }
 }

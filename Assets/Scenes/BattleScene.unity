@@ -2690,29 +2690,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b4c1d000227ad3488418819c764885e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonAI
-  animator: {fileID: 356980420}
+  motion: {fileID: 0}
+  phase: {fileID: 0}
   dragonHP: {fileID: 78498549}
+  effectPlayer: {fileID: 0}
   player: {fileID: 426628364}
-  modelForwardOffsetY: 0
-  lockYPosition: 1
   introIdleBeforeRoarTime: 3
-  idleAnim: Idle_Battle
-  walkAnim: walk
-  runAnim: Running
-  roarAnim: Roar
-  breathAnim: Breath
-  leftSwipeAnim: Arm Swipe_Left
-  rightSwipeAnim: Arm Swipe_Right
-  bigHitAnim: Big hit
-  deathAnim: Death
-  downAnim: Down
-  stepAnim: Step_L_R_B
-  tailSlamAnim: Tail Slam
-  tailSwipeAnim: Tail Swipe
-  crossFadeTime: 0.12
-  animationFPS: 30
-  walkAnimationRefreshTime: 0
-  runAnimationRefreshTime: 0
   closeRange: 7
   middleRange: 15
   farRange: 25
@@ -2726,18 +2709,30 @@ MonoBehaviour:
   meleeApproachSpeed: 3
   meleeApproachTurnSpeed: 6
   meleeApproachTimeout: 3
-  tackleWhenTargetEscapes: 1
-  tackleEscapeDistance: 3
-  useTackleDuringMeleeAttacks: 1
   minActionInterval: 0.4
   maxActionInterval: 1
-  preventSameActionRepeat: 1
-  avoidLastTwoActions: 1
-  allowRepeatIfNoOtherChoice: 1
-  idleTurnSpeed: 8
-  actionTurnSpeed: 5
-  facePlayerBeforeActionTime: 0.25
+  useOpeningIdle: 1
+  openingIdleChance: 0.18
+  openingIdleMinTime: 1
+  openingIdleMaxTime: 2.2
+  lookAtPlayerDuringOpening: 1
+  closeSwipeWeight: 4
+  closeTailSlamWeight: 2
+  closeTailSwipeWeight: 2
+  closeSideStepSwipeWeight: 2
+  closeBackStepBreathWeight: 2
+  closeChargeWeight: 1
+  middleSwipeWeight: 3
+  middleBreathWeight: 2
+  middleTailWeight: 2
+  middleStepWeight: 2
+  middleChargeWeight: 1
+  farBreathWeight: 3
+  farApproachWeight: 3
+  farChargeWeight: 1
   chargeHitbox: {fileID: 0}
+  useChargeAsAttack: 1
+  chargeCooldown: 10
   chargeSpeed: 24
   chargeOvershootDistance: 4
   chargeMinDuration: 0.75
@@ -2745,38 +2740,64 @@ MonoBehaviour:
   chargeMinStartDistance: 8
   chargeTellTime: 3
   chargeTellAnimationSpeed: 0.18
-  chargeTellAnimationRefreshTime: 0.25
   chargeReadyPauseTime: 0.15
   chargeRecoveryTime: 0.5
+  doubleChargeInterval: 0.55
+  doubleChargeRecovery: 1.4
   closeChargeBackStepDistance: 5
   closeChargeBackStepDuration: 0.45
   closeChargeBackStepCount: 2
   chargeAccelerationRatio: 0.18
   chargeDecelerationRatio: 0.22
-  useChargeAsAttack: 1
   chargeHoldParticle: {fileID: 585711684}
   chargeReadyParticle: {fileID: 1358320788}
   chargeRunParticle: {fileID: 0}
+  chargeHoldSfx: {fileID: 0}
+  chargeReadySfx: {fileID: 0}
+  chargeRunSfx: {fileID: 0}
+  chargeEndSfx: {fileID: 0}
   sideStepDistance: 2
   backStepDistance: 3
   stepDuration: 0.45
   afterBackStepBreathChance: 0.85
   afterBackStepChargeChance: 0.55
   swipeForwardDistance: 0.5
-  swipeForwardTime: 0.15
+  swipeLungeStartFrame: 18
+  swipeLungeEndFrame: 48
   swipeReturnTime: 0.18
   swipeReturnToStartPosition: 1
   swipeLungeTowardPlayer: 1
-  breathHitbox: {fileID: 0}
-  breathStartFrame: 30
-  breathEndFrame: 120
-  breathDuration: 4.2
-  breathTurnTime: 0.35
+  swipeLungeTurnSpeed: 7
   leftArmHitbox: {fileID: 0}
   rightArmHitbox: {fileID: 0}
   swipeHitStartFrame: 35
   swipeHitEndFrame: 55
   swipeAnimDuration: 2
+  swipeParticle: {fileID: 0}
+  swipeSfx: {fileID: 0}
+  breathTurnTime: 0.35
+  breathDuration: 4.2
+  breathAnimatorSpeed: 1
+  wideBreathHitbox: {fileID: 0}
+  wideBreathChargeParticle: {fileID: 0}
+  wideBreathFireParticle: {fileID: 0}
+  wideBreathChargeSfx: {fileID: 0}
+  wideBreathFireSfx: {fileID: 0}
+  wideBreathStartFrame: 35
+  wideBreathEndFrame: 120
+  wideBreathRecovery: 0.8
+  beamBreathHitbox: {fileID: 0}
+  beamBreathPivot: {fileID: 0}
+  beamBreathAimer: {fileID: 0}
+  beamBreathChargeParticle: {fileID: 0}
+  beamBreathFireParticle: {fileID: 0}
+  beamBreathChargeSfx: {fileID: 0}
+  beamBreathFireSfx: {fileID: 0}
+  beamBreathStartFrame: 45
+  beamBreathEndFrame: 135
+  beamTrackStartFrame: 40
+  beamTrackEndFrame: 120
+  beamBreathRecovery: 1
   tailHitbox: {fileID: 0}
   tailAttacksTurnTailToPlayer: 1
   tailFacePlayerOffsetY: 49
@@ -2800,19 +2821,83 @@ MonoBehaviour:
   tailSwipeSecondHitStartFrame: 104
   tailSwipeSecondHitEndFrame: 133
   chooseTailSwipeDirectionByPlayerPosition: 1
+  tailSlamParticle: {fileID: 0}
+  tailSwipeParticle: {fileID: 0}
+  tailSlamSfx: {fileID: 0}
+  tailSwipeSfx: {fileID: 0}
   roarDuration: 2.8
   roarStaggerRadius: 15
   roarStaggerTime: 1
   playerLayer:
     serializedVersion: 2
     m_Bits: 0
-  roarCameraShakeDuration: 0.5
-  roarCameraShakeStrength: 0.15
+  roarParticle: {fileID: 0}
+  roarSfx: {fileID: 0}
   downDuration: 9.11
+  downParticle: {fileID: 0}
+  deathParticle: {fileID: 0}
+  downSfx: {fileID: 0}
+  deathSfx: {fileID: 0}
+  audioSource: {fileID: 0}
+  sfxVolume: 1
+--- !u!114 &356980423
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 356980418}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbe63c2f435f8454aab595b62a028f89, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonPhaseController
   isPhase2: 0
   phase2SpeedMultiplier: 1.15
   phase2ActionIntervalMultiplier: 0.7
-  phase2ComboChance: 0.55
+  phase2ChargeSpeedMultiplier: 1.12
+  doubleChargeChance: 0.25
+  rapidComboChance: 0.3
+  rapidComboInterval: 0.15
+  rapidComboRecovery: 1.2
+  phase2OpeningChance: 0.16
+  phase2OpeningMinTime: 0.9
+  phase2OpeningMaxTime: 1.8
+--- !u!114 &356980424
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 356980418}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 411768750600f584aaa792b9badaa94f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonDragonMotion
+  animator: {fileID: 356980420}
+  player: {fileID: 426628364}
+  modelForwardOffsetY: 0
+  lockYPosition: 1
+  crossFadeTime: 0.12
+  animationFPS: 30
+  moveAnimCheckInterval: 0.25
+  moveAnimRestartNormalizedTime: 0.95
+  idleAnim: Idle_Battle
+  walkAnim: walk
+  runAnim: Running
+  roarAnim: Roar
+  breathAnim: Breath
+  leftSwipeAnim: Arm Swipe_Left
+  rightSwipeAnim: Arm Swipe_Right
+  bigHitAnim: Big hit
+  deathAnim: Death
+  downAnim: Down
+  stepAnim: Step_L_R_B
+  tailSlamAnim: Tail Slam
+  tailSwipeAnim: Tail Swipe
+  idleTurnSpeed: 8
+  actionTurnSpeed: 6
 --- !u!1 &366261100
 GameObject:
   m_ObjectHideFlags: 0
@@ -2845,6 +2930,37 @@ Transform:
   - {fileID: 1399985619}
   - {fileID: 1734039824}
   m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &370577765
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 370577766}
+  m_Layer: 0
+  m_Name: BeamBreathHitbox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &370577766
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 370577765}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 464567946}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &393661992
 GameObject:
@@ -3679,6 +3795,39 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 189416, guid: 80844b2319340044da27db99208a9eac, type: 3}
   m_PrefabInstance: {fileID: 131519520}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &464567945
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 464567946}
+  m_Layer: 0
+  m_Name: BeamBreathPivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &464567946
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 464567945}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2004533826}
+  - {fileID: 370577766}
+  m_Father: {fileID: 356980421}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &508818314 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6869523744398176947, guid: 80844b2319340044da27db99208a9eac, type: 3}
@@ -38580,6 +38729,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1999101712}
   m_CullTransparentMesh: 1
+--- !u!1 &2004533825
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2004533826}
+  m_Layer: 0
+  m_Name: BeamParticle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2004533826
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2004533825}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 464567946}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2011396030
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -39231,6 +39411,64 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2128821110}
   m_CullTransparentMesh: 1
+--- !u!1 &2134306639
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2134306640}
+  - component: {fileID: 2134306641}
+  m_Layer: 0
+  m_Name: WideBreathHitbox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2134306640
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2134306639}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 356980421}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2134306641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2134306639}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e39226cd7178e6d47bf014ce32086d39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DragonAttackHitbox
+  damage: 20
+  knockbackPower: 5
+  staggerTime: 0.5
+  targetLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  hitOnlyOncePerActivation: 1
+  activationParticle: {fileID: 0}
+  loopParticle: {fileID: 0}
+  activationSfx: {fileID: 0}
+  hitParticlePrefab: {fileID: 0}
+  hitSfx: {fileID: 0}
+  audioSource: {fileID: 0}
+  sfxVolume: 1
 --- !u!1001 &2693063377860934578
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -39410,10 +39648,22 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6805329374342380691, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       insertIndex: 0
       addedObject: {fileID: 585711686}
+    - targetCorrespondingSourceObject: {fileID: 6805329374342380691, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2134306640}
+    - targetCorrespondingSourceObject: {fileID: 6805329374342380691, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 464567946}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 6141418602240484905, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 356980420}
+    - targetCorrespondingSourceObject: {fileID: 6141418602240484905, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 356980424}
+    - targetCorrespondingSourceObject: {fileID: 6141418602240484905, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 356980423}
     - targetCorrespondingSourceObject: {fileID: 6141418602240484905, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 356980422}

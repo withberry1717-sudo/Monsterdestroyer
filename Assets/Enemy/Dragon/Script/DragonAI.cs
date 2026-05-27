@@ -111,8 +111,20 @@ public class DragonAI : MonoBehaviour
     [Tooltip("懐対策バックステップの回数です。1から2がおすすめです。")]
     public int innerBackStepCount = 1;
 
+    [Tooltip("懐対策バックステップ1回分の移動距離です。通常バックステップとは別に調整できます。大きくすると懐から大きく離れます。")]
+    public float innerBackStepMoveDistance = 4f;
+
+    [Tooltip("懐対策バックステップ1回分の移動時間です。通常バックステップとは別に調整できます。小さくすると素早く下がります。")]
+    public float innerBackStepMoveDuration = 0.38f;
+
     [Tooltip("懐対策バックステップ後の短い硬直です。大きくするとプレイヤーが追撃しやすくなります。")]
-    public float innerBackStepRecovery = 0.15f;
+    public float innerBackStepRecovery = 0.05f;
+
+    [Tooltip("オンにすると、懐対策バックステップ直後だけ次の行動待ち時間をスキップして、すぐ攻撃や次行動に移ります。")]
+    public bool innerBackStepConnectNextActionImmediately = true;
+
+    [Tooltip("懐対策バックステップ直後に次の行動へ移るまでの追加待ち時間です。0ならほぼ即行動します。")]
+    public float innerBackStepNextActionDelay = 0f;
 
     [Tooltip("オンにすると、プレイヤーが懐に入り込みすぎた時は待機中の向き補正を止めます。くるくる回転する挙動を抑えます。")]
     public bool stopIdleTurnWhenPlayerTooClose = true;
@@ -701,6 +713,7 @@ public class DragonAI : MonoBehaviour
     private DragonAction lastAction = DragonAction.None;
     private DragonAction secondLastAction = DragonAction.None;
     private Animator dragonAnimator;
+    private bool skipNextActionInterval = false;
 
     private void Awake()
     {
@@ -843,12 +856,24 @@ public class DragonAI : MonoBehaviour
 
             float interval = Random.Range(minActionInterval, maxActionInterval);
 
-            if (phase != null)
+            if (skipNextActionInterval)
+            {
+                skipNextActionInterval = false;
+                interval = Mathf.Max(0f, innerBackStepNextActionDelay);
+            }
+            else if (phase != null)
             {
                 interval = phase.ApplyActionInterval(interval);
             }
 
-            yield return new WaitForSeconds(interval);
+            if (interval > 0f)
+            {
+                yield return new WaitForSeconds(interval);
+            }
+            else
+            {
+                yield return null;
+            }
 
             if (state == DragonState.Down || state == DragonState.Dead || isBusy)
             {
@@ -1262,10 +1287,43 @@ public class DragonAI : MonoBehaviour
             motion.ResetAnimatorSpeed();
         }
 
-        yield return DoFixedBackSteps(innerBackStepCount);
-        yield return new WaitForSeconds(innerBackStepRecovery);
+        yield return DoInnerBackSteps();
+
+        if (innerBackStepRecovery > 0f)
+        {
+            yield return new WaitForSeconds(innerBackStepRecovery);
+        }
+
+        if (innerBackStepConnectNextActionImmediately)
+        {
+            skipNextActionInterval = true;
+        }
 
         ReturnToIdle();
+    }
+
+    private IEnumerator DoInnerBackSteps()
+    {
+        int safeCount = Mathf.Max(0, innerBackStepCount);
+
+        for (int i = 0; i < safeCount; i++)
+        {
+            yield return motion.FacePlayerForSeconds(0.06f);
+
+            Vector3 backDirection = -motion.GetMoveForward();
+
+            yield return motion.MoveInDirectionForSeconds(
+                backDirection,
+                innerBackStepMoveDistance,
+                innerBackStepMoveDuration,
+                motion.stepAnim
+            );
+
+            if (backStepInterval > 0f)
+            {
+                yield return new WaitForSeconds(backStepInterval);
+            }
+        }
     }
 
     private IEnumerator DoRandomBackSteps()

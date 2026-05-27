@@ -883,6 +883,7 @@ GameObject:
   m_Component:
   - component: {fileID: 51230603}
   - component: {fileID: 51230604}
+  - component: {fileID: 51230605}
   m_Layer: 0
   m_Name: ChargeAttackHitbox
   m_TagString: Untagged
@@ -924,11 +925,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DragonAttackHitbox
   damage: 40
   knockbackPower: 5
+  knockbackUpPower: 0.2
   staggerTime: 0.5
   targetLayers:
     serializedVersion: 2
     m_Bits: 256
   hitOnlyOncePerActivation: 1
+  useChildColliders: 1
+  disableOnAwake: 1
+  debugLog: 1
   activationParticle: {fileID: 0}
   loopParticle: {fileID: 0}
   activationSfx: {fileID: 0}
@@ -936,6 +941,33 @@ MonoBehaviour:
   hitSfx: {fileID: 0}
   audioSource: {fileID: 0}
   sfxVolume: 1
+--- !u!54 &51230605
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 51230602}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1001 &53812667
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3513,11 +3545,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DragonAttackHitbox
   damage: 30
   knockbackPower: 5
+  knockbackUpPower: 0.2
   staggerTime: 0.5
   targetLayers:
     serializedVersion: 2
     m_Bits: 256
   hitOnlyOncePerActivation: 1
+  useChildColliders: 1
+  disableOnAwake: 1
+  debugLog: 1
   activationParticle: {fileID: 2004533828}
   loopParticle: {fileID: 2004533828}
   activationSfx: {fileID: 0}
@@ -4496,6 +4532,7 @@ GameObject:
   - component: {fileID: 464567946}
   - component: {fileID: 464567947}
   - component: {fileID: 464567948}
+  - component: {fileID: 464567949}
   m_Layer: 0
   m_Name: BeamBreathPivot
   m_TagString: Untagged
@@ -4565,6 +4602,33 @@ ParentConstraint:
   m_Sources:
   - sourceTransform: {fileID: 1602324573}
     weight: 1
+--- !u!54 &464567949
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 464567945}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &487454228
 GameObject:
   m_ObjectHideFlags: 0
@@ -16583,6 +16647,7 @@ GameObject:
   - component: {fileID: 871613329}
   - component: {fileID: 871613331}
   - component: {fileID: 871613330}
+  - component: {fileID: 871613332}
   m_Layer: 3
   m_Name: RightSwipeAttackHitbox
   m_TagString: Untagged
@@ -16621,11 +16686,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DragonAttackHitbox
   damage: 20
   knockbackPower: 2
+  knockbackUpPower: 0.2
   staggerTime: 0.5
   targetLayers:
     serializedVersion: 2
     m_Bits: 256
   hitOnlyOncePerActivation: 1
+  useChildColliders: 1
+  disableOnAwake: 1
+  debugLog: 1
   activationParticle: {fileID: 0}
   loopParticle: {fileID: 0}
   activationSfx: {fileID: 0}
@@ -16660,6 +16729,33 @@ ParentConstraint:
   m_Sources:
   - sourceTransform: {fileID: 1036172109}
     weight: 1
+--- !u!54 &871613332
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 871613328}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1001 &871700988
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24903,6 +24999,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 6255566353793799433, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
     - target: {fileID: 6474350826026298146, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: m_Layer
       value: 8
@@ -31742,6 +31842,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1367468469}
   - component: {fileID: 1367468470}
+  - component: {fileID: 1367468471}
   m_Layer: 0
   m_Name: TailAttackHitbox
   m_TagString: Untagged
@@ -31783,11 +31884,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DragonAttackHitbox
   damage: 30
   knockbackPower: 5
+  knockbackUpPower: 0.2
   staggerTime: 0.5
   targetLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
   hitOnlyOncePerActivation: 1
+  useChildColliders: 1
+  disableOnAwake: 1
+  debugLog: 1
   activationParticle: {fileID: 0}
   loopParticle: {fileID: 0}
   activationSfx: {fileID: 0}
@@ -31795,6 +31900,33 @@ MonoBehaviour:
   hitSfx: {fileID: 0}
   audioSource: {fileID: 0}
   sfxVolume: 1
+--- !u!54 &1367468471
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1367468468}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &1371140000
 GameObject:
   m_ObjectHideFlags: 0
@@ -34087,6 +34219,7 @@ MonoBehaviour:
   hpDelayWait: 0.8
   hpDelaySpeed: 0.5
   heavyDamageThreshold: 25
+  minimumDamageInterval: 0.05
   lightInvincibleTime: 0.5
   lightControlLockTime: 0.25
   heavyInvincibleTime: 2
@@ -34094,6 +34227,9 @@ MonoBehaviour:
   knockbackPower: 6
   knockbackUpPower: 0
   knockbackDuration: 0.8
+  externalKnockbackMultiplier: 1
+  applyGravityDuringKnockback: 1
+  gravityDuringKnockback: -20
   blinkInterval: 0.08
   damageFlashCanvasGroup: {fileID: 437921560}
   damageFlashMaxAlpha: 0.7
@@ -35767,6 +35903,7 @@ GameObject:
   - component: {fileID: 1850472136}
   - component: {fileID: 1850472138}
   - component: {fileID: 1850472137}
+  - component: {fileID: 1850472139}
   m_Layer: 3
   m_Name: LeftSwipeAttackHitbox
   m_TagString: Untagged
@@ -35805,11 +35942,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DragonAttackHitbox
   damage: 20
   knockbackPower: 2
+  knockbackUpPower: 0.2
   staggerTime: 0.5
   targetLayers:
     serializedVersion: 2
     m_Bits: 256
   hitOnlyOncePerActivation: 1
+  useChildColliders: 1
+  disableOnAwake: 1
+  debugLog: 1
   activationParticle: {fileID: 0}
   loopParticle: {fileID: 0}
   activationSfx: {fileID: 0}
@@ -35844,6 +35985,33 @@ ParentConstraint:
   m_Sources:
   - sourceTransform: {fileID: 952013573}
     weight: 1
+--- !u!54 &1850472139
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1850472135}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &1854291311
 GameObject:
   m_ObjectHideFlags: 0
@@ -47460,11 +47628,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DragonAttackHitbox
   damage: 20
   knockbackPower: 5
+  knockbackUpPower: 0.2
   staggerTime: 0.5
   targetLayers:
     serializedVersion: 2
     m_Bits: 256
   hitOnlyOncePerActivation: 1
+  useChildColliders: 1
+  disableOnAwake: 1
+  debugLog: 1
   activationParticle: {fileID: 0}
   loopParticle: {fileID: 0}
   activationSfx: {fileID: 0}

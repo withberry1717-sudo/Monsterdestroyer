@@ -12,9 +12,9 @@ public class PlayerHP : MonoBehaviour
     [SerializeField] private TextMeshProUGUI hpText;
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private GameObject gameClearPanel;
-    [SerializeField] private UnityEngine.UI.Image hpBarFill;
-    [SerializeField] private UnityEngine.UI.Image hpHighlightFill;
-    [SerializeField] private UnityEngine.UI.Image hpDelayFill;
+    [SerializeField] private Image hpBarFill;
+    [SerializeField] private Image hpHighlightFill;
+    [SerializeField] private Image hpDelayFill;
 
     [Header("HPíxâÑÉoÅ[")]
     [SerializeField] private float hpDelayWait = 0.35f;
@@ -22,6 +22,7 @@ public class PlayerHP : MonoBehaviour
 
     [Header("îÌíeê›íË")]
     [SerializeField] private float heavyDamageThreshold = 25f;
+    [SerializeField] private float minimumDamageInterval = 0.05f;
 
     [Header("è¨É_ÉÅÅ[ÉW")]
     [SerializeField] private float lightInvincibleTime = 0.5f;
@@ -33,6 +34,11 @@ public class PlayerHP : MonoBehaviour
     [SerializeField] private float knockbackPower = 4f;
     [SerializeField] private float knockbackUpPower = 1.2f;
     [SerializeField] private float knockbackDuration = 0.25f;
+
+    [Header("ÉhÉâÉSÉìçUåÇÇ©ÇÁÇÃêÅÇ¡îÚÇ—")]
+    [SerializeField] private float externalKnockbackMultiplier = 1.0f;
+    [SerializeField] private bool applyGravityDuringKnockback = true;
+    [SerializeField] private float gravityDuringKnockback = -20f;
 
     [Header("ì_ñ≈")]
     [SerializeField] private float blinkInterval = 0.08f;
@@ -62,16 +68,23 @@ public class PlayerHP : MonoBehaviour
     [SerializeField] private MonoBehaviour[] disableOnGameOver;
 
     private float currentHp;
-    private bool isGameOver = false;
-    private bool isGameClear = false;
-    private bool isInvincible = false;
+    private bool isGameOver;
+    private bool isGameClear;
+    private bool isInvincible;
+
+    private int controlLockCount;
+    private float lastDamageTime = -999f;
 
     private Coroutine hpDelayCoroutine;
     private Coroutine damageFlashCoroutine;
+    private Coroutine damageRoutineCoroutine;
+    private Coroutine externalKnockbackCoroutine;
+    private Coroutine staggerCoroutine;
 
     private Animator _animator;
     private Retro.ThirdPersonCharacter.Movement _movement;
     private CharacterController _characterController;
+    private Rigidbody _rigidbody;
     private Renderer[] _renderers;
 
     private MonoBehaviour _combat;
@@ -79,13 +92,16 @@ public class PlayerHP : MonoBehaviour
     private MonoBehaviour _aimingController;
     private MonoBehaviour _safePlayerCamera;
 
-    void Start()
+    private Vector3 lastKnockbackDirection = Vector3.zero;
+
+    private void Start()
     {
         currentHp = maxHp;
 
         _animator = GetComponent<Animator>();
         _movement = GetComponent<Retro.ThirdPersonCharacter.Movement>();
         _characterController = GetComponent<CharacterController>();
+        _rigidbody = GetComponent<Rigidbody>();
         _renderers = GetComponentsInChildren<Renderer>();
 
         FindScriptsForGameOver();
@@ -156,56 +172,13 @@ public class PlayerHP : MonoBehaviour
 
         Transform parent = damageFlashCanvasGroup.transform;
 
-        CreateOrUpdateEdge(
-            parent,
-            "TopRed",
-            new Vector2(0f, 1f),
-            new Vector2(1f, 1f),
-            new Vector2(0.5f, 1f),
-            new Vector2(0f, 0f),
-            new Vector2(0f, damageEdgeThickness)
-        );
-
-        CreateOrUpdateEdge(
-            parent,
-            "BottomRed",
-            new Vector2(0f, 0f),
-            new Vector2(1f, 0f),
-            new Vector2(0.5f, 0f),
-            new Vector2(0f, 0f),
-            new Vector2(0f, damageEdgeThickness)
-        );
-
-        CreateOrUpdateEdge(
-            parent,
-            "LeftRed",
-            new Vector2(0f, 0f),
-            new Vector2(0f, 1f),
-            new Vector2(0f, 0.5f),
-            new Vector2(0f, 0f),
-            new Vector2(damageEdgeThickness, 0f)
-        );
-
-        CreateOrUpdateEdge(
-            parent,
-            "RightRed",
-            new Vector2(1f, 0f),
-            new Vector2(1f, 1f),
-            new Vector2(1f, 0.5f),
-            new Vector2(0f, 0f),
-            new Vector2(damageEdgeThickness, 0f)
-        );
+        CreateOrUpdateEdge(parent, "TopRed", new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), Vector2.zero, new Vector2(0f, damageEdgeThickness));
+        CreateOrUpdateEdge(parent, "BottomRed", new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), Vector2.zero, new Vector2(0f, damageEdgeThickness));
+        CreateOrUpdateEdge(parent, "LeftRed", new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 0.5f), Vector2.zero, new Vector2(damageEdgeThickness, 0f));
+        CreateOrUpdateEdge(parent, "RightRed", new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(1f, 0.5f), Vector2.zero, new Vector2(damageEdgeThickness, 0f));
     }
 
-    private void CreateOrUpdateEdge(
-        Transform parent,
-        string edgeName,
-        Vector2 anchorMin,
-        Vector2 anchorMax,
-        Vector2 pivot,
-        Vector2 anchoredPosition,
-        Vector2 sizeDelta
-    )
+    private void CreateOrUpdateEdge(Transform parent, string edgeName, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPosition, Vector2 sizeDelta)
     {
         Transform existing = parent.Find(edgeName);
         GameObject edgeObject;
@@ -226,10 +199,9 @@ public class PlayerHP : MonoBehaviour
             rect = edgeObject.AddComponent<RectTransform>();
         }
 
-        CanvasRenderer canvasRenderer = edgeObject.GetComponent<CanvasRenderer>();
-        if (canvasRenderer == null)
+        if (edgeObject.GetComponent<CanvasRenderer>() == null)
         {
-            canvasRenderer = edgeObject.AddComponent<CanvasRenderer>();
+            edgeObject.AddComponent<CanvasRenderer>();
         }
 
         Image image = edgeObject.GetComponent<Image>();
@@ -253,8 +225,76 @@ public class PlayerHP : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        if (isGameOver || isGameClear || isInvincible) return;
+        if (!CanTakeDamage()) return;
 
+        ApplyDamage(damage);
+
+        if (currentHp <= 0f)
+        {
+            GameOver();
+            return;
+        }
+
+        StartDamageReaction(damage);
+    }
+
+    public void DragonStagger(float duration)
+    {
+        if (isGameOver || isGameClear) return;
+        if (duration <= 0f) return;
+
+        if (damageRoutineCoroutine != null) return;
+
+        if (staggerCoroutine != null)
+        {
+            StopCoroutine(staggerCoroutine);
+            staggerCoroutine = null;
+            ForceUnlockControl();
+        }
+
+        staggerCoroutine = StartCoroutine(StaggerRoutine(duration));
+    }
+
+    public void DragonKnockback(Vector3 knockbackDirection)
+    {
+        if (isGameOver || isGameClear) return;
+
+        if (knockbackDirection.sqrMagnitude < 0.001f)
+        {
+            knockbackDirection = -transform.forward;
+        }
+
+        lastKnockbackDirection = knockbackDirection.normalized;
+
+        if (externalKnockbackCoroutine != null)
+        {
+            StopCoroutine(externalKnockbackCoroutine);
+        }
+
+        externalKnockbackCoroutine = StartCoroutine(
+            ExternalKnockbackRoutine(
+                lastKnockbackDirection,
+                knockbackPower * externalKnockbackMultiplier,
+                knockbackDuration
+            )
+        );
+    }
+
+    private bool CanTakeDamage()
+    {
+        if (isGameOver || isGameClear || isInvincible) return false;
+
+        if (minimumDamageInterval > 0f && Time.time < lastDamageTime + minimumDamageInterval)
+        {
+            return false;
+        }
+
+        lastDamageTime = Time.time;
+        return true;
+    }
+
+    private void ApplyDamage(float damage)
+    {
         PlayDamageFlash(damage);
 
         if (_movement != null)
@@ -263,23 +303,36 @@ public class PlayerHP : MonoBehaviour
         }
 
         currentHp -= damage;
+        currentHp = Mathf.Max(currentHp, 0f);
+
         UpdateHPUI();
 
         Debug.Log("Hit! Damage: " + damage + " | Remaining HP: " + currentHp);
+    }
 
-        if (currentHp <= 0)
+    private void StartDamageReaction(float damage)
+    {
+        if (damageRoutineCoroutine != null)
         {
-            GameOver();
-            return;
+            StopCoroutine(damageRoutineCoroutine);
+            damageRoutineCoroutine = null;
+            ForceUnlockControl();
+        }
+
+        if (staggerCoroutine != null)
+        {
+            StopCoroutine(staggerCoroutine);
+            staggerCoroutine = null;
+            ForceUnlockControl();
         }
 
         if (damage >= heavyDamageThreshold)
         {
-            StartCoroutine(HeavyDamageRoutine());
+            damageRoutineCoroutine = StartCoroutine(HeavyDamageRoutine());
         }
         else
         {
-            StartCoroutine(LightDamageRoutine());
+            damageRoutineCoroutine = StartCoroutine(LightDamageRoutine());
         }
     }
 
@@ -296,9 +349,7 @@ public class PlayerHP : MonoBehaviour
             StopCoroutine(damageFlashCoroutine);
         }
 
-        float targetAlpha = damage >= heavyDamageThreshold
-            ? heavyDamageFlashMaxAlpha
-            : damageFlashMaxAlpha;
+        float targetAlpha = damage >= heavyDamageThreshold ? heavyDamageFlashMaxAlpha : damageFlashMaxAlpha;
 
         damageFlashCoroutine = StartCoroutine(DamageFlashRoutine(targetAlpha));
     }
@@ -339,26 +390,20 @@ public class PlayerHP : MonoBehaviour
     {
         isInvincible = true;
 
-        if (_movement != null)
-        {
-            _movement.ForceStopTrail();
-            _movement.enabled = false;
-        }
+        LockControl();
 
         if (_animator != null)
         {
+            _animator.ResetTrigger("KnockDown");
             _animator.SetTrigger("TakingDamage");
         }
 
         yield return new WaitForSeconds(lightControlLockTime);
 
-        if (!isGameOver && _movement != null)
-        {
-            _movement.ForceStopTrail();
-            _movement.enabled = true;
-        }
+        UnlockControl();
 
-        yield return StartCoroutine(BlinkRoutine(lightInvincibleTime - lightControlLockTime));
+        float blinkTime = Mathf.Max(0f, lightInvincibleTime - lightControlLockTime);
+        yield return StartCoroutine(BlinkRoutine(blinkTime));
 
         SetRenderersVisible(true);
 
@@ -371,34 +416,32 @@ public class PlayerHP : MonoBehaviour
         {
             isInvincible = false;
         }
+
+        damageRoutineCoroutine = null;
     }
 
     private IEnumerator HeavyDamageRoutine()
     {
         isInvincible = true;
 
-        if (_movement != null)
-        {
-            _movement.ForceStopTrail();
-            _movement.enabled = false;
-        }
+        LockControl();
 
         if (_animator != null)
         {
+            _animator.ResetTrigger("TakingDamage");
             _animator.SetTrigger("KnockDown");
         }
 
-        yield return StartCoroutine(KnockbackRoutine());
+        Vector3 knockDir = lastKnockbackDirection.sqrMagnitude > 0.001f ? lastKnockbackDirection : -transform.forward;
+
+        yield return StartCoroutine(InternalKnockbackRoutine(knockDir));
 
         yield return new WaitForSeconds(heavyControlLockTime);
 
-        if (!isGameOver && _movement != null)
-        {
-            _movement.ForceStopTrail();
-            _movement.enabled = true;
-        }
+        UnlockControl();
 
-        yield return StartCoroutine(BlinkRoutine(heavyInvincibleTime - heavyControlLockTime));
+        float blinkTime = Mathf.Max(0f, heavyInvincibleTime - heavyControlLockTime);
+        yield return StartCoroutine(BlinkRoutine(blinkTime));
 
         SetRenderersVisible(true);
 
@@ -411,25 +454,122 @@ public class PlayerHP : MonoBehaviour
         {
             isInvincible = false;
         }
+
+        damageRoutineCoroutine = null;
     }
 
-    private IEnumerator KnockbackRoutine()
+    private IEnumerator InternalKnockbackRoutine(Vector3 direction)
     {
         float timer = 0f;
 
-        Vector3 knockDir = -transform.forward;
-        knockDir.y = knockbackUpPower;
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude < 0.001f)
+        {
+            direction = -transform.forward;
+        }
+
+        direction.Normalize();
+
+        Vector3 velocity = direction * knockbackPower;
+        velocity.y = knockbackUpPower;
 
         while (timer < knockbackDuration)
         {
             timer += Time.deltaTime;
+            MovePlayerByKnockback(velocity);
+            yield return null;
+        }
+    }
 
-            if (_characterController != null)
+    private IEnumerator ExternalKnockbackRoutine(Vector3 direction, float power, float duration)
+    {
+        float timer = 0f;
+
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude < 0.001f)
+        {
+            direction = -transform.forward;
+        }
+
+        direction.Normalize();
+
+        Vector3 velocity = direction * Mathf.Max(0f, power);
+        velocity.y = knockbackUpPower;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            MovePlayerByKnockback(velocity);
+            yield return null;
+        }
+
+        externalKnockbackCoroutine = null;
+    }
+
+    private void MovePlayerByKnockback(Vector3 velocity)
+    {
+        if (_characterController != null && _characterController.enabled)
+        {
+            Vector3 move = velocity * Time.deltaTime;
+
+            if (applyGravityDuringKnockback)
             {
-                _characterController.Move(knockDir * knockbackPower * Time.deltaTime);
+                move.y += gravityDuringKnockback * Time.deltaTime * Time.deltaTime;
             }
 
-            yield return null;
+            _characterController.Move(move);
+        }
+        else if (_rigidbody != null && !_rigidbody.isKinematic)
+        {
+            _rigidbody.AddForce(velocity, ForceMode.Impulse);
+        }
+    }
+
+    private IEnumerator StaggerRoutine(float duration)
+    {
+        LockControl();
+        yield return new WaitForSeconds(duration);
+        UnlockControl();
+        staggerCoroutine = null;
+    }
+
+    private void LockControl()
+    {
+        controlLockCount++;
+
+        if (_movement != null)
+        {
+            _movement.ForceStopTrail();
+            _movement.enabled = false;
+        }
+    }
+
+    private void UnlockControl()
+    {
+        controlLockCount = Mathf.Max(0, controlLockCount - 1);
+
+        if (controlLockCount > 0) return;
+        if (isGameOver) return;
+
+        if (_movement != null)
+        {
+            _movement.ForceStopTrail();
+            _movement.enabled = true;
+        }
+    }
+
+    private void ForceUnlockControl()
+    {
+        controlLockCount = 0;
+
+        if (isGameOver) return;
+
+        if (_movement != null)
+        {
+            _movement.ForceStopTrail();
+            _movement.enabled = true;
         }
     }
 
@@ -462,11 +602,11 @@ public class PlayerHP : MonoBehaviour
         }
     }
 
-    void UpdateHPUI()
+    private void UpdateHPUI()
     {
         if (hpText != null)
         {
-            hpText.text = "HP: " + Mathf.CeilToInt(Mathf.Max(0, currentHp));
+            hpText.text = "HP: " + Mathf.CeilToInt(Mathf.Max(0f, currentHp));
         }
 
         float hpRatio = Mathf.Clamp01(currentHp / maxHp);
@@ -497,27 +637,14 @@ public class PlayerHP : MonoBehaviour
         ResetGameOverButtons();
 
         isGameOver = false;
+        isGameClear = false;
         isInvincible = false;
+        controlLockCount = 0;
 
         currentHp = maxHp;
         UpdateHPUI();
 
-        if (hpDelayCoroutine != null)
-        {
-            StopCoroutine(hpDelayCoroutine);
-            hpDelayCoroutine = null;
-        }
-
-        if (damageFlashCoroutine != null)
-        {
-            StopCoroutine(damageFlashCoroutine);
-            damageFlashCoroutine = null;
-        }
-
-        if (damageFlashCanvasGroup != null)
-        {
-            damageFlashCanvasGroup.alpha = 0f;
-        }
+        StopPlayerCoroutinesForRevive();
 
         if (hpDelayFill != null)
         {
@@ -525,7 +652,6 @@ public class PlayerHP : MonoBehaviour
         }
 
         SetRenderersVisible(true);
-
         SetGameOverScriptsEnabled(true);
 
         if (_movement != null)
@@ -554,10 +680,33 @@ public class PlayerHP : MonoBehaviour
 
         if (_animator != null)
         {
+            _animator.ResetTrigger("TakingDamage");
+            _animator.ResetTrigger("KnockDown");
+            _animator.ResetTrigger("Die");
             _animator.Play("RFA_Movement");
         }
 
         Debug.Log("Player Revived");
+    }
+
+    private void StopPlayerCoroutinesForRevive()
+    {
+        if (hpDelayCoroutine != null) StopCoroutine(hpDelayCoroutine);
+        if (damageFlashCoroutine != null) StopCoroutine(damageFlashCoroutine);
+        if (damageRoutineCoroutine != null) StopCoroutine(damageRoutineCoroutine);
+        if (externalKnockbackCoroutine != null) StopCoroutine(externalKnockbackCoroutine);
+        if (staggerCoroutine != null) StopCoroutine(staggerCoroutine);
+
+        hpDelayCoroutine = null;
+        damageFlashCoroutine = null;
+        damageRoutineCoroutine = null;
+        externalKnockbackCoroutine = null;
+        staggerCoroutine = null;
+
+        if (damageFlashCanvasGroup != null)
+        {
+            damageFlashCanvasGroup.alpha = 0f;
+        }
     }
 
     public void BackToTitle()
@@ -565,16 +714,18 @@ public class PlayerHP : MonoBehaviour
         Time.timeScale = 1f;
         SetGameOverScriptsEnabled(true);
         BattleCursorManager.UnlockCursor();
-
         SceneManager.LoadScene("TitleScene");
     }
 
-    void GameOver()
+    private void GameOver()
     {
         if (isGameOver) return;
 
         isGameOver = true;
         isInvincible = true;
+        controlLockCount = 999;
+
+        StopPlayerCoroutinesOnGameOver();
 
         if (_movement != null)
         {
@@ -592,7 +743,6 @@ public class PlayerHP : MonoBehaviour
         }
 
         SetRenderersVisible(true);
-
         SetGameOverScriptsEnabled(false);
         BattleCursorManager.UnlockCursor();
 
@@ -608,7 +758,18 @@ public class PlayerHP : MonoBehaviour
         Debug.Log("GAME OVER.");
     }
 
-    void RestartGame()
+    private void StopPlayerCoroutinesOnGameOver()
+    {
+        if (damageRoutineCoroutine != null) StopCoroutine(damageRoutineCoroutine);
+        if (externalKnockbackCoroutine != null) StopCoroutine(externalKnockbackCoroutine);
+        if (staggerCoroutine != null) StopCoroutine(staggerCoroutine);
+
+        damageRoutineCoroutine = null;
+        externalKnockbackCoroutine = null;
+        staggerCoroutine = null;
+    }
+
+    public void RestartGame()
     {
         Time.timeScale = 1f;
         BattleCursorManager.LockCursor();
@@ -639,9 +800,7 @@ public class PlayerHP : MonoBehaviour
             }
         }
 
-        MonoBehaviour[] allScripts = Object.FindObjectsByType<MonoBehaviour>(
-            FindObjectsInactive.Exclude
-        );
+        MonoBehaviour[] allScripts = Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude);
 
         foreach (MonoBehaviour script in allScripts)
         {
@@ -713,11 +872,8 @@ public class PlayerHP : MonoBehaviour
         while (timer < gameOverFadeDuration)
         {
             timer += Time.deltaTime;
-            float t = timer / gameOverFadeDuration;
-
-            float eased = Mathf.SmoothStep(0f, 1f, t);
-            gameOverCanvasGroup.alpha = eased;
-
+            float t = gameOverFadeDuration <= 0f ? 1f : timer / gameOverFadeDuration;
+            gameOverCanvasGroup.alpha = Mathf.SmoothStep(0f, 1f, t);
             yield return null;
         }
 

@@ -3220,7 +3220,7 @@ MonoBehaviour:
   enableBeamBreathAction: 0
   enableChargeAction: 1
   enableDoubleChargeAction: 1
-  introIdleBeforeRoarTime: 2
+  introIdleBeforeRoarTime: 1
   closeRange: 6
   middleRange: 15
   farRange: 25
@@ -3229,8 +3229,8 @@ MonoBehaviour:
   runChaseSpeed: 6.2
   switchToRunDistance: 8
   runChaseStopDistance: 5
-  minActionInterval: 0.7
-  maxActionInterval: 1.3
+  minActionInterval: 1
+  maxActionInterval: 2
   useOpeningIdle: 0
   openingIdleChance: 0.18
   openingIdleMinTime: 1
@@ -25818,7 +25818,7 @@ Rigidbody:
   serializedVersion: 5
   m_Mass: 1
   m_LinearDamping: 0
-  m_AngularDamping: 0.05
+  m_AngularDamping: 0.15
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -47431,7 +47431,7 @@ Rigidbody:
   serializedVersion: 5
   m_Mass: 1
   m_LinearDamping: 0
-  m_AngularDamping: 0.05
+  m_AngularDamping: 0.1
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}

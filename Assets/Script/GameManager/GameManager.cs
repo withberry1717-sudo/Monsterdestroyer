@@ -19,7 +19,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private bool pauseGameOnClear = false;
 
     [Header("Player Control")]
-    [Tooltip("クリア時に止めたいプレイヤー操作スクリプトがあれば入れてください。空でもOKです。")]
+    [Tooltip("クリア時に止めたいスクリプトがあれば入れてください。空でもOKです。")]
     [SerializeField] private MonoBehaviour[] disableOnClear;
 
     private bool isGameClear = false;
@@ -60,7 +60,6 @@ public class GameManager : MonoBehaviour
         if (isGameClear) return;
 
         isGameClear = true;
-
         Debug.Log("Game Clear");
 
         if (clearPanel != null)
@@ -69,9 +68,10 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("GameManager: ClearPanelが設定されていません。Canvas内のClearPanelを入れてください。");
+            Debug.LogWarning("GameManager: ClearPanelが設定されていません。");
         }
 
+        // ★命令でスクリプトをオフにする処理
         if (disableOnClear != null)
         {
             foreach (MonoBehaviour script in disableOnClear)
@@ -87,14 +87,10 @@ public class GameManager : MonoBehaviour
         {
             ScoreManager.Instance.ShowFinalScore(CurrentTime);
         }
-        else
-        {
-            Debug.LogWarning("GameManager: ScoreManager.Instanceが見つかりません。");
-        }
 
-        // BattleCursorManager側の処理を呼び出してカーソルを表示・操作可能にする
         BattleCursorManager.UnlockCursor();
 
+        // オフ推奨なので、Inspectorでチェックを外しておけば時間は止まりません
         if (pauseGameOnClear)
         {
             Time.timeScale = 0f;

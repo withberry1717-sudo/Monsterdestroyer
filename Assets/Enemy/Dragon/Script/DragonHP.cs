@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections;
 
 public class DragonHP : MonoBehaviour
 {
@@ -31,10 +32,19 @@ public class DragonHP : MonoBehaviour
     [Tooltip("HP50%イベントをすでに発動したか")]
     public bool halfHpTriggered = false;
 
+    [Header("ゲームクリア演出")]
+    [Tooltip("ドラゴンのHPが0になってから、クリアパネルを出すまでの待ち時間です。")]
+    public float gameClearDelay = 5f;
+
+    [Tooltip("オンにすると、Time.timeScaleが0でも5秒後にクリアパネルを出します。基本オン推奨です。")]
+    public bool useRealtimeGameClearDelay = true;
+
     public event Action OnHalfHP;
     public event Action OnDeath;
     public event Action OnTailCrystalBroken;
     public event Action OnCrystalBroken;
+
+    private bool gameClearStarted = false;
 
     private void Start()
     {
@@ -60,14 +70,7 @@ public class DragonHP : MonoBehaviour
 
         if (currentHP <= 0f)
         {
-            isDead = true;
-            Debug.Log("ドラゴン討伐完了");
-            OnDeath?.Invoke();
-
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.GameClear();
-            }
+            Die();
         }
     }
 
@@ -108,5 +111,46 @@ public class DragonHP : MonoBehaviour
 
         OnTailCrystalBroken?.Invoke();
         OnCrystalBroken?.Invoke();
+    }
+
+    private void Die()
+    {
+        if (isDead) return;
+
+        isDead = true;
+        currentHP = 0f;
+
+        Debug.Log("ドラゴン討伐完了");
+
+        OnDeath?.Invoke();
+
+        if (!gameClearStarted)
+        {
+            gameClearStarted = true;
+            StartCoroutine(GameClearDelayRoutine());
+        }
+    }
+
+    private IEnumerator GameClearDelayRoutine()
+    {
+        float delay = Mathf.Max(0f, gameClearDelay);
+
+        if (useRealtimeGameClearDelay)
+        {
+            yield return new WaitForSecondsRealtime(delay);
+        }
+        else
+        {
+            yield return new WaitForSeconds(delay);
+        }
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.GameClear();
+        }
+        else
+        {
+            Debug.LogWarning("GameManager.Instance が見つからないため、ゲームクリア処理を呼べませんでした。");
+        }
     }
 }

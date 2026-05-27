@@ -1,102 +1,117 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using TMPro;
-using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
-    [Header("クリアUI")]
+    [Header("Timer")]
+    [Tooltip("現在の経過時間です。ScoreManagerが参照します。")]
+    public float CurrentTime { get; private set; }
+
+    [Header("Clear UI")]
+    [Tooltip("クリア時に表示するパネルです。Canvas内のClearPanelを入れてください。")]
     [SerializeField] private GameObject clearPanel;
-    [SerializeField] private TextMeshProUGUI timeText;
-    [SerializeField] private TextMeshProUGUI rankText;
 
-    [Header("プレイ中UI")]
-    [SerializeField] private TextMeshProUGUI inGameTimeText;
+    [Tooltip("ゲーム開始時にClearPanelを自動で非表示にします。")]
+    [SerializeField] private bool hideClearPanelOnStart = true;
 
-    private float currentTime = 0f;
-    private bool isGameActive = true;
+    [Tooltip("クリア時にTime.timeScaleを0にします。スコア演出を止めたくない場合はオフ推奨です。")]
+    [SerializeField] private bool pauseGameOnClear = false;
 
-    public float CurrentTime => currentTime;
-    public bool IsGameActive => isGameActive;
+    [Header("Player Control")]
+    [Tooltip("クリア時に止めたいプレイヤー操作スクリプトがあれば入れてください。空でもOKです。")]
+    [SerializeField] private MonoBehaviour[] disableOnClear;
 
-    void Awake()
+    private bool isGameClear = false;
+
+    private void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
     }
 
-    void Start()
+    private void Start()
     {
-        if (clearPanel != null) clearPanel.SetActive(false);
+        CurrentTime = 0f;
+        isGameClear = false;
+
+        if (hideClearPanelOnStart && clearPanel != null)
+        {
+            clearPanel.SetActive(false);
+        }
     }
 
-    void Update()
+    private void Update()
     {
-        if (!isGameActive) return;
+        if (isGameClear) return;
 
-        currentTime += Time.deltaTime;
-        UpdateInGameTimeUI();
-    }
-
-    private void UpdateInGameTimeUI()
-    {
-        if (inGameTimeText == null) return;
-        inGameTimeText.text = FormatTime(currentTime);
+        CurrentTime += Time.deltaTime;
     }
 
     public void GameClear()
     {
-        if (!isGameActive) return;
+        if (isGameClear) return;
 
-        isGameActive = false;
+        isGameClear = true;
 
-        string niceTime = FormatTime(currentTime);
+        Debug.Log("Game Clear");
 
-        if (timeText != null) timeText.text = "Clear Time : " + niceTime;
+        if (clearPanel != null)
+        {
+            clearPanel.SetActive(true);
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: ClearPanelが設定されていません。Canvas内のClearPanelを入れてください。");
+        }
+
+        if (disableOnClear != null)
+        {
+            foreach (MonoBehaviour script in disableOnClear)
+            {
+                if (script != null)
+                {
+                    script.enabled = false;
+                }
+            }
+        }
 
         if (ScoreManager.Instance != null)
         {
-            string rank = ScoreManager.Instance.GetRank(currentTime);
-            if (rankText != null) rankText.text = "Rank : " + rank;
-
-            ScoreManager.Instance.ShowFinalScore(currentTime);
+            ScoreManager.Instance.ShowFinalScore(CurrentTime);
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: ScoreManager.Instanceが見つかりません。");
         }
 
-        if (clearPanel != null) clearPanel.SetActive(true);
-        if (inGameTimeText != null) inGameTimeText.gameObject.SetActive(false);
+        // BattleCursorManager側の処理を呼び出してカーソルを表示・操作可能にする
+        BattleCursorManager.UnlockCursor();
+
+        if (pauseGameOnClear)
+        {
+            Time.timeScale = 0f;
+        }
     }
 
-    private string FormatTime(float time)
-    {
-        int minutes = Mathf.FloorToInt(time / 60f);
-        int seconds = Mathf.FloorToInt(time % 60f);
-        return string.Format("{0:0}:{1:00}", minutes, seconds);
-    }
-
-    public void Stop(float duration)
-    {
-        if (Time.timeScale < 1f) return;
-        StartCoroutine(DoHitStop(duration));
-    }
-
-    private IEnumerator DoHitStop(float duration)
-    {
-        Time.timeScale = 0.05f;
-        yield return new WaitForSecondsRealtime(duration);
-        Time.timeScale = 1f;
-    }
-
-    public void Retry()
+    public void RestartGame()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        UnityEngine.SceneManagement.SceneManager.LoadScene(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
+        );
     }
 
     public void BackToTitle()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("TitleScene");
+        UnityEngine.SceneManagement.SceneManager.LoadScene("TitleScene");
     }
 }

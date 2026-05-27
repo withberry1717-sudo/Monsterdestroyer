@@ -25413,7 +25413,7 @@ MonoBehaviour:
   deathPenaltyText: {fileID: 1002429371}
   finalScoreText: {fileID: 139783534}
   rankText: {fileID: 329226134}
-  startScore: 11200
+  startScore: 12000
   scoreDecreasePerSecond: 33
   crystalBreakBonus: 1500
   deathPenalty: 1000

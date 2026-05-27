@@ -2600,7 +2600,7 @@ public class DragonAI : MonoBehaviour
 
         isBusy = false;
 
-        if (state != DragonState.Dead && state != DragonState.Down)
+        if (state != DragonState.Dead)
         {
             state = DragonState.Idle;
         }

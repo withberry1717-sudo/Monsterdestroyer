@@ -19096,7 +19096,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0.019385934, a: 1}
+  m_Color: {r: 0, g: 1, b: 0.000022053719, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -25981,7 +25981,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: dashKey
-      value: 304
+      value: 32
       objectReference: {fileID: 0}
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: gravity
@@ -25989,7 +25989,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: jumpKey
-      value: 32
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: MaxSpeed
@@ -37114,7 +37114,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0.019385934, a: 0.4117647}
+  m_Color: {r: 1, g: 0.184, b: 0, a: 0.4117647}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -43380,7 +43380,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: -1070, y: 970}
-  m_SizeDelta: {x: 1500, y: 50}
+  m_SizeDelta: {x: 1600, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1999101714
 MonoBehaviour:
@@ -50732,7 +50732,7 @@ PrefabInstance:
       objectReference: {fileID: 1036172109}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: maxHP
-      value: 1500
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: isCrystalBroken

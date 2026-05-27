@@ -2491,10 +2491,10 @@ public class DragonAI : MonoBehaviour
         }
 
         StopAllCoroutines();
-        StartCoroutine(HalfHPRoarRoutine());
+        StartCoroutine(HalfHPDownRoutine());
     }
 
-    private IEnumerator HalfHPRoarRoutine()
+    private IEnumerator HalfHPDownRoutine()
     {
         DisableAllHitboxes();
         StopAllSpecialParticles();
@@ -2505,14 +2505,14 @@ public class DragonAI : MonoBehaviour
         }
 
         isBusy = true;
-        state = DragonState.Acting;
+        state = DragonState.Down;
 
-        yield return motion.FacePlayerForSeconds(0.3f);
+        if (motion != null)
+        {
+            motion.PlayAnim(motion.downAnim, true);
+        }
 
-        motion.PlayAnim(motion.roarAnim, true);
-        DoRoarEffect();
-
-        yield return new WaitForSeconds(roarDuration);
+        yield return new WaitForSeconds(downDuration);
 
         ReturnToIdle();
         StartCoroutine(AILoop());

@@ -3615,7 +3615,7 @@ MonoBehaviour:
   swipeCounterChance: 0.35
   swipeCounterFaceTime: 0.12
   useAnalyzedSwipeFrames: 1
-  analyzedSwipeAnticipationEndFrame: 10
+  analyzedSwipeAnticipationEndFrame: 13
   analyzedSwipeAttackEndFrame: 20
   swipeAnticipationEndFrame: 16
   swipeAnticipationDuration: 1.2
@@ -3647,11 +3647,11 @@ MonoBehaviour:
   breathBackStepIfCloserThan: 10
   chargeHitbox: {fileID: 51230604}
   chargeCooldown: 10
-  chargeSpeed: 24
-  chargeOvershootDistance: 6
+  chargeSpeed: 35
+  chargeOvershootDistance: 4
   chargeMinDuration: 0.75
   chargeMaxDuration: 1.8
-  chargeBackStepIfCloserThan: 9
+  chargeBackStepIfCloserThan: 5
   chargeTellTime: 1.5
   chargeTellAnimationSpeed: 0.18
   chargeReadyPauseTime: 0.15
@@ -3697,10 +3697,10 @@ MonoBehaviour:
   tailFacePlayerOffsetY: 49
   tailSlamAttackOffsetY: 0
   tailSwipeFixedAttackOffsetY: -10
-  tailTrackingTurnSpeed: 7
+  tailTrackingTurnSpeed: 12
   tailSlamDuration: 4.8
   tailSlamAimStartFrame: 5
-  tailSlamTrackUntilFrame: 79
+  tailSlamTrackUntilFrame: 77
   tailSlamHitStartFrame: 73
   tailSlamHitEndFrame: 82
   tailSlamReturnStartFrame: 105
@@ -50730,6 +50730,10 @@ PrefabInstance:
       propertyPath: m_Sources.Array.data[0].sourceTransform
       value: 
       objectReference: {fileID: 1036172109}
+    - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+      propertyPath: maxHP
+      value: 1500
+      objectReference: {fileID: 0}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: isCrystalBroken
       value: 0

@@ -3578,8 +3578,8 @@ MonoBehaviour:
   innerBackStepDistance: 3
   innerBackStepChance: 0.7
   innerBackStepCount: 1
-  innerBackStepMoveDistance: 4
-  innerBackStepMoveDuration: 0.38
+  innerBackStepMoveDistance: 10
+  innerBackStepMoveDuration: 1
   innerBackStepRecovery: 0.15
   innerBackStepConnectNextActionImmediately: 1
   innerBackStepNextActionDelay: 0
@@ -3648,11 +3648,11 @@ MonoBehaviour:
   chargeHitbox: {fileID: 51230604}
   chargeCooldown: 10
   chargeSpeed: 24
-  chargeOvershootDistance: 4
+  chargeOvershootDistance: 6
   chargeMinDuration: 0.75
   chargeMaxDuration: 1.8
   chargeBackStepIfCloserThan: 9
-  chargeTellTime: 3
+  chargeTellTime: 1.5
   chargeTellAnimationSpeed: 0.18
   chargeReadyPauseTime: 0.15
   chargeRecoveryTime: 0.5
@@ -3700,7 +3700,7 @@ MonoBehaviour:
   tailTrackingTurnSpeed: 7
   tailSlamDuration: 4.8
   tailSlamAimStartFrame: 5
-  tailSlamTrackUntilFrame: 76
+  tailSlamTrackUntilFrame: 79
   tailSlamHitStartFrame: 73
   tailSlamHitEndFrame: 82
   tailSlamReturnStartFrame: 105
@@ -3710,7 +3710,7 @@ MonoBehaviour:
   tailSlamSfx: {fileID: 0}
   tailSwipeDuration: 10
   tailSwipeAimStartFrame: 8
-  tailSwipeTrackUntilFrame: 73
+  tailSwipeTrackUntilFrame: 76
   tailSwipeSlamHitStartFrame: 77
   tailSwipeSlamHitEndFrame: 87
   tailSwipeSecondHitStartFrame: 100
@@ -3748,7 +3748,7 @@ MonoBehaviour:
   tailSwipeSpinMinLoops: 1
   tailSwipeSpinMaxLoops: 4
   tailSwipeSpinOvershootDistance: 4
-  tailSwipeSpinHomingStrength: 0.5
+  tailSwipeSpinHomingStrength: 1
   tailSwipeSpinRotationPerLoop: 360
   tailSwipeSpinInertiaDistance: 1.2
   tailSwipeSpinInertiaDuration: 1

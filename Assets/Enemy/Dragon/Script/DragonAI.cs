@@ -193,6 +193,39 @@ public class DragonAI : MonoBehaviour
     [Tooltip("ひっかき反撃前にプレイヤーへ向き直る時間です。大きくすると発生前にしっかり向き直ります。")]
     public float swipeCounterFaceTime = 0.12f;
 
+    [Tooltip("オン推奨。解析した実フレームを使います。オンなら予備動作は9フレーム目まで、攻撃判定は9から20フレーム目までになります。古いInspector値の影響を受けにくくします。")]
+    public bool useAnalyzedSwipeFrames = true;
+
+    [Tooltip("解析したひっかき予備動作終了フレームです。今回は9フレーム目までを予備動作として引き延ばします。")]
+    public int analyzedSwipeAnticipationEndFrame = 9;
+
+    [Tooltip("解析したひっかき攻撃終了フレームです。今回は9から20フレーム目までを攻撃判定にします。")]
+    public int analyzedSwipeAttackEndFrame = 20;
+
+    [Tooltip("旧設定です。Use Analyzed Swipe Framesがオフの時だけ使います。ひっかきの予備動作が終わるフレームです。")]
+    public int swipeAnticipationEndFrame = 9;
+
+    [Tooltip("ひっかきの予備動作を実際に見せる秒数です。大きくすると腕を構えてから攻撃するまでが長くなり、理不尽さが減ります。")]
+    public float swipeAnticipationDuration = 0.75f;
+
+    [Tooltip("オンにすると、予備動作区間だけAnimatorを遅くして9フレーム目までを引き延ばします。")]
+    public bool stretchSwipeAnticipation = true;
+
+    [Tooltip("9から20フレーム目までの攻撃部分を実際に見せる秒数です。予備動作だけでなく攻撃部分も少し伸ばすことで、見た目と判定のバランスを取りやすくします。")]
+    public float swipeAttackDuration = 0.38f;
+
+    [Tooltip("オンにすると、攻撃区間だけAnimatorを遅くして9から20フレーム目の攻撃を引き延ばします。")]
+    public bool stretchSwipeAttack = true;
+
+    [Tooltip("予備動作中にプレイヤーへ向き直る速度です。大きくすると予備動作中にしっかり正面を向きます。")]
+    public float swipeAnticipationTurnSpeed = 8f;
+
+    [Tooltip("予備動作中に再生する警告パーティクルです。腕、爪、地面のどこに置いてもOKです。未設定なら何も出ません。")]
+    public ParticleSystem swipeAnticipationParticle;
+
+    [Tooltip("予備動作開始時に鳴らす警告SEです。未設定なら鳴りません。")]
+    public AudioClip swipeAnticipationSfx;
+
     [Tooltip("ひっかき中に前進する距離です。今回は距離詰め用途ではないため、0から1程度がおすすめです。")]
     public float swipeForwardDistance = 0f;
 
@@ -205,11 +238,17 @@ public class DragonAI : MonoBehaviour
     [Tooltip("ひっかき中の向き補正の強さです。大きくすると攻撃中にプレイヤー方向へ向きやすくなります。")]
     public float swipeLungeTurnSpeed = 5f;
 
-    [Tooltip("ひっかき判定を出し始めるフレームです。小さくすると早く当たり判定が出ます。")]
-    public int swipeHitStartFrame = 28;
+    [Tooltip("オンなら、予備動作終了と同時にひっかき判定をONにします。理不尽さを減らすため、基本はオン推奨です。")]
+    public bool swipeHitboxStartsAtAttackPhase = true;
 
-    [Tooltip("ひっかき判定を消すフレームです。大きくすると判定が長く残ります。")]
-    public int swipeHitEndFrame = 55;
+    [Tooltip("予備動作終了後、当たり判定を出すまでの遅延秒数です。0なら攻撃に入った瞬間に判定が出ます。")]
+    public float swipeHitboxDelayAfterAnticipation = 0f;
+
+    [Tooltip("Swipe Hitbox Starts At Attack Phase がオフの時だけ使います。ひっかき判定を出し始めるフレームです。Use Analyzed Swipe Framesがオンの時は基本使いません。")]
+    public int swipeHitStartFrame = 9;
+
+    [Tooltip("旧設定です。Use Analyzed Swipe Framesがオフの時だけ主に使います。ひっかき判定を消すフレームです。")]
+    public int swipeHitEndFrame = 20;
 
     [Tooltip("ひっかきアニメーション全体の長さです。実際のアニメーション長に合わせてください。")]
     public float swipeAnimDuration = 1.6f;
@@ -1149,29 +1188,121 @@ public class DragonAI : MonoBehaviour
 
         motion.PlayAnim(animName, true);
 
-        if (swipeParticle != null) swipeParticle.Play();
-        PlaySfx(swipeSfx);
+        int effectiveAnticipationEndFrame = useAnalyzedSwipeFrames
+            ? analyzedSwipeAnticipationEndFrame
+            : swipeAnticipationEndFrame;
 
+        int effectiveAttackEndFrame = useAnalyzedSwipeFrames
+            ? analyzedSwipeAttackEndFrame
+            : swipeHitEndFrame;
+
+        effectiveAnticipationEndFrame = Mathf.Max(0, effectiveAnticipationEndFrame);
+        effectiveAttackEndFrame = Mathf.Max(effectiveAnticipationEndFrame + 1, effectiveAttackEndFrame);
+
+        float anticipationEndAnimTime = motion.FrameToSeconds(effectiveAnticipationEndFrame);
+        float attackEndAnimTime = motion.FrameToSeconds(effectiveAttackEndFrame);
         float lungeStart = motion.FrameToSeconds(swipeLungeStartFrame);
         float lungeEnd = motion.FrameToSeconds(swipeLungeEndFrame);
-        float hitStart = motion.FrameToSeconds(swipeHitStartFrame);
-        float hitEnd = motion.FrameToSeconds(swipeHitEndFrame);
+        float configuredHitStart = motion.FrameToSeconds(swipeHitStartFrame);
 
-        float timer = 0f;
+        float rawAnticipationDuration = Mathf.Max(0.01f, anticipationEndAnimTime);
+        float rawAttackDuration = Mathf.Max(0.01f, attackEndAnimTime - anticipationEndAnimTime);
+        float targetAnticipationDuration = Mathf.Max(0.01f, swipeAnticipationDuration);
+        float targetAttackDuration = Mathf.Max(0.01f, swipeAttackDuration);
+
+        bool shouldStretchAnticipation = stretchSwipeAnticipation && targetAnticipationDuration > rawAnticipationDuration;
+        bool shouldStretchAttack = stretchSwipeAttack && targetAttackDuration > rawAttackDuration;
+
+        if (!shouldStretchAnticipation)
+        {
+            targetAnticipationDuration = rawAnticipationDuration;
+        }
+
+        if (!shouldStretchAttack)
+        {
+            targetAttackDuration = rawAttackDuration;
+        }
+
+        if (swipeAnticipationParticle != null)
+        {
+            swipeAnticipationParticle.Play();
+        }
+
+        PlaySfx(swipeAnticipationSfx);
+
+        if (shouldStretchAnticipation)
+        {
+            float anticipationAnimatorSpeed = rawAnticipationDuration / targetAnticipationDuration;
+            motion.SetAnimatorSpeed(anticipationAnimatorSpeed);
+        }
+        else
+        {
+            motion.ResetAnimatorSpeed();
+        }
+
+        float anticipationTimer = 0f;
+
+        while (anticipationTimer < targetAnticipationDuration)
+        {
+            anticipationTimer += Time.deltaTime;
+            motion.FacePlayerSmooth(swipeAnticipationTurnSpeed);
+            yield return null;
+        }
+
+        if (swipeAnticipationParticle != null)
+        {
+            swipeAnticipationParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        }
+
+        if (swipeParticle != null)
+        {
+            swipeParticle.Play();
+        }
+
+        PlaySfx(swipeSfx);
+
+        if (shouldStretchAttack)
+        {
+            float attackAnimatorSpeed = rawAttackDuration / targetAttackDuration;
+            motion.SetAnimatorSpeed(attackAnimatorSpeed);
+        }
+        else
+        {
+            motion.ResetAnimatorSpeed();
+        }
+
+        float attackAnimTimer = anticipationEndAnimTime;
+        float realAttackPhaseTimer = 0f;
         float previousLunge = 0f;
         bool hitboxEnabled = false;
 
-        while (timer < swipeAnimDuration)
-        {
-            timer += Time.deltaTime;
+        float hitDelayAfterAttackStart = swipeHitboxStartsAtAttackPhase
+            ? Mathf.Max(0f, swipeHitboxDelayAfterAnticipation)
+            : Mathf.Max(0f, configuredHitStart - anticipationEndAnimTime);
 
-            if (swipeForwardDistance > 0f && timer >= lungeStart && timer <= lungeEnd)
+        float hitboxEndAfterAttackStart = Mathf.Max(0.03f, targetAttackDuration);
+
+        if (hitDelayAfterAttackStart <= 0f)
+        {
+            hitboxEnabled = true;
+            if (hitbox != null) hitbox.EnableHitbox();
+        }
+
+        while (realAttackPhaseTimer < targetAttackDuration)
+        {
+            float deltaTime = Time.deltaTime;
+            realAttackPhaseTimer += deltaTime;
+
+            float attackT = Mathf.Clamp01(realAttackPhaseTimer / targetAttackDuration);
+            attackAnimTimer = Mathf.Lerp(anticipationEndAnimTime, attackEndAnimTime, attackT);
+
+            if (swipeForwardDistance > 0f && attackAnimTimer >= lungeStart && attackAnimTimer <= lungeEnd)
             {
                 motion.FacePlayerSmooth(swipeLungeTurnSpeed);
 
                 Vector3 lungeDirection = motion.GetDirectionToPlayer();
 
-                float t = Mathf.InverseLerp(lungeStart, lungeEnd, timer);
+                float t = Mathf.InverseLerp(lungeStart, lungeEnd, attackAnimTimer);
                 float eased = Mathf.SmoothStep(0f, 1f, t);
                 float currentLunge = swipeForwardDistance * eased;
                 float delta = currentLunge - previousLunge;
@@ -1180,13 +1311,13 @@ public class DragonAI : MonoBehaviour
                 motion.MoveDragon(lungeDirection * delta);
             }
 
-            if (!hitboxEnabled && timer >= hitStart)
+            if (!hitboxEnabled && realAttackPhaseTimer >= hitDelayAfterAttackStart)
             {
                 hitboxEnabled = true;
                 if (hitbox != null) hitbox.EnableHitbox();
             }
 
-            if (hitboxEnabled && timer >= hitEnd)
+            if (hitboxEnabled && realAttackPhaseTimer >= hitboxEndAfterAttackStart)
             {
                 hitboxEnabled = false;
                 if (hitbox != null) hitbox.DisableHitbox();
@@ -1195,7 +1326,25 @@ public class DragonAI : MonoBehaviour
             yield return null;
         }
 
-        if (hitbox != null) hitbox.DisableHitbox();
+        if (hitbox != null)
+        {
+            hitbox.DisableHitbox();
+        }
+
+        motion.ResetAnimatorSpeed();
+
+        float afterAttackDuration = Mathf.Max(0f, swipeAnimDuration - attackEndAnimTime);
+        if (afterAttackDuration > 0f)
+        {
+            yield return new WaitForSeconds(afterAttackDuration);
+        }
+
+        if (swipeAnticipationParticle != null)
+        {
+            swipeAnticipationParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        motion.ResetAnimatorSpeed();
 
         ReturnToIdle();
     }
@@ -1864,6 +2013,7 @@ public class DragonAI : MonoBehaviour
     {
         StopAllChargeParticles();
         StopAllBreathParticles();
+        StopAllSwipeParticles();
     }
 
     private void StopAllChargeParticles()
@@ -1904,6 +2054,19 @@ public class DragonAI : MonoBehaviour
         if (beamBreathFireParticle != null)
         {
             beamBreathFireParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+    }
+
+    private void StopAllSwipeParticles()
+    {
+        if (swipeAnticipationParticle != null)
+        {
+            swipeAnticipationParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        if (swipeParticle != null)
+        {
+            swipeParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
     }
 

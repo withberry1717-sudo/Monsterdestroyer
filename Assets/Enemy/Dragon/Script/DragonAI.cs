@@ -19,6 +19,7 @@ public class DragonAI : MonoBehaviour
         None,
         Opening,
         Approach,
+        EmergencyBackStep,
         SwipeCounter,
         TailSlam,
         TailSwipe,
@@ -95,6 +96,26 @@ public class DragonAI : MonoBehaviour
 
     [Tooltip("接近行動をやめる距離です。大きくすると離れた位置で止まり、小さくすると近くまで詰めます。")]
     public float approachStopDistance = 8f;
+
+    [Header("懐対策バックステップ")]
+    [Tooltip("オンにすると、プレイヤーがドラゴンの中心に入り込みすぎた時に高確率でバックステップして間合いを取ります。")]
+    public bool enableInnerBackStepAction = true;
+
+    [Tooltip("この距離未満を懐に入り込みすぎた状態として扱います。ひっかきが届かない距離より少し大きめにすると安定します。")]
+    public float innerBackStepDistance = 2.4f;
+
+    [Tooltip("懐に入られた時にバックステップを選ぶ確率です。0.8なら高確率で距離を取ります。")]
+    [Range(0f, 1f)]
+    public float innerBackStepChance = 0.85f;
+
+    [Tooltip("懐対策バックステップの回数です。1から2がおすすめです。")]
+    public int innerBackStepCount = 1;
+
+    [Tooltip("懐対策バックステップ後の短い硬直です。大きくするとプレイヤーが追撃しやすくなります。")]
+    public float innerBackStepRecovery = 0.15f;
+
+    [Tooltip("オンにすると、プレイヤーが懐に入り込みすぎた時は待機中の向き補正を止めます。くるくる回転する挙動を抑えます。")]
+    public bool stopIdleTurnWhenPlayerTooClose = true;
 
     [Header("接近行動")]
     [Tooltip("歩き接近の速度です。大きくすると歩き接近が速くなります。")]
@@ -527,6 +548,110 @@ public class DragonAI : MonoBehaviour
     [Tooltip("Tail Swipe開始時に再生するSEです。未設定なら鳴りません。")]
     public AudioClip tailSwipeSfx;
 
+    [Header("Tail Swipe 強化設定")]
+    [Tooltip("オンにすると、Tail Swipeを強化版として使います。中距離まででだけ発動し、前半の位置合わせ、二段目前の予備動作、回転突進を行います。")]
+    public bool useEnhancedTailSwipe = true;
+
+    [Tooltip("強化Tail Swipeを開始できる最小距離です。近すぎる時は不自然な座標移動を避けるため、候補から外します。")]
+    public float enhancedTailSwipeMinStartDistance = 3.5f;
+
+    [Tooltip("強化Tail Swipeを開始できる最大距離です。中距離までに制限したいので、middleRange以下を推奨します。")]
+    public float enhancedTailSwipeMaxStartDistance = 15f;
+
+    [Tooltip("Tail Swipe前半の位置合わせ移動を使うかどうかです。11から35フレームの間に、尻尾が届きやすい位置へ移動します。")]
+    public bool tailSwipeUseRepositionMove = true;
+
+    [Tooltip("Tail Swipe前半の位置合わせ開始フレームです。")]
+    public int tailSwipeRepositionStartFrame = 11;
+
+    [Tooltip("Tail Swipe前半の位置合わせ終了フレームです。")]
+    public int tailSwipeRepositionEndFrame = 35;
+
+    [Tooltip("位置合わせ後、ドラゴン中心とプレイヤーの距離がこの値に近づくように移動します。尻尾の当たりやすい距離に合わせてください。")]
+    public float tailSwipeIdealHitDistance = 6.2f;
+
+    [Tooltip("位置合わせで動ける最大距離です。大きくすると当たりやすくなりますが、ワープ感が出やすくなります。")]
+    public float tailSwipeRepositionMaxDistance = 4.0f;
+
+    [Tooltip("位置合わせ移動の横方向補正です。尻尾の当たる位置が左右にずれる場合に調整します。")]
+    public float tailSwipeRepositionSideOffset = 0f;
+
+    [Tooltip("位置合わせ移動中の向き補正速度です。大きくすると早く尻尾の角度を合わせます。")]
+    public float tailSwipeRepositionTurnSpeed = 18f;
+
+    [Tooltip("一段目後、二段目の回転突進に入る前の予備動作を使うかどうかです。83から102フレームをスローにして時間を作ります。")]
+    public bool useTailSwipeSecondTell = true;
+
+    [Tooltip("二段目予備動作の開始フレームです。ここでパーティクルとSEを再生します。")]
+    public int tailSwipeSecondTellStartFrame = 83;
+
+    [Tooltip("二段目予備動作の終了フレームです。この後、回転突進に入ります。")]
+    public int tailSwipeSecondTellEndFrame = 102;
+
+    [Tooltip("二段目予備動作を実際に見せる秒数です。大きくすると分かりやすい予兆になります。")]
+    public float tailSwipeSecondTellDuration = 0.55f;
+
+    [Tooltip("二段目予備動作中に再生するパーティクルです。未設定なら何も再生されません。")]
+    public ParticleSystem tailSwipeSecondTellParticle;
+
+    [Tooltip("二段目予備動作開始時に再生するSEです。未設定なら鳴りません。")]
+    public AudioClip tailSwipeSecondTellSfx;
+
+    [Tooltip("Tail Swipeの回転突進を使うかどうかです。103から132フレームの一回転薙ぎ払いをループさせながら突進します。")]
+    public bool useTailSwipeSpinDash = true;
+
+    [Tooltip("回転突進専用の攻撃判定です。通常のTail Hitboxとは別にしたい場合に設定してください。未設定ならTail Hitboxを使います。")]
+    public DragonAttackHitbox tailSwipeSpinDashHitbox;
+
+    [Tooltip("回転突進でループさせるアニメーション区間の開始フレームです。")]
+    public int tailSwipeSpinLoopStartFrame = 103;
+
+    [Tooltip("回転突進でループさせるアニメーション区間の終了フレームです。")]
+    public int tailSwipeSpinLoopEndFrame = 132;
+
+    [Tooltip("回転突進で使うAnimatorレイヤーです。通常は0でOKです。")]
+    public int tailSwipeSpinAnimatorLayer = 0;
+
+    [Tooltip("オンにすると、回転突進中にTail Swipeの指定フレーム区間を毎フレーム手動再生します。回転だけしてアニメーションが止まる場合はオンにしてください。")]
+    public bool tailSwipeSpinForceAnimationLoop = true;
+
+
+    [Tooltip("一回転分の実時間です。小さくすると高速回転、大きくするとゆっくり回転します。")]
+    public float tailSwipeSpinLoopDuration = 0.55f;
+
+    [Tooltip("一回転ごとに進む固定距離です。大きくすると一回転ごとに大きく前進します。")]
+    public float tailSwipeSpinMoveDistancePerLoop = 4.2f;
+
+    [Tooltip("回転突進の最小ループ回数です。")]
+    public int tailSwipeSpinMinLoops = 1;
+
+    [Tooltip("回転突進の最大ループ回数です。大きくすると長く追いかけます。")]
+    public int tailSwipeSpinMaxLoops = 4;
+
+    [Tooltip("プレイヤーをどれくらい追い越したら止まるかです。大きくするとプレイヤーの奥まで突っ込みます。")]
+    public float tailSwipeSpinOvershootDistance = 2.5f;
+
+    [Tooltip("回転突進中の弱い追尾性能です。0なら完全直線、1以上で少しずつプレイヤー方向へ曲がります。")]
+    public float tailSwipeSpinHomingStrength = 0.35f;
+
+    [Tooltip("一回転あたりの回転角度です。反時計回りなら360、逆にしたい場合は-360にしてください。")]
+    public float tailSwipeSpinRotationPerLoop = 360f;
+
+    [Tooltip("回転突進の最後に残す慣性移動距離です。")]
+    public float tailSwipeSpinInertiaDistance = 1.2f;
+
+    [Tooltip("回転突進の最後に残す慣性時間です。この間も回転は続きます。")]
+    public float tailSwipeSpinInertiaDuration = 0.25f;
+
+    [Tooltip("回転突進中に再生するパーティクルです。未設定なら何も再生されません。")]
+    public ParticleSystem tailSwipeSpinDashParticle;
+
+    [Tooltip("回転突進開始時に再生するSEです。未設定なら鳴りません。")]
+    public AudioClip tailSwipeSpinDashSfx;
+
+    [Tooltip("回転突進終了時に再生するSEです。未設定なら鳴りません。")]
+    public AudioClip tailSwipeSpinDashEndSfx;
+
     [Header("咆哮")]
     [Tooltip("咆哮アニメーションの長さです。実際のアニメーション長に合わせてください。")]
     public float roarDuration = 2.8f;
@@ -575,9 +700,16 @@ public class DragonAI : MonoBehaviour
     private float lastChargeTime = -999f;
     private DragonAction lastAction = DragonAction.None;
     private DragonAction secondLastAction = DragonAction.None;
+    private Animator dragonAnimator;
 
     private void Awake()
     {
+        dragonAnimator = GetComponent<Animator>();
+        if (dragonAnimator == null)
+        {
+            dragonAnimator = GetComponentInChildren<Animator>();
+        }
+
         if (motion == null)
         {
             motion = GetComponent<DragonDragonMotion>();
@@ -664,6 +796,11 @@ public class DragonAI : MonoBehaviour
         if (isBusy) return;
         if (motion == null) return;
 
+        if (stopIdleTurnWhenPlayerTooClose && motion.GetDistanceToPlayer() < innerBackStepDistance)
+        {
+            return;
+        }
+
         motion.FacePlayerSmooth(motion.idleTurnSpeed);
     }
 
@@ -726,6 +863,12 @@ public class DragonAI : MonoBehaviour
     {
         float distance = motion.GetDistanceToPlayer();
 
+        if (ShouldUseInnerBackStep(distance))
+        {
+            yield return ExecuteAction(DragonAction.EmergencyBackStep);
+            yield break;
+        }
+
         if (ShouldDoOpening())
         {
             yield return ExecuteAction(DragonAction.Opening);
@@ -768,12 +911,35 @@ public class DragonAI : MonoBehaviour
         return Random.value < openingIdleChance;
     }
 
+    private bool ShouldUseInnerBackStep(float distance)
+    {
+        if (!enableInnerBackStepAction) return false;
+        if (distance > innerBackStepDistance) return false;
+
+        return Random.value < innerBackStepChance;
+    }
+
+
     private bool ShouldUseSwipeCounter(float distance)
     {
         if (!enableSwipeCounterAction) return false;
         if (distance > swipeCounterReachDistance) return false;
 
         return Random.value < swipeCounterChance;
+    }
+
+    private bool CanSelectTailSwipe(float distance)
+    {
+        if (!enableTailSwipeAction) return false;
+        if (distance > tailSwipeReachDistance) return false;
+
+        if (useEnhancedTailSwipe)
+        {
+            if (distance < enhancedTailSwipeMinStartDistance) return false;
+            if (distance > enhancedTailSwipeMaxStartDistance) return false;
+        }
+
+        return true;
     }
 
     private DragonAction PickCloseAction(float distance)
@@ -787,7 +953,7 @@ public class DragonAI : MonoBehaviour
                 picker.Add(DragonAction.TailSlam, closeTailSlamWeight);
             }
 
-            if (enableTailSwipeAction && distance <= tailSwipeReachDistance)
+            if (CanSelectTailSwipe(distance))
             {
                 picker.Add(DragonAction.TailSwipe, closeTailSwipeWeight);
             }
@@ -837,7 +1003,7 @@ public class DragonAI : MonoBehaviour
                 picker.Add(DragonAction.TailSlam, middleTailSlamWeight);
             }
 
-            if (enableTailSwipeAction && distance <= tailSwipeReachDistance)
+            if (CanSelectTailSwipe(distance))
             {
                 picker.Add(DragonAction.TailSwipe, middleTailSwipeWeight);
             }
@@ -935,6 +1101,10 @@ public class DragonAI : MonoBehaviour
 
             case DragonAction.Approach:
                 yield return ApproachPlayer();
+                break;
+
+            case DragonAction.EmergencyBackStep:
+                yield return EmergencyBackStepOnly();
                 break;
 
             case DragonAction.SwipeCounter:
@@ -1075,6 +1245,25 @@ public class DragonAI : MonoBehaviour
 
             yield return null;
         }
+
+        ReturnToIdle();
+    }
+
+    private IEnumerator EmergencyBackStepOnly()
+    {
+        isBusy = true;
+        state = DragonState.Acting;
+
+        DisableAllHitboxes();
+        StopAllSpecialParticles();
+
+        if (motion != null)
+        {
+            motion.ResetAnimatorSpeed();
+        }
+
+        yield return DoFixedBackSteps(innerBackStepCount);
+        yield return new WaitForSeconds(innerBackStepRecovery);
 
         ReturnToIdle();
     }
@@ -1780,12 +1969,24 @@ public class DragonAI : MonoBehaviour
         DisableAllHitboxes();
         StopAllSpecialParticles();
 
-        if (motion.GetDistanceToPlayer() > tailSwipeReachDistance)
+        float startDistance = motion.GetDistanceToPlayer();
+
+        if (startDistance > tailSwipeReachDistance)
         {
             ReturnToIdle();
             yield break;
         }
 
+        if (useEnhancedTailSwipe)
+        {
+            if (startDistance < enhancedTailSwipeMinStartDistance || startDistance > enhancedTailSwipeMaxStartDistance)
+            {
+                ReturnToIdle();
+                yield break;
+            }
+        }
+
+        motion.ResetAnimatorSpeed();
         motion.PlayAnim(motion.tailSwipeAnim, true);
 
         if (tailSwipeParticle != null) tailSwipeParticle.Play();
@@ -1795,18 +1996,28 @@ public class DragonAI : MonoBehaviour
 
         float aimStartTime = motion.FrameToSeconds(tailSwipeAimStartFrame);
         float trackEndTime = motion.FrameToSeconds(tailSwipeTrackUntilFrame);
+
+        float repositionStartTime = motion.FrameToSeconds(tailSwipeRepositionStartFrame);
+        float repositionEndTime = motion.FrameToSeconds(tailSwipeRepositionEndFrame);
+
         float firstHitStartTime = motion.FrameToSeconds(tailSwipeSlamHitStartFrame);
         float firstHitEndTime = motion.FrameToSeconds(tailSwipeSlamHitEndFrame);
-        float secondHitStartTime = motion.FrameToSeconds(tailSwipeSecondHitStartFrame);
-        float secondHitEndTime = motion.FrameToSeconds(tailSwipeSecondHitEndFrame);
-        float secondTurnStartTime = motion.FrameToSeconds(tailSwipeSecondTurnStartFrame);
-        float secondTurnEndTime = motion.FrameToSeconds(tailSwipeSecondTurnEndFrame);
+
+        float secondTellStartTime = motion.FrameToSeconds(tailSwipeSecondTellStartFrame);
+        float secondTellEndTime = motion.FrameToSeconds(tailSwipeSecondTellEndFrame);
+
+        float spinLoopStartTime = motion.FrameToSeconds(tailSwipeSpinLoopStartFrame);
+        float spinLoopEndTime = motion.FrameToSeconds(tailSwipeSpinLoopEndFrame);
 
         bool hitboxEnabled = false;
-        bool secondTurnStarted = false;
-        Quaternion secondTurnStartRotation = transform.rotation;
+        bool repositionStarted = false;
 
-        while (timer < tailSwipeDuration)
+        Vector3 repositionStartPosition = transform.position;
+        Vector3 repositionTargetPosition = transform.position;
+
+        float firstPhaseEndTime = useTailSwipeSecondTell ? secondTellStartTime : spinLoopStartTime;
+
+        while (timer < firstPhaseEndTime)
         {
             timer += Time.deltaTime;
 
@@ -1825,6 +2036,163 @@ public class DragonAI : MonoBehaviour
 
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, tailTrackingTurnSpeed * Time.deltaTime);
             }
+
+            if (useEnhancedTailSwipe && tailSwipeUseRepositionMove && timer >= repositionStartTime && timer <= repositionEndTime)
+            {
+                if (!repositionStarted)
+                {
+                    repositionStarted = true;
+                    repositionStartPosition = transform.position;
+                    repositionTargetPosition = CalculateTailSwipeRepositionTarget();
+                }
+
+                float moveDuration = Mathf.Max(0.01f, repositionEndTime - repositionStartTime);
+                float moveT = Mathf.Clamp01((timer - repositionStartTime) / moveDuration);
+                float smoothT = Mathf.SmoothStep(0f, 1f, moveT);
+
+                Vector3 desiredPosition = Vector3.Lerp(repositionStartPosition, repositionTargetPosition, smoothT);
+                Vector3 delta = desiredPosition - transform.position;
+                delta.y = 0f;
+
+                motion.MoveDragon(delta);
+
+                Quaternion targetRotation;
+
+                if (tailAttacksTurnTailToPlayer)
+                {
+                    targetRotation = motion.GetTailRotationToPlayer(tailFacePlayerOffsetY, tailSwipeFixedAttackOffsetY);
+                }
+                else
+                {
+                    targetRotation = motion.GetRotationToPlayerWithOffset(tailSwipeFixedAttackOffsetY);
+                }
+
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, tailSwipeRepositionTurnSpeed * Time.deltaTime);
+            }
+
+            bool shouldEnableHitbox = timer >= firstHitStartTime && timer <= firstHitEndTime;
+
+            if (shouldEnableHitbox && !hitboxEnabled)
+            {
+                hitboxEnabled = true;
+                if (tailHitbox != null) tailHitbox.EnableHitbox();
+            }
+            else if (!shouldEnableHitbox && hitboxEnabled)
+            {
+                hitboxEnabled = false;
+                if (tailHitbox != null) tailHitbox.DisableHitbox();
+            }
+
+            yield return null;
+        }
+
+        if (tailHitbox != null) tailHitbox.DisableHitbox();
+
+        if (useTailSwipeSecondTell)
+        {
+            yield return TailSwipeSecondTell(secondTellStartTime, secondTellEndTime);
+        }
+
+        if (useTailSwipeSpinDash)
+        {
+            yield return TailSwipeSpinDash(spinLoopStartTime, spinLoopEndTime);
+        }
+        else
+        {
+            yield return TailSwipeOriginalSecondHit();
+        }
+
+        if (tailHitbox != null) tailHitbox.DisableHitbox();
+
+        if (tailSwipeSpinDashHitbox != null) tailSwipeSpinDashHitbox.DisableHitbox();
+
+        motion.ResetAnimatorSpeed();
+
+        ReturnToIdle();
+    }
+
+    private Vector3 CalculateTailSwipeRepositionTarget()
+    {
+        if (player == null)
+        {
+            return transform.position;
+        }
+
+        Vector3 toDragon = transform.position - player.position;
+        toDragon.y = 0f;
+
+        if (toDragon.sqrMagnitude < 0.001f)
+        {
+            toDragon = -transform.forward;
+        }
+
+        Vector3 desiredFromPlayer = toDragon.normalized * Mathf.Max(0.1f, tailSwipeIdealHitDistance);
+
+        Vector3 side = Vector3.Cross(Vector3.up, desiredFromPlayer.normalized);
+        desiredFromPlayer += side * tailSwipeRepositionSideOffset;
+
+        Vector3 desiredPosition = player.position + desiredFromPlayer;
+        desiredPosition.y = transform.position.y;
+
+        Vector3 delta = desiredPosition - transform.position;
+        delta.y = 0f;
+
+        float maxDistance = Mathf.Max(0f, tailSwipeRepositionMaxDistance);
+        if (delta.magnitude > maxDistance)
+        {
+            delta = delta.normalized * maxDistance;
+        }
+
+        return transform.position + delta;
+    }
+
+    private IEnumerator TailSwipeSecondTell(float tellStartTime, float tellEndTime)
+    {
+        if (tailSwipeSecondTellParticle != null)
+        {
+            tailSwipeSecondTellParticle.Play();
+        }
+
+        PlaySfx(tailSwipeSecondTellSfx);
+
+        float rawTellDuration = Mathf.Max(0.01f, tellEndTime - tellStartTime);
+        float targetTellDuration = Mathf.Max(rawTellDuration, tailSwipeSecondTellDuration);
+
+        float animatorSpeed = rawTellDuration / targetTellDuration;
+        motion.SetAnimatorSpeed(animatorSpeed);
+
+        float timer = 0f;
+
+        while (timer < targetTellDuration)
+        {
+            timer += Time.deltaTime;
+            motion.FacePlayerSmooth(tailTrackingTurnSpeed);
+            yield return null;
+        }
+
+        if (tailSwipeSecondTellParticle != null)
+        {
+            tailSwipeSecondTellParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        }
+
+        motion.ResetAnimatorSpeed();
+    }
+
+    private IEnumerator TailSwipeOriginalSecondHit()
+    {
+        float secondHitStartTime = motion.FrameToSeconds(tailSwipeSecondHitStartFrame);
+        float secondHitEndTime = motion.FrameToSeconds(tailSwipeSecondHitEndFrame);
+        float secondTurnStartTime = motion.FrameToSeconds(tailSwipeSecondTurnStartFrame);
+        float secondTurnEndTime = motion.FrameToSeconds(tailSwipeSecondTurnEndFrame);
+
+        float timer = secondTurnStartTime;
+        bool hitboxEnabled = false;
+        bool secondTurnStarted = false;
+        Quaternion secondTurnStartRotation = transform.rotation;
+
+        while (timer < tailSwipeDuration)
+        {
+            timer += Time.deltaTime;
 
             if (timer >= secondTurnStartTime && timer <= secondTurnEndTime)
             {
@@ -1851,9 +2219,7 @@ public class DragonAI : MonoBehaviour
                 );
             }
 
-            bool shouldEnableHitbox =
-                (timer >= firstHitStartTime && timer <= firstHitEndTime) ||
-                (timer >= secondHitStartTime && timer <= secondHitEndTime);
+            bool shouldEnableHitbox = timer >= secondHitStartTime && timer <= secondHitEndTime;
 
             if (shouldEnableHitbox && !hitboxEnabled)
             {
@@ -1870,8 +2236,191 @@ public class DragonAI : MonoBehaviour
         }
 
         if (tailHitbox != null) tailHitbox.DisableHitbox();
+    }
 
-        ReturnToIdle();
+    private IEnumerator TailSwipeSpinDash(float loopStartTime, float loopEndTime)
+    {
+        DragonAttackHitbox spinHitbox = tailSwipeSpinDashHitbox != null ? tailSwipeSpinDashHitbox : tailHitbox;
+
+        if (tailSwipeSpinDashParticle != null)
+        {
+            tailSwipeSpinDashParticle.Play();
+        }
+
+        PlaySfx(tailSwipeSpinDashSfx);
+
+        float rawLoopDuration = Mathf.Max(0.01f, loopEndTime - loopStartTime);
+        float loopDuration = Mathf.Max(0.05f, tailSwipeSpinLoopDuration);
+        float animatorSpeed = rawLoopDuration / loopDuration;
+
+        Vector3 dashDirection = GetFlatDirectionToPlayer();
+
+        float targetDistance = GetTailSwipeSpinDashTargetDistance(dashDirection);
+        int requiredLoops = Mathf.CeilToInt(targetDistance / Mathf.Max(0.01f, tailSwipeSpinMoveDistancePerLoop));
+        int loopCount = Mathf.Clamp(requiredLoops, Mathf.Max(1, tailSwipeSpinMinLoops), Mathf.Max(1, tailSwipeSpinMaxLoops));
+
+        if (spinHitbox != null)
+        {
+            spinHitbox.EnableHitbox();
+        }
+
+        for (int i = 0; i < loopCount; i++)
+        {
+            float timer = 0f;
+            float previousMove = 0f;
+            Quaternion baseRotation = Quaternion.LookRotation(dashDirection, Vector3.up);
+
+            UpdateTailSwipeSpinLoopAnimation(loopStartTime, loopEndTime, 0f, loopDuration, animatorSpeed);
+
+            while (timer < loopDuration)
+            {
+                timer += Time.deltaTime;
+
+                if (player != null && tailSwipeSpinHomingStrength > 0f)
+                {
+                    Vector3 toPlayer = GetFlatDirectionToPlayer();
+                    dashDirection = Vector3.Slerp(
+                        dashDirection,
+                        toPlayer,
+                        tailSwipeSpinHomingStrength * Time.deltaTime
+                    ).normalized;
+
+                    baseRotation = Quaternion.LookRotation(dashDirection, Vector3.up);
+                }
+
+                float t = Mathf.Clamp01(timer / loopDuration);
+                float currentMove = tailSwipeSpinMoveDistancePerLoop * t;
+                float deltaMove = currentMove - previousMove;
+                previousMove = currentMove;
+
+                motion.MoveDragon(dashDirection * deltaMove);
+
+                float spinAngle = tailSwipeSpinRotationPerLoop * t;
+                transform.rotation = baseRotation * Quaternion.Euler(0f, spinAngle, 0f);
+
+                UpdateTailSwipeSpinLoopAnimation(loopStartTime, loopEndTime, timer, loopDuration, animatorSpeed);
+
+                yield return null;
+            }
+
+            UpdateTailSwipeSpinLoopAnimation(loopStartTime, loopEndTime, loopDuration, loopDuration, animatorSpeed);
+        }
+
+        if (tailSwipeSpinInertiaDuration > 0f && tailSwipeSpinInertiaDistance > 0f)
+        {
+            float timer = 0f;
+            float previousMove = 0f;
+            Quaternion baseRotation = Quaternion.LookRotation(dashDirection, Vector3.up);
+
+            while (timer < tailSwipeSpinInertiaDuration)
+            {
+                timer += Time.deltaTime;
+
+                float t = Mathf.Clamp01(timer / tailSwipeSpinInertiaDuration);
+                float eased = 1f - Mathf.Pow(1f - t, 2f);
+
+                float currentMove = tailSwipeSpinInertiaDistance * eased;
+                float deltaMove = currentMove - previousMove;
+                previousMove = currentMove;
+
+                motion.MoveDragon(dashDirection * deltaMove);
+
+                float spinAngle = tailSwipeSpinRotationPerLoop * t;
+                transform.rotation = baseRotation * Quaternion.Euler(0f, spinAngle, 0f);
+
+                float animationLoopTime = Mathf.Repeat(timer, loopDuration);
+                UpdateTailSwipeSpinLoopAnimation(loopStartTime, loopEndTime, animationLoopTime, loopDuration, animatorSpeed);
+
+                yield return null;
+            }
+        }
+
+        if (spinHitbox != null)
+        {
+            spinHitbox.DisableHitbox();
+        }
+
+        if (tailSwipeSpinDashParticle != null)
+        {
+            tailSwipeSpinDashParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+        }
+
+        PlaySfx(tailSwipeSpinDashEndSfx);
+        motion.ResetAnimatorSpeed();
+
+        if (dragonAnimator != null)
+        {
+            dragonAnimator.speed = 1f;
+        }
+    }
+
+    private void UpdateTailSwipeSpinLoopAnimation(float loopStartTime, float loopEndTime, float loopTimer, float loopDuration, float animatorSpeed)
+    {
+        if (motion == null || string.IsNullOrEmpty(motion.tailSwipeAnim))
+        {
+            return;
+        }
+
+        if (!tailSwipeSpinForceAnimationLoop)
+        {
+            motion.SetAnimatorSpeed(animatorSpeed);
+            return;
+        }
+
+        if (dragonAnimator == null)
+        {
+            motion.SetAnimatorSpeed(animatorSpeed);
+            motion.PlayAnim(motion.tailSwipeAnim, true);
+            return;
+        }
+
+        float safeTailSwipeDuration = Mathf.Max(0.01f, tailSwipeDuration);
+        float startNormalizedTime = Mathf.Clamp01(loopStartTime / safeTailSwipeDuration);
+        float endNormalizedTime = Mathf.Clamp01(loopEndTime / safeTailSwipeDuration);
+
+        if (endNormalizedTime <= startNormalizedTime)
+        {
+            endNormalizedTime = Mathf.Min(0.999f, startNormalizedTime + 0.01f);
+        }
+
+        float loopT = Mathf.Clamp01(loopTimer / Mathf.Max(0.01f, loopDuration));
+        float normalizedTime = Mathf.Lerp(startNormalizedTime, endNormalizedTime, loopT);
+
+        dragonAnimator.speed = 0f;
+        dragonAnimator.Play(motion.tailSwipeAnim, tailSwipeSpinAnimatorLayer, normalizedTime);
+        dragonAnimator.Update(0f);
+    }
+
+    private float GetTailSwipeSpinDashTargetDistance(Vector3 dashDirection)
+    {
+        if (player == null)
+        {
+            return tailSwipeSpinMoveDistancePerLoop;
+        }
+
+        Vector3 toPlayer = player.position - transform.position;
+        toPlayer.y = 0f;
+
+        float distanceToPlayerAlongDash = Mathf.Max(0f, Vector3.Dot(toPlayer, dashDirection.normalized));
+        return distanceToPlayerAlongDash + tailSwipeSpinOvershootDistance;
+    }
+
+    private Vector3 GetFlatDirectionToPlayer()
+    {
+        if (player == null)
+        {
+            return transform.forward;
+        }
+
+        Vector3 direction = player.position - transform.position;
+        direction.y = 0f;
+
+        if (direction.sqrMagnitude < 0.001f)
+        {
+            direction = transform.forward;
+        }
+
+        return direction.normalized;
     }
 
     private void HandleHalfHP()
@@ -2005,6 +2554,7 @@ public class DragonAI : MonoBehaviour
         if (leftArmHitbox != null) leftArmHitbox.DisableHitbox();
         if (rightArmHitbox != null) rightArmHitbox.DisableHitbox();
         if (tailHitbox != null) tailHitbox.DisableHitbox();
+        if (tailSwipeSpinDashHitbox != null) tailSwipeSpinDashHitbox.DisableHitbox();
         if (wideBreathHitbox != null) wideBreathHitbox.DisableHitbox();
         if (beamBreathHitbox != null) beamBreathHitbox.DisableHitbox();
     }
@@ -2013,6 +2563,7 @@ public class DragonAI : MonoBehaviour
     {
         StopAllChargeParticles();
         StopAllBreathParticles();
+        StopTailSwipeSpecialParticles();
         StopAllSwipeParticles();
     }
 
@@ -2067,6 +2618,19 @@ public class DragonAI : MonoBehaviour
         if (swipeParticle != null)
         {
             swipeParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+    }
+
+    private void StopTailSwipeSpecialParticles()
+    {
+        if (tailSwipeSecondTellParticle != null)
+        {
+            tailSwipeSecondTellParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        if (tailSwipeSpinDashParticle != null)
+        {
+            tailSwipeSpinDashParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
     }
 

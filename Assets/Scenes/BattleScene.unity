@@ -3211,20 +3211,26 @@ MonoBehaviour:
   effectPlayer: {fileID: 356980425}
   player: {fileID: 426628364}
   enableApproachAction: 1
-  enableSwipeCounterAction: 1
-  enableTailSlamAction: 1
+  enableSwipeCounterAction: 0
+  enableTailSlamAction: 0
   enableTailSwipeAction: 1
-  enableBackStepTailAction: 1
+  enableBackStepTailAction: 0
   enableBackStepBreathAction: 0
   enableWideBreathAction: 0
   enableBeamBreathAction: 0
-  enableChargeAction: 1
-  enableDoubleChargeAction: 1
+  enableChargeAction: 0
+  enableDoubleChargeAction: 0
   introIdleBeforeRoarTime: 1
   closeRange: 6
   middleRange: 15
   farRange: 25
   approachStopDistance: 6
+  enableInnerBackStepAction: 1
+  innerBackStepDistance: 2.4
+  innerBackStepChance: 0.7
+  innerBackStepCount: 1
+  innerBackStepRecovery: 0.15
+  stopIdleTurnWhenPlayerTooClose: 1
   walkSpeed: 2
   runChaseSpeed: 6.2
   switchToRunDistance: 8
@@ -3349,7 +3355,7 @@ MonoBehaviour:
   tailSlamAngleOffset: 0
   tailSlamParticle: {fileID: 0}
   tailSlamSfx: {fileID: 0}
-  tailSwipeDuration: 4.6
+  tailSwipeDuration: 10
   tailSwipeAimStartFrame: 8
   tailSwipeTrackUntilFrame: 73
   tailSwipeSlamHitStartFrame: 77
@@ -3362,6 +3368,40 @@ MonoBehaviour:
   tailSwipeSecondTurnEndFrame: 135
   tailSwipeParticle: {fileID: 585711684}
   tailSwipeSfx: {fileID: 0}
+  useEnhancedTailSwipe: 1
+  enhancedTailSwipeMinStartDistance: 5
+  enhancedTailSwipeMaxStartDistance: 18
+  tailSwipeUseRepositionMove: 1
+  tailSwipeRepositionStartFrame: 11
+  tailSwipeRepositionEndFrame: 35
+  tailSwipeIdealHitDistance: 6.2
+  tailSwipeRepositionMaxDistance: 10
+  tailSwipeRepositionSideOffset: 0
+  tailSwipeRepositionTurnSpeed: 18
+  useTailSwipeSecondTell: 1
+  tailSwipeSecondTellStartFrame: 83
+  tailSwipeSecondTellEndFrame: 102
+  tailSwipeSecondTellDuration: 1.5
+  tailSwipeSecondTellParticle: {fileID: 1358320788}
+  tailSwipeSecondTellSfx: {fileID: 0}
+  useTailSwipeSpinDash: 1
+  tailSwipeSpinDashHitbox: {fileID: 0}
+  tailSwipeSpinLoopStartFrame: 103
+  tailSwipeSpinLoopEndFrame: 132
+  tailSwipeSpinAnimatorLayer: 0
+  tailSwipeSpinForceAnimationLoop: 1
+  tailSwipeSpinLoopDuration: 0.5
+  tailSwipeSpinMoveDistancePerLoop: 5
+  tailSwipeSpinMinLoops: 1
+  tailSwipeSpinMaxLoops: 4
+  tailSwipeSpinOvershootDistance: 4
+  tailSwipeSpinHomingStrength: 0.5
+  tailSwipeSpinRotationPerLoop: 360
+  tailSwipeSpinInertiaDistance: 1.2
+  tailSwipeSpinInertiaDuration: 1
+  tailSwipeSpinDashParticle: {fileID: 0}
+  tailSwipeSpinDashSfx: {fileID: 0}
+  tailSwipeSpinDashEndSfx: {fileID: 0}
   roarDuration: 2.8
   roarStaggerRadius: 15
   roarStaggerTime: 1

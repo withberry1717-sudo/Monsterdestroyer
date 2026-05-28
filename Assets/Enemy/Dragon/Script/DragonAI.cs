@@ -699,6 +699,17 @@ public class DragonAI : MonoBehaviour
     [Tooltip("死亡時に再生するSEです。未設定なら鳴りません。")]
     public AudioClip deathSfx;
 
+
+    [Header("移動アニメーション安全装置")]
+    [Tooltip("オン推奨。移動しているのにIdle/停止アニメのまま滑るバグを防ぐため、移動中は歩き/走りアニメとAnimator速度を監視します。")]
+    public bool forceMoveAnimationWhileMoving = true;
+
+    [Tooltip("移動中にアニメーション状態を確認する間隔です。短すぎるとアニメが毎回最初からになりやすいので0.2から0.5程度がおすすめです。")]
+    public float moveAnimationSafetyCheckInterval = 0.25f;
+
+    [Tooltip("オンにすると、Animator.speedが0のまま移動し始めた時に強制で1へ戻します。Tail Swipeの手動ループ後などの保険です。")]
+    public bool forceAnimatorSpeedOneWhenMoving = true;
+
     [Header("共通サウンド")]
     [Tooltip("SEを再生するAudioSourceです。未設定の場合は自分または親から自動で探します。")]
     public AudioSource audioSource;
@@ -1232,9 +1243,10 @@ public class DragonAI : MonoBehaviour
         bool running = motion.GetDistanceToPlayer() >= switchToRunDistance;
         string moveAnim = running ? motion.runAnim : motion.walkAnim;
 
-        motion.PlayAnim(moveAnim, true);
+        PlayMoveAnimSafe(moveAnim);
 
         float checkTimer = 0f;
+        float moveAnimSafetyTimer = 0f;
 
         while (player != null && motion.GetDistanceToPlayer() > approachStopDistance)
         {
@@ -1244,19 +1256,21 @@ public class DragonAI : MonoBehaviour
             {
                 running = true;
                 moveAnim = motion.runAnim;
-                motion.PlayAnim(moveAnim, true);
+                PlayMoveAnimSafe(moveAnim);
                 checkTimer = 0f;
+                moveAnimSafetyTimer = 0f;
             }
             else if (running && distance <= runChaseStopDistance)
             {
                 running = false;
                 moveAnim = motion.walkAnim;
-                motion.PlayAnim(moveAnim, true);
+                PlayMoveAnimSafe(moveAnim);
                 checkTimer = 0f;
+                moveAnimSafetyTimer = 0f;
             }
 
             checkTimer += Time.deltaTime;
-            motion.KeepMoveAnim(moveAnim, ref checkTimer);
+            KeepMoveAnimSafe(moveAnim, ref checkTimer, ref moveAnimSafetyTimer);
             motion.FacePlayerSmooth(motion.actionTurnSpeed);
 
             float speed = running ? runChaseSpeed : walkSpeed;
@@ -1795,8 +1809,8 @@ public class DragonAI : MonoBehaviour
         if (chargeReadyParticle != null) chargeReadyParticle.Play();
         PlaySfx(chargeReadySfx);
 
-        motion.ResetAnimatorSpeed();
-        motion.PlayAnim(motion.runAnim, true);
+        ResetAnimatorSpeedHard();
+        PlayMoveAnimSafe(motion.runAnim);
 
         yield return new WaitForSeconds(chargeReadyPauseTime);
 
@@ -1821,15 +1835,17 @@ public class DragonAI : MonoBehaviour
 
         if (chargeHitbox != null) chargeHitbox.EnableHitbox();
 
-        motion.PlayAnim(motion.runAnim, true);
-        motion.ResetAnimatorSpeed();
+        PlayMoveAnimSafe(motion.runAnim);
+        ResetAnimatorSpeedHard();
+
+        float chargeMoveAnimSafetyTimer = 0f;
 
         while (timer < chargeTime)
         {
             timer += Time.deltaTime;
             runCheckTimer += Time.deltaTime;
 
-            motion.KeepMoveAnim(motion.runAnim, ref runCheckTimer);
+            KeepMoveAnimSafe(motion.runAnim, ref runCheckTimer, ref chargeMoveAnimSafetyTimer);
 
             float t = Mathf.Clamp01(timer / chargeTime);
             float eased = EvaluateChargeMoveCurve(t);
@@ -2587,6 +2603,82 @@ public class DragonAI : MonoBehaviour
         return true;
     }
 
+
+    private void ResetAnimatorSpeedHard()
+    {
+        if (motion != null)
+        {
+            motion.ResetAnimatorSpeed();
+        }
+
+        if (dragonAnimator != null)
+        {
+            dragonAnimator.speed = 1f;
+        }
+    }
+
+    private void PlayMoveAnimSafe(string animName)
+    {
+        if (motion == null || string.IsNullOrEmpty(animName))
+        {
+            return;
+        }
+
+        if (forceAnimatorSpeedOneWhenMoving)
+        {
+            ResetAnimatorSpeedHard();
+        }
+
+        motion.PlayAnim(animName, true);
+    }
+
+    private void KeepMoveAnimSafe(string animName, ref float keepTimer, ref float safetyTimer)
+    {
+        if (motion == null || string.IsNullOrEmpty(animName))
+        {
+            return;
+        }
+
+        if (!forceMoveAnimationWhileMoving)
+        {
+            motion.KeepMoveAnim(animName, ref keepTimer);
+            return;
+        }
+
+        if (forceAnimatorSpeedOneWhenMoving && dragonAnimator != null && dragonAnimator.speed <= 0.01f)
+        {
+            dragonAnimator.speed = 1f;
+        }
+
+        motion.KeepMoveAnim(animName, ref keepTimer);
+
+        safetyTimer += Time.deltaTime;
+
+        if (safetyTimer < Mathf.Max(0.05f, moveAnimationSafetyCheckInterval))
+        {
+            return;
+        }
+
+        safetyTimer = 0f;
+
+        if (dragonAnimator == null)
+        {
+            motion.PlayAnim(animName, true);
+            return;
+        }
+
+        AnimatorStateInfo current = dragonAnimator.GetCurrentAnimatorStateInfo(0);
+        AnimatorStateInfo next = dragonAnimator.GetNextAnimatorStateInfo(0);
+
+        bool currentIsMoveAnim = current.IsName(animName);
+        bool nextIsMoveAnim = dragonAnimator.IsInTransition(0) && next.IsName(animName);
+
+        if (!currentIsMoveAnim && !nextIsMoveAnim)
+        {
+            motion.PlayAnim(animName, true);
+        }
+    }
+
     private void ReturnToIdle()
     {
         DisableAllHitboxes();
@@ -2594,7 +2686,7 @@ public class DragonAI : MonoBehaviour
 
         if (motion != null)
         {
-            motion.ResetAnimatorSpeed();
+            ResetAnimatorSpeedHard();
             motion.PlayAnim(motion.idleAnim, true);
         }
 

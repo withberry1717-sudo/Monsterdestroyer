@@ -174,7 +174,7 @@ public class ScoreManager : MonoBehaviour
 
         yield return StartCoroutine(TypeText(
             rankText,
-            "Rank            " + rank,
+            "Rank                   " + rank,
             rankTypeInterval
         ));
     }

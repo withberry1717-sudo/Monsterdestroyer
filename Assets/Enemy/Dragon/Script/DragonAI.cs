@@ -615,6 +615,12 @@ public class DragonAI : MonoBehaviour
     [Tooltip("回転突進専用の攻撃判定です。通常のTail Hitboxとは別にしたい場合に設定してください。未設定ならTail Hitboxを使います。")]
     public DragonAttackHitbox tailSwipeSpinDashHitbox;
 
+    [Tooltip("オン推奨。Tail Swipe二段目の攻撃中は、開始から終了まで常に当たり判定をONにします。")]
+    public bool keepTailSwipeSecondHitboxActiveDuringSecondAttack = true;
+
+    [Tooltip("オン推奨。二段目攻撃中にHitbox側が一時的にOFFになっても、毎フレームEnableし直して判定抜けを防ぎます。")]
+    public bool forceTailSwipeSecondHitboxEveryFrame = true;
+
     [Tooltip("回転突進でループさせるアニメーション区間の開始フレームです。")]
     public int tailSwipeSpinLoopStartFrame = 103;
 
@@ -2264,6 +2270,12 @@ public class DragonAI : MonoBehaviour
         bool secondTurnStarted = false;
         Quaternion secondTurnStartRotation = transform.rotation;
 
+        if (keepTailSwipeSecondHitboxActiveDuringSecondAttack && tailHitbox != null)
+        {
+            hitboxEnabled = true;
+            tailHitbox.EnableHitbox();
+        }
+
         while (timer < tailSwipeDuration)
         {
             timer += Time.deltaTime;
@@ -2293,17 +2305,27 @@ public class DragonAI : MonoBehaviour
                 );
             }
 
-            bool shouldEnableHitbox = timer >= secondHitStartTime && timer <= secondHitEndTime;
-
-            if (shouldEnableHitbox && !hitboxEnabled)
+            if (keepTailSwipeSecondHitboxActiveDuringSecondAttack)
             {
-                hitboxEnabled = true;
-                if (tailHitbox != null) tailHitbox.EnableHitbox();
+                if (tailHitbox != null && forceTailSwipeSecondHitboxEveryFrame)
+                {
+                    tailHitbox.EnableHitbox();
+                }
             }
-            else if (!shouldEnableHitbox && hitboxEnabled)
+            else
             {
-                hitboxEnabled = false;
-                if (tailHitbox != null) tailHitbox.DisableHitbox();
+                bool shouldEnableHitbox = timer >= secondHitStartTime && timer <= secondHitEndTime;
+
+                if (shouldEnableHitbox && !hitboxEnabled)
+                {
+                    hitboxEnabled = true;
+                    if (tailHitbox != null) tailHitbox.EnableHitbox();
+                }
+                else if (!shouldEnableHitbox && hitboxEnabled)
+                {
+                    hitboxEnabled = false;
+                    if (tailHitbox != null) tailHitbox.DisableHitbox();
+                }
             }
 
             yield return null;
@@ -2350,6 +2372,11 @@ public class DragonAI : MonoBehaviour
             {
                 timer += Time.deltaTime;
 
+                if (keepTailSwipeSecondHitboxActiveDuringSecondAttack && forceTailSwipeSecondHitboxEveryFrame && spinHitbox != null)
+                {
+                    spinHitbox.EnableHitbox();
+                }
+
                 if (player != null && tailSwipeSpinHomingStrength > 0f)
                 {
                     Vector3 toPlayer = GetFlatDirectionToPlayer();
@@ -2389,6 +2416,11 @@ public class DragonAI : MonoBehaviour
             while (timer < tailSwipeSpinInertiaDuration)
             {
                 timer += Time.deltaTime;
+
+                if (keepTailSwipeSecondHitboxActiveDuringSecondAttack && forceTailSwipeSecondHitboxEveryFrame && spinHitbox != null)
+                {
+                    spinHitbox.EnableHitbox();
+                }
 
                 float t = Mathf.Clamp01(timer / tailSwipeSpinInertiaDuration);
                 float eased = 1f - Mathf.Pow(1f - t, 2f);

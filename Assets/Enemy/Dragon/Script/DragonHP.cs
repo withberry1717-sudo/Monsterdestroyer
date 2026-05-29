@@ -11,15 +11,22 @@ public class DragonHP : MonoBehaviour
     [Tooltip("現在の本体HP")]
     public float currentHP;
 
-    [Header("尻尾クリスタルのHP")]
-    [Tooltip("尻尾クリスタルの最大HP。これが0になると尻尾攻撃を封印してダウンする")]
+    [Header("尻尾切断部位HP")]
+    [Tooltip("尻尾切断部位の最大HP。これが0になると尻尾切断が発生し、尻尾攻撃を封印します。")]
     public float maxTailCrystalHP = 300f;
 
-    [Tooltip("現在の尻尾クリスタルHP")]
+    [Tooltip("現在の尻尾切断部位HP")]
     public float currentTailCrystalHP;
 
-    [Tooltip("尻尾クリスタルが壊れているか")]
+    [Tooltip("尻尾が切断済みか。昔のクリスタル破壊判定も兼ねます。")]
     public bool isTailCrystalBroken = false;
+
+    [Header("尻尾部位ダメージ設定")]
+    [Tooltip("ONにすると、尻尾切断部位への攻撃でも本体HPにダメージが入ります。")]
+    [SerializeField] private bool tailDamageAlsoDamagesBody = true;
+
+    [Tooltip("尻尾切断部位に攻撃した時、本体へ入るダメージ倍率。1なら同じダメージが本体にも入ります。")]
+    [SerializeField] private float tailToBodyDamageMultiplier = 1.0f;
 
     [Header("互換用：昔のCrystal変数")]
     [Tooltip("昔のコードとの互換用。isTailCrystalBrokenと同じ意味")]
@@ -48,7 +55,11 @@ public class DragonHP : MonoBehaviour
 
     public event Action OnHalfHP;
     public event Action OnDeath;
+
+    [Tooltip("尻尾切断時に呼ばれます。昔のOnTailCrystalBrokenと互換目的で残しています。")]
     public event Action OnTailCrystalBroken;
+
+    [Tooltip("尻尾切断時に呼ばれます。昔のOnCrystalBrokenと互換目的で残しています。")]
     public event Action OnCrystalBroken;
 
     private bool gameClearStarted = false;
@@ -76,6 +87,11 @@ public class DragonHP : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        ApplyBodyDamage(damage, "本体");
+    }
+
+    private void ApplyBodyDamage(float damage, string sourceLabel)
+    {
         if (isDead) return;
 
         float finalDamage = Mathf.Max(0f, damage);
@@ -83,7 +99,7 @@ public class DragonHP : MonoBehaviour
         currentHP -= finalDamage;
         currentHP = Mathf.Max(currentHP, 0f);
 
-        Debug.Log($"本体に {finalDamage} ダメージ。残りHP: {currentHP}");
+        Debug.Log($"{sourceLabel}に {finalDamage} ダメージ。残り本体HP: {currentHP}");
 
         if (!halfHpTriggered && currentHP <= maxHP * 0.5f)
         {
@@ -100,36 +116,50 @@ public class DragonHP : MonoBehaviour
 
     public void TakeTailCrystalDamage(float damage)
     {
-        if (isDead) return;
-        if (IsCrystalBroken()) return;
-
-        float finalDamage = Mathf.Max(0f, damage);
-
-        currentTailCrystalHP -= finalDamage;
-        currentTailCrystalHP = Mathf.Max(currentTailCrystalHP, 0f);
-
-        Debug.Log($"尻尾クリスタルに {finalDamage} ダメージ。残り耐久: {currentTailCrystalHP}");
-
-        if (currentTailCrystalHP <= 0f)
-        {
-            BreakTailCrystal();
-        }
+        TakeTailSeverPartDamage(damage);
     }
 
     public void TakeCrystalDamage(float damage)
     {
-        TakeTailCrystalDamage(damage);
+        TakeTailSeverPartDamage(damage);
     }
 
-    private void BreakTailCrystal()
+    public void TakeTailSeverPartDamage(float damage)
     {
-        if (IsCrystalBroken()) return;
+        if (isDead) return;
+
+        float finalDamage = Mathf.Max(0f, damage);
+
+        // 尻尾への攻撃でも本体にダメージを入れる
+        if (tailDamageAlsoDamagesBody)
+        {
+            float bodyDamage = finalDamage * Mathf.Max(0f, tailToBodyDamageMultiplier);
+            ApplyBodyDamage(bodyDamage, "尻尾部位経由で本体");
+        }
+
+        if (isDead) return;
+        if (IsTailSevered()) return;
+
+        currentTailCrystalHP -= finalDamage;
+        currentTailCrystalHP = Mathf.Max(currentTailCrystalHP, 0f);
+
+        Debug.Log($"尻尾切断部位に {finalDamage} ダメージ。残り耐久: {currentTailCrystalHP}");
+
+        if (currentTailCrystalHP <= 0f)
+        {
+            SeverTail();
+        }
+    }
+
+    private void SeverTail()
+    {
+        if (IsTailSevered()) return;
 
         isTailCrystalBroken = true;
         isCrystalBroken = true;
         currentTailCrystalHP = 0f;
 
-        Debug.Log("尻尾クリスタル破壊。尻尾切断演出を実行");
+        Debug.Log("尻尾切断。尻尾攻撃を封印して、切断演出を実行");
 
         if (tailSeverController != null)
         {
@@ -191,6 +221,11 @@ public class DragonHP : MonoBehaviour
     }
 
     public bool IsCrystalBroken()
+    {
+        return isTailCrystalBroken || isCrystalBroken;
+    }
+
+    public bool IsTailSevered()
     {
         return isTailCrystalBroken || isCrystalBroken;
     }

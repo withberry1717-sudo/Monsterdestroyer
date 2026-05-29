@@ -2,24 +2,44 @@
 
 public class TailSeverController : MonoBehaviour
 {
-    [Header("ドラゴンメッシュ切り替え")]
-    [Tooltip("破壊前の通常ドラゴンメッシュ。尻尾と結晶がある方を入れる")]
-    [SerializeField] private GameObject normalDragonMeshObject;
+    [Header("ドラゴン本体メッシュ差し替え")]
+    [Tooltip("Hierarchy上の通常ドラゴンのDragonMeshについているSkinned Mesh Rendererを入れる")]
+    [SerializeField] private SkinnedMeshRenderer targetSkinnedMeshRenderer;
 
-    [Tooltip("破壊後のドラゴンメッシュ。尻尾が切断された本体を入れる。最初は非表示推奨")]
-    [SerializeField] private GameObject brokenDragonMeshObject;
+    [Tooltip("尻尾切断後のMesh。Project内のDragonMesh_Broken.fbxの中にあるDragon Meshを入れる")]
+    [SerializeField] private Mesh brokenMesh;
+
+    [Tooltip("切断後だけ別マテリアルにしたい場合に入れる。空なら現在のマテリアルをそのまま使う")]
+    [SerializeField] private Material brokenMaterial;
+
+    [Tooltip("切断時にSkinned Mesh RendererのBoundsを再計算します。表示が消える場合はON推奨")]
+    [SerializeField] private bool recalculateBoundsOnSever = true;
 
     [Header("吹っ飛ぶ尻尾")]
-    [Tooltip("切断されて吹っ飛ぶ尻尾Prefab。RigidbodyとColliderを付けておく")]
+    [Tooltip("切断されて吹っ飛ぶ尻尾Prefab。親にRigidbody、子か親にColliderを付けておく")]
     [SerializeField] private GameObject severedTailPrefab;
 
-    [Tooltip("尻尾を生成する位置。尻尾の根元〜切断位置あたりに空オブジェクトを置く")]
+    [Tooltip("尻尾を生成する位置。尻尾ボーンの子に置くとアニメーションに追従します")]
     [SerializeField] private Transform severedTailSpawnPoint;
 
-    [Tooltip("尻尾を吹っ飛ばす方向の基準。未設定ならこのオブジェクトの向きを使う")]
+    [Tooltip("尻尾を吹っ飛ばす方向の基準。未設定ならSpawnPoint、それもなければこのオブジェクトの向きを使います")]
     [SerializeField] private Transform severedTailForceDirection;
 
-    [Tooltip("尻尾を前後方向に吹っ飛ばす力")]
+    [Header("吹っ飛ぶ尻尾の見た目補正")]
+    [Tooltip("尻尾Prefabを生成する位置の補正。SeveredTailSpawnPoint基準のローカル座標で調整します")]
+    [SerializeField] private Vector3 severedTailLocalPositionOffset = Vector3.zero;
+
+    [Tooltip("尻尾Prefabを生成する回転の補正。向きがズレる場合に調整します")]
+    [SerializeField] private Vector3 severedTailLocalRotationOffset = Vector3.zero;
+
+    [Tooltip("尻尾Prefabの大きさ補正。Prefabが小さい/大きい場合に調整します")]
+    [SerializeField] private Vector3 severedTailScaleMultiplier = Vector3.one;
+
+    [Header("吹っ飛び挙動")]
+    [Tooltip("ONなら、吹っ飛ぶ方向はSevered Tail Force DirectionのForward方向を使います。OFFならBackward方向を使います")]
+    [SerializeField] private bool useForceDirectionForward = true;
+
+    [Tooltip("尻尾を横方向・前後方向に吹っ飛ばす力")]
     [SerializeField] private float tailFlyForce = 8f;
 
     [Tooltip("尻尾を上方向に浮かせる力")]
@@ -27,6 +47,9 @@ public class TailSeverController : MonoBehaviour
 
     [Tooltip("尻尾を回転させる力")]
     [SerializeField] private float tailTorqueForce = 8f;
+
+    [Tooltip("生成直後にドラゴンの親子関係から外します。基本ON推奨")]
+    [SerializeField] private bool detachSpawnedTailFromParent = true;
 
     [Tooltip("吹っ飛んだ尻尾を何秒後に消すか。0以下なら消さない")]
     [SerializeField] private float severedTailDestroyDelay = 12f;
@@ -52,7 +75,7 @@ public class TailSeverController : MonoBehaviour
     [SerializeField] private float particleDestroyDelay = 5f;
 
     [Header("切断SE")]
-    [Tooltip("切断SE再生用AudioSource。未設定なら親から探す")]
+    [Tooltip("切断SE再生用AudioSource。未設定なら自分か親から探します")]
     [SerializeField] private AudioSource audioSource;
 
     [Tooltip("尻尾切断時のSE")]
@@ -61,20 +84,29 @@ public class TailSeverController : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float severSfxVolume = 1f;
 
+    private Mesh normalMesh;
+    private Material[] normalMaterials;
     private bool hasSevered = false;
 
     private void Awake()
     {
-        if (brokenDragonMeshObject != null)
+        CacheNormalMeshAndMaterials();
+        FindAudioSourceIfNeeded();
+    }
+
+    private void CacheNormalMeshAndMaterials()
+    {
+        if (targetSkinnedMeshRenderer == null)
         {
-            brokenDragonMeshObject.SetActive(false);
+            return;
         }
 
-        if (normalDragonMeshObject != null)
-        {
-            normalDragonMeshObject.SetActive(true);
-        }
+        normalMesh = targetSkinnedMeshRenderer.sharedMesh;
+        normalMaterials = targetSkinnedMeshRenderer.sharedMaterials;
+    }
 
+    private void FindAudioSourceIfNeeded()
+    {
         if (audioSource == null)
         {
             audioSource = GetComponent<AudioSource>();
@@ -91,60 +123,106 @@ public class TailSeverController : MonoBehaviour
         if (hasSevered) return;
         hasSevered = true;
 
-        SwitchDragonMesh();
+        SwitchToBrokenMesh();
         SpawnSeveredTail();
         DisableOldHitboxes();
         PlaySeverParticle();
         PlaySeverSfx();
     }
 
-    private void SwitchDragonMesh()
+    private void SwitchToBrokenMesh()
     {
-        if (normalDragonMeshObject != null)
+        if (targetSkinnedMeshRenderer == null)
         {
-            normalDragonMeshObject.SetActive(false);
+            Debug.LogWarning($"{name}: Target Skinned Mesh Renderer が設定されていません。");
+            return;
         }
 
-        if (brokenDragonMeshObject != null)
+        if (brokenMesh == null)
         {
-            brokenDragonMeshObject.SetActive(true);
+            Debug.LogWarning($"{name}: Broken Mesh が設定されていません。");
+            return;
         }
+
+        targetSkinnedMeshRenderer.sharedMesh = brokenMesh;
+
+        if (brokenMaterial != null)
+        {
+            targetSkinnedMeshRenderer.sharedMaterial = brokenMaterial;
+        }
+
+        if (recalculateBoundsOnSever)
+        {
+            targetSkinnedMeshRenderer.localBounds = brokenMesh.bounds;
+        }
+
+        Debug.Log("尻尾切断後メッシュに差し替えました。");
     }
 
     private void SpawnSeveredTail()
     {
-        if (severedTailPrefab == null) return;
+        if (severedTailPrefab == null)
+        {
+            return;
+        }
 
         Vector3 spawnPosition = transform.position;
         Quaternion spawnRotation = transform.rotation;
 
         if (severedTailSpawnPoint != null)
         {
-            spawnPosition = severedTailSpawnPoint.position;
-            spawnRotation = severedTailSpawnPoint.rotation;
+            spawnPosition = severedTailSpawnPoint.TransformPoint(severedTailLocalPositionOffset);
+            spawnRotation = severedTailSpawnPoint.rotation * Quaternion.Euler(severedTailLocalRotationOffset);
         }
 
         GameObject tail = Instantiate(severedTailPrefab, spawnPosition, spawnRotation);
+
+        if (detachSpawnedTailFromParent)
+        {
+            tail.transform.SetParent(null, true);
+        }
+
+        tail.transform.localScale = Vector3.Scale(tail.transform.localScale, severedTailScaleMultiplier);
 
         Rigidbody rb = tail.GetComponent<Rigidbody>();
 
         if (rb != null)
         {
-            Transform directionTransform = severedTailForceDirection != null
-                ? severedTailForceDirection
-                : transform;
+            Transform directionTransform = GetForceDirectionTransform();
 
-            Vector3 flyDirection = -directionTransform.forward + Vector3.up * 0.35f;
-            Vector3 force = flyDirection.normalized * tailFlyForce + Vector3.up * tailUpForce;
+            Vector3 horizontalDirection = useForceDirectionForward
+                ? directionTransform.forward
+                : -directionTransform.forward;
+
+            Vector3 force = horizontalDirection.normalized * tailFlyForce + Vector3.up * tailUpForce;
 
             rb.AddForce(force, ForceMode.Impulse);
             rb.AddTorque(Random.insideUnitSphere * tailTorqueForce, ForceMode.Impulse);
+        }
+        else
+        {
+            Debug.LogWarning($"{tail.name}: Rigidbody が付いていないため、尻尾は吹っ飛びません。");
         }
 
         if (severedTailDestroyDelay > 0f)
         {
             Destroy(tail, severedTailDestroyDelay);
         }
+    }
+
+    private Transform GetForceDirectionTransform()
+    {
+        if (severedTailForceDirection != null)
+        {
+            return severedTailForceDirection;
+        }
+
+        if (severedTailSpawnPoint != null)
+        {
+            return severedTailSpawnPoint;
+        }
+
+        return transform;
     }
 
     private void DisableOldHitboxes()
@@ -215,5 +293,27 @@ public class TailSeverController : MonoBehaviour
         if (severSfx == null) return;
 
         audioSource.PlayOneShot(severSfx, severSfxVolume);
+    }
+
+    [ContextMenu("Debug Sever Tail")]
+    private void DebugSeverTail()
+    {
+        SeverTail();
+    }
+
+    [ContextMenu("Restore Normal Mesh")]
+    public void RestoreNormalMesh()
+    {
+        if (targetSkinnedMeshRenderer == null) return;
+        if (normalMesh == null) return;
+
+        targetSkinnedMeshRenderer.sharedMesh = normalMesh;
+
+        if (normalMaterials != null && normalMaterials.Length > 0)
+        {
+            targetSkinnedMeshRenderer.sharedMaterials = normalMaterials;
+        }
+
+        hasSevered = false;
     }
 }

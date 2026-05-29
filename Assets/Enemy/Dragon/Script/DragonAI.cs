@@ -732,6 +732,10 @@ public class DragonAI : MonoBehaviour
     private Animator dragonAnimator;
     private bool skipNextActionInterval = false;
 
+    // AIループとダウン処理を明示管理する。StopAllCoroutines後の二重起動や停止バグ対策。
+    private Coroutine aiLoopCoroutine;
+    private Coroutine downRoutineCoroutine;
+
     private void Awake()
     {
         dragonAnimator = GetComponent<Animator>();
@@ -834,6 +838,37 @@ public class DragonAI : MonoBehaviour
         motion.FacePlayerSmooth(motion.idleTurnSpeed);
     }
 
+
+    private void StartAILoopSafely()
+    {
+        if (state == DragonState.Dead) return;
+
+        if (aiLoopCoroutine != null)
+        {
+            StopCoroutine(aiLoopCoroutine);
+            aiLoopCoroutine = null;
+        }
+
+        aiLoopCoroutine = StartCoroutine(AILoop());
+    }
+
+    private void PlayAnimationFromStart(string animName)
+    {
+        if (string.IsNullOrEmpty(animName)) return;
+
+        if (motion != null)
+        {
+            motion.ResetAnimatorSpeed();
+            motion.PlayAnim(animName, true);
+        }
+
+        if (dragonAnimator != null)
+        {
+            dragonAnimator.speed = 1f;
+            dragonAnimator.Play(animName, 0, 0f);
+            dragonAnimator.Update(0f);
+        }
+    }
     private IEnumerator IntroRoutine()
     {
         state = DragonState.Intro;
@@ -858,7 +893,7 @@ public class DragonAI : MonoBehaviour
         yield return new WaitForSeconds(roarDuration);
 
         ReturnToIdle();
-        StartCoroutine(AILoop());
+        StartAILoopSafely();
     }
 
     private IEnumerator AILoop()
@@ -1245,6 +1280,7 @@ public class DragonAI : MonoBehaviour
         state = DragonState.Acting;
         DisableAllHitboxes();
         StopAllSpecialParticles();
+        ResetAnimatorSpeedHard();
 
         bool running = motion.GetDistanceToPlayer() >= switchToRunDistance;
         string moveAnim = running ? motion.runAnim : motion.walkAnim;
@@ -1253,30 +1289,37 @@ public class DragonAI : MonoBehaviour
 
         float checkTimer = 0f;
         float moveAnimSafetyTimer = 0f;
+        Vector3 previousPosition = transform.position;
 
         while (player != null && motion.GetDistanceToPlayer() > approachStopDistance)
         {
+            if (state == DragonState.Down || state == DragonState.Dead)
+            {
+                yield break;
+            }
+
             float distance = motion.GetDistanceToPlayer();
 
-            if (distance >= switchToRunDistance && !running)
+            bool shouldRun = running;
+
+            if (!running && distance >= switchToRunDistance)
             {
-                running = true;
-                moveAnim = motion.runAnim;
-                PlayMoveAnimSafe(moveAnim);
-                checkTimer = 0f;
-                moveAnimSafetyTimer = 0f;
+                shouldRun = true;
             }
             else if (running && distance <= runChaseStopDistance)
             {
-                running = false;
-                moveAnim = motion.walkAnim;
+                shouldRun = false;
+            }
+
+            if (shouldRun != running)
+            {
+                running = shouldRun;
+                moveAnim = running ? motion.runAnim : motion.walkAnim;
                 PlayMoveAnimSafe(moveAnim);
                 checkTimer = 0f;
                 moveAnimSafetyTimer = 0f;
             }
 
-            checkTimer += Time.deltaTime;
-            KeepMoveAnimSafe(moveAnim, ref checkTimer, ref moveAnimSafetyTimer);
             motion.FacePlayerSmooth(motion.actionTurnSpeed);
 
             float speed = running ? runChaseSpeed : walkSpeed;
@@ -1286,7 +1329,19 @@ public class DragonAI : MonoBehaviour
                 speed = phase.ApplySpeed(speed);
             }
 
-            motion.MoveDragon(motion.GetMoveForward() * speed * Time.deltaTime);
+            Vector3 moveDelta = motion.GetMoveForward() * speed * Time.deltaTime;
+            motion.MoveDragon(moveDelta);
+
+            float movedDistance = Vector3.Distance(transform.position, previousPosition);
+            previousPosition = transform.position;
+
+            checkTimer += Time.deltaTime;
+            KeepMoveAnimSafe(moveAnim, ref checkTimer, ref moveAnimSafetyTimer);
+
+            if (movedDistance > 0.002f)
+            {
+                ForceMoveAnimationIfNeeded(moveAnim);
+            }
 
             yield return null;
         }
@@ -1392,23 +1447,49 @@ public class DragonAI : MonoBehaviour
 
     private IEnumerator BackStepThenTailSlam()
     {
+        if (IsTailBroken() || !enableTailSlamAction)
+        {
+            yield return ApproachPlayer();
+            yield break;
+        }
+
         isBusy = true;
         state = DragonState.Acting;
         DisableAllHitboxes();
         StopAllSpecialParticles();
 
         yield return DoFixedBackSteps(closeSpecialBackStepCount);
+
+        if (IsTailBroken() || state == DragonState.Down || state == DragonState.Dead)
+        {
+            ReturnToIdle();
+            yield break;
+        }
+
         yield return TailSlam();
     }
 
     private IEnumerator BackStepThenTailSwipe()
     {
+        if (IsTailBroken() || !enableTailSwipeAction)
+        {
+            yield return ApproachPlayer();
+            yield break;
+        }
+
         isBusy = true;
         state = DragonState.Acting;
         DisableAllHitboxes();
         StopAllSpecialParticles();
 
         yield return DoFixedBackSteps(closeSpecialBackStepCount);
+
+        if (IsTailBroken() || state == DragonState.Down || state == DragonState.Dead)
+        {
+            ReturnToIdle();
+            yield break;
+        }
+
         yield return TailSwipe();
     }
 
@@ -1944,7 +2025,7 @@ public class DragonAI : MonoBehaviour
     {
         if (IsTailBroken())
         {
-            yield return ApproachPlayer();
+            ReturnToIdle();
             yield break;
         }
 
@@ -1980,6 +2061,12 @@ public class DragonAI : MonoBehaviour
         while (timer < tailSlamDuration)
         {
             timer += Time.deltaTime;
+
+            if (IsTailBroken() || state == DragonState.Down || state == DragonState.Dead)
+            {
+                if (tailHitbox != null) tailHitbox.DisableHitbox();
+                yield break;
+            }
 
             if (timer >= aimStartTime && timer <= trackEndTime)
             {
@@ -2040,7 +2127,7 @@ public class DragonAI : MonoBehaviour
     {
         if (IsTailBroken())
         {
-            yield return ApproachPlayer();
+            ReturnToIdle();
             yield break;
         }
 
@@ -2100,6 +2187,13 @@ public class DragonAI : MonoBehaviour
         while (timer < firstPhaseEndTime)
         {
             timer += Time.deltaTime;
+
+            if (IsTailBroken() || state == DragonState.Down || state == DragonState.Dead)
+            {
+                if (tailHitbox != null) tailHitbox.DisableHitbox();
+                if (tailSwipeSpinDashHitbox != null) tailSwipeSpinDashHitbox.DisableHitbox();
+                yield break;
+            }
 
             if (timer >= aimStartTime && timer <= trackEndTime)
             {
@@ -2539,63 +2633,91 @@ public class DragonAI : MonoBehaviour
         }
 
         StopAllCoroutines();
-        StartCoroutine(HalfHPDownRoutine());
+        aiLoopCoroutine = null;
+        downRoutineCoroutine = null;
+
+        DisableAllHitboxes();
+        StopAllSpecialParticles();
+        ResetAnimatorSpeedHard();
+
+        // HP50%時は咆哮ではなく、ダウンを最初から再生する。
+        downRoutineCoroutine = StartCoroutine(HalfHPDownRoutine());
     }
 
     private IEnumerator HalfHPDownRoutine()
     {
         DisableAllHitboxes();
         StopAllSpecialParticles();
-
-        if (motion != null)
-        {
-            motion.ResetAnimatorSpeed();
-        }
+        ResetAnimatorSpeedHard();
 
         isBusy = true;
         state = DragonState.Down;
 
-        if (motion != null)
+        PlayAnimationFromStart(motion != null ? motion.downAnim : string.Empty);
+
+        if (downParticle != null)
         {
-            motion.PlayAnim(motion.downAnim, true);
+            downParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            downParticle.Play();
         }
+
+        PlaySfx(downSfx);
 
         yield return new WaitForSeconds(downDuration);
 
+        if (state == DragonState.Dead)
+        {
+            yield break;
+        }
+
         ReturnToIdle();
-        StartCoroutine(AILoop());
+        StartAILoopSafely();
     }
 
     private void HandleTailCrystalBroken()
     {
         if (state == DragonState.Dead) return;
 
+        // ダウン中に尻尾切断が入った場合も、現在のダウンを一度止めて最初からやり直す。
         StopAllCoroutines();
-        StartCoroutine(DownRoutine());
+        aiLoopCoroutine = null;
+        downRoutineCoroutine = null;
+
+        DisableAllHitboxes();
+        StopAllSpecialParticles();
+        ResetAnimatorSpeedHard();
+
+        downRoutineCoroutine = StartCoroutine(DownRoutine());
     }
 
     private IEnumerator DownRoutine()
     {
         DisableAllHitboxes();
         StopAllSpecialParticles();
-
-        if (motion != null)
-        {
-            motion.ResetAnimatorSpeed();
-        }
+        ResetAnimatorSpeedHard();
 
         isBusy = true;
         state = DragonState.Down;
 
-        motion.PlayAnim(motion.downAnim, true);
+        PlayAnimationFromStart(motion != null ? motion.downAnim : string.Empty);
 
-        if (downParticle != null) downParticle.Play();
+        if (downParticle != null)
+        {
+            downParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            downParticle.Play();
+        }
+
         PlaySfx(downSfx);
 
         yield return new WaitForSeconds(downDuration);
 
+        if (state == DragonState.Dead)
+        {
+            yield break;
+        }
+
         ReturnToIdle();
-        StartCoroutine(AILoop());
+        StartAILoopSafely();
     }
 
     private void HandleDeath()
@@ -2624,7 +2746,14 @@ public class DragonAI : MonoBehaviour
 
     private bool IsTailBroken()
     {
-        return dragonHP != null && dragonHP.isTailCrystalBroken;
+        if (dragonHP == null) return false;
+
+        // 尻尾切断後はTail Slam / Tail Swipe / BackStepTail系を完全に封印する。
+        // 古いisTailCrystalBroken系と、新しいIsTailSevered系の両方に対応。
+        return dragonHP.IsTailSevered()
+            || dragonHP.IsCrystalBroken()
+            || dragonHP.isTailCrystalBroken
+            || dragonHP.isCrystalBroken;
     }
 
     private bool CanUseCharge()
@@ -2656,12 +2785,13 @@ public class DragonAI : MonoBehaviour
             return;
         }
 
-        if (forceAnimatorSpeedOneWhenMoving)
-        {
-            ResetAnimatorSpeedHard();
-        }
-
+        ResetAnimatorSpeedHard();
         motion.PlayAnim(animName, true);
+
+        if (dragonAnimator != null)
+        {
+            dragonAnimator.Update(0f);
+        }
     }
 
     private void KeepMoveAnimSafe(string animName, ref float keepTimer, ref float safetyTimer)
@@ -2671,18 +2801,18 @@ public class DragonAI : MonoBehaviour
             return;
         }
 
+        if (forceAnimatorSpeedOneWhenMoving)
+        {
+            ResetAnimatorSpeedHard();
+        }
+
+        // 既存の保持処理も使う。ここでPlayAnimの連打になりすぎないよう、内部タイマーを利用する。
+        motion.KeepMoveAnim(animName, ref keepTimer);
+
         if (!forceMoveAnimationWhileMoving)
         {
-            motion.KeepMoveAnim(animName, ref keepTimer);
             return;
         }
-
-        if (forceAnimatorSpeedOneWhenMoving && dragonAnimator != null && dragonAnimator.speed <= 0.01f)
-        {
-            dragonAnimator.speed = 1f;
-        }
-
-        motion.KeepMoveAnim(animName, ref keepTimer);
 
         safetyTimer += Time.deltaTime;
 
@@ -2692,11 +2822,23 @@ public class DragonAI : MonoBehaviour
         }
 
         safetyTimer = 0f;
+        ForceMoveAnimationIfNeeded(animName);
+    }
+
+    private void ForceMoveAnimationIfNeeded(string animName)
+    {
+        if (!forceMoveAnimationWhileMoving) return;
+        if (motion == null || string.IsNullOrEmpty(animName)) return;
 
         if (dragonAnimator == null)
         {
             motion.PlayAnim(animName, true);
             return;
+        }
+
+        if (forceAnimatorSpeedOneWhenMoving && dragonAnimator.speed <= 0.01f)
+        {
+            dragonAnimator.speed = 1f;
         }
 
         AnimatorStateInfo current = dragonAnimator.GetCurrentAnimatorStateInfo(0);
@@ -2708,6 +2850,7 @@ public class DragonAI : MonoBehaviour
         if (!currentIsMoveAnim && !nextIsMoveAnim)
         {
             motion.PlayAnim(animName, true);
+            dragonAnimator.Update(0f);
         }
     }
 
@@ -2715,18 +2858,18 @@ public class DragonAI : MonoBehaviour
     {
         DisableAllHitboxes();
         StopAllSpecialParticles();
-
-        if (motion != null)
-        {
-            ResetAnimatorSpeedHard();
-            motion.PlayAnim(motion.idleAnim, true);
-        }
+        ResetAnimatorSpeedHard();
 
         isBusy = false;
 
-        if (state != DragonState.Dead)
+        if (state != DragonState.Dead && state != DragonState.Down)
         {
             state = DragonState.Idle;
+
+            if (motion != null)
+            {
+                motion.PlayAnim(motion.idleAnim, true);
+            }
         }
     }
 

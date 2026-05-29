@@ -2212,7 +2212,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.68235296}
+  m_Color: {r: 0.9009434, g: 0.9662244, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -3937,8 +3937,8 @@ MonoBehaviour:
   runChaseSpeed: 6.2
   switchToRunDistance: 8
   runChaseStopDistance: 5
-  minActionInterval: 0.6
-  maxActionInterval: 1.2
+  minActionInterval: 0.4
+  maxActionInterval: 1
   useOpeningIdle: 0
   openingIdleChance: 0.18
   openingIdleMinTime: 1
@@ -4001,7 +4001,7 @@ MonoBehaviour:
   chargeMinDuration: 0.75
   chargeMaxDuration: 1.8
   chargeBackStepIfCloserThan: 5
-  chargeTellTime: 1.5
+  chargeTellTime: 1.4
   chargeTellAnimationSpeed: 0.18
   chargeReadyPauseTime: 0.15
   chargeRecoveryTime: 0.5
@@ -25973,9 +25973,9 @@ MonoBehaviour:
   finalScoreText: {fileID: 139783534}
   rankText: {fileID: 329226134}
   startScore: 12000
-  scoreDecreasePerSecond: 33
-  crystalBreakBonus: 1500
-  deathPenalty: 1000
+  scoreDecreasePerSecond: 36
+  crystalBreakBonus: 0
+  deathPenalty: 500
   showDelay: 0.35
   typeInterval: 0.03
   rankTypeInterval: 0.08

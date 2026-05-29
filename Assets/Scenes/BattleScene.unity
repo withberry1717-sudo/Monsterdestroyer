@@ -3988,27 +3988,6 @@ MonoBehaviour:
   dragonHP: {fileID: 78498549}
   effectPlayer: {fileID: 356980425}
   player: {fileID: 426628364}
-  difficultyMode: 1
-  applyDifficultyPresetOnStart: 1
-  actionAnimationSpeedMultiplier: 1
-  movementSpeedMultiplier: 1
-  actionIntervalMultiplier: 1
-  actionDurationMultiplier: 1
-  moveAnimationSpeedMultiplier: 1
-  easyActionAnimationSpeedMultiplier: 0.88
-  easyMovementSpeedMultiplier: 0.9
-  easyActionIntervalMultiplier: 1.35
-  easyActionDurationMultiplier: 1.18
-  normalActionAnimationSpeedMultiplier: 1
-  normalMovementSpeedMultiplier: 1
-  normalActionIntervalMultiplier: 1
-  normalActionDurationMultiplier: 1
-  hardActionAnimationSpeedMultiplier: 1.1
-  hardMovementSpeedMultiplier: 1.08
-  hardActionIntervalMultiplier: 0.82
-  hardActionDurationMultiplier: 0.9
-  forceApproachWhenVeryFar: 1
-  forceApproachDistance: 32
   enableApproachAction: 1
   enableSwipeCounterAction: 1
   enableTailSlamAction: 1
@@ -4195,8 +4174,8 @@ MonoBehaviour:
   tailSwipeSpinLoopEndFrame: 140
   tailSwipeSpinAnimatorLayer: 0
   tailSwipeSpinForceAnimationLoop: 1
-  tailSwipeSpinLoopDuration: 0.6
-  tailSwipeSpinMoveDistancePerLoop: 5
+  tailSwipeSpinLoopDuration: 0.7
+  tailSwipeSpinMoveDistancePerLoop: 7
   tailSwipeSpinMinLoops: 1
   tailSwipeSpinMaxLoops: 4
   tailSwipeSpinOvershootDistance: 4
@@ -4223,10 +4202,11 @@ MonoBehaviour:
   forceMoveAnimationWhileMoving: 1
   moveAnimationSafetyCheckInterval: 0.25
   forceAnimatorSpeedOneWhenMoving: 1
-  hardOverrideMoveAnimationOnStart: 1
-  hardOverrideMoveAnimationWhileMoving: 1
-  hardMoveAnimationCrossFadeTime: 0.05
-  movingDistanceThreshold: 0.0008
+  keepMoveAnimationAliveWhileMoving: 1
+  moveAnimationRestartNormalizedTimeWhileMoving: 0.82
+  moveAnimationHardRefreshInterval: 2.1
+  useDirectAnimatorReplayForMoveAnimation: 1
+  directMoveAnimCrossFadeTime: 0.04
   audioSource: {fileID: 0}
   sfxVolume: 1
 --- !u!114 &356980423
@@ -57016,7 +56996,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: maxTailCrystalHP
-      value: 300
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: tailSeverController

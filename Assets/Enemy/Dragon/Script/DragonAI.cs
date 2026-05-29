@@ -33,13 +33,6 @@ public class DragonAI : MonoBehaviour
         DoubleCharge
     }
 
-    public enum DifficultyMode
-    {
-        Easy,
-        Normal,
-        Hard
-    }
-
     [Header("参照設定")]
     [Tooltip("Dragon_AllObjectsに付いているDragonDragonMotionを入れてください。移動、回転、アニメーション再生を担当します。")]
     public DragonDragonMotion motion;
@@ -55,71 +48,6 @@ public class DragonAI : MonoBehaviour
 
     [Tooltip("プレイヤー本体のTransformを入れてください。ドラゴンが向く方向、追跡、攻撃対象の基準になります。")]
     public Transform player;
-
-
-    [Header("難易度調整")]
-    [Tooltip("Easy / Normal / Hardをここで切り替えます。下の倍率はInspectorでさらに調整できます。")]
-    public DifficultyMode difficultyMode = DifficultyMode.Normal;
-
-    [Tooltip("現在の難易度プリセットを起動時に自動で倍率へ反映します。タイトル画面などから別スクリプトで設定する場合もONでOKです。")]
-    [SerializeField] private bool applyDifficultyPresetOnStart = true;
-
-    [Tooltip("全体の攻撃アニメーション速度倍率です。Easyは低め、Hardは高め推奨です。移動アニメは別倍率で調整します。")]
-    [SerializeField] private float actionAnimationSpeedMultiplier = 1f;
-
-    [Tooltip("歩き、走り、突進、回転突進など座標移動の速度倍率です。")]
-    [SerializeField] private float movementSpeedMultiplier = 1f;
-
-    [Tooltip("行動後の待機間隔倍率です。大きいほど次の行動まで遅くなります。Easyは大きめ、Hardは小さめ推奨です。")]
-    [SerializeField] private float actionIntervalMultiplier = 1f;
-
-    [Tooltip("攻撃後硬直、予備動作、隙などの時間倍率です。大きいほど遅くなります。Easyは大きめ、Hardは小さめ推奨です。")]
-    [SerializeField] private float actionDurationMultiplier = 1f;
-
-    [Tooltip("移動アニメーションの再生速度倍率です。座標移動速度と合わせると足滑りが減ります。")]
-    [SerializeField] private float moveAnimationSpeedMultiplier = 1f;
-
-    [Tooltip("Easy用：全体攻撃アニメーション速度倍率")]
-    [SerializeField] private float easyActionAnimationSpeedMultiplier = 0.88f;
-
-    [Tooltip("Easy用：移動速度倍率")]
-    [SerializeField] private float easyMovementSpeedMultiplier = 0.9f;
-
-    [Tooltip("Easy用：行動後待機倍率")]
-    [SerializeField] private float easyActionIntervalMultiplier = 1.35f;
-
-    [Tooltip("Easy用：予備動作・硬直時間倍率")]
-    [SerializeField] private float easyActionDurationMultiplier = 1.18f;
-
-    [Tooltip("Normal用：全体攻撃アニメーション速度倍率")]
-    [SerializeField] private float normalActionAnimationSpeedMultiplier = 1f;
-
-    [Tooltip("Normal用：移動速度倍率")]
-    [SerializeField] private float normalMovementSpeedMultiplier = 1f;
-
-    [Tooltip("Normal用：行動後待機倍率")]
-    [SerializeField] private float normalActionIntervalMultiplier = 1f;
-
-    [Tooltip("Normal用：予備動作・硬直時間倍率")]
-    [SerializeField] private float normalActionDurationMultiplier = 1f;
-
-    [Tooltip("Hard用：全体攻撃アニメーション速度倍率。強くしすぎると理不尽になるので1.05〜1.15推奨です。")]
-    [SerializeField] private float hardActionAnimationSpeedMultiplier = 1.1f;
-
-    [Tooltip("Hard用：移動速度倍率")]
-    [SerializeField] private float hardMovementSpeedMultiplier = 1.08f;
-
-    [Tooltip("Hard用：行動後待機倍率。小さいほど攻撃頻度が上がります。")]
-    [SerializeField] private float hardActionIntervalMultiplier = 0.82f;
-
-    [Tooltip("Hard用：予備動作・硬直時間倍率。小さいほど攻撃が速くなります。")]
-    [SerializeField] private float hardActionDurationMultiplier = 0.9f;
-
-    [Tooltip("この距離より遠い場合、ブレスなどを抽選せず必ず接近します。ステージ1つならON推奨です。")]
-    [SerializeField] private bool forceApproachWhenVeryFar = true;
-
-    [Tooltip("この距離以上で必ず接近します。FarRangeより少し大きめがおすすめです。")]
-    [SerializeField] private float forceApproachDistance = 32f;
 
     [Header("デバッグ用：行動オンオフ")]
     [Tooltip("接近行動を使うかどうかです。オフにすると遠距離で近づかなくなるため、単体テスト時以外はオン推奨です。")]
@@ -788,17 +716,21 @@ public class DragonAI : MonoBehaviour
     [Tooltip("オンにすると、Animator.speedが0のまま移動し始めた時に強制で1へ戻します。Tail Swipeの手動ループ後などの保険です。")]
     public bool forceAnimatorSpeedOneWhenMoving = true;
 
-    [Tooltip("ON推奨。移動開始時はCrossFadeだけでなくAnimatorへ直接短いクロスフェードを入れ、Idleのまま滑る瞬間を減らします。")]
-    public bool hardOverrideMoveAnimationOnStart = true;
+    [Tooltip("オン推奨。移動中のWalk/Runが非ループ扱いで終わっても、移動している限り自動で再再生します。")]
+    public bool keepMoveAnimationAliveWhileMoving = true;
 
-    [Tooltip("移動中に現在アニメがWalk/Runでない場合、短いクロスフェードで強制復帰します。")]
-    public bool hardOverrideMoveAnimationWhileMoving = true;
+    [Tooltip("移動アニメがこのNormalizedTimeを超えたら、止まる前に同じ移動アニメを0秒から再再生します。3秒前後で止まる場合は0.75〜0.9推奨です。")]
+    [Range(0.2f, 0.98f)]
+    public float moveAnimationRestartNormalizedTimeWhileMoving = 0.82f;
 
-    [Tooltip("移動アニメ強制復帰時のクロスフェード時間です。0.03〜0.08推奨です。")]
-    public float hardMoveAnimationCrossFadeTime = 0.05f;
+    [Tooltip("保険として、この秒数ごとに移動アニメを再再生します。クリップが3秒で切れる場合は2.0〜2.5推奨です。")]
+    public float moveAnimationHardRefreshInterval = 2.1f;
 
-    [Tooltip("この距離以上座標が動いたフレームは移動中として扱い、Walk/Runを強めに維持します。")]
-    public float movingDistanceThreshold = 0.0008f;
+    [Tooltip("ONならAnimatorへ直接CrossFadeして移動アニメを再再生します。motion.PlayAnimだけで直らない場合の強い保険です。")]
+    public bool useDirectAnimatorReplayForMoveAnimation = true;
+
+    [Tooltip("Direct Replay時のCrossFade秒数。小さくすると止まりにくく、大きくすると滑らかですが切り替えが遅れます。")]
+    public float directMoveAnimCrossFadeTime = 0.04f;
 
     [Header("共通サウンド")]
     [Tooltip("SEを再生するAudioSourceです。未設定の場合は自分または親から自動で探します。")]
@@ -898,11 +830,6 @@ public class DragonAI : MonoBehaviour
     {
         DisableAllHitboxes();
         StopAllSpecialParticles();
-
-        if (applyDifficultyPresetOnStart)
-        {
-            ApplyDifficultyPreset(difficultyMode);
-        }
 
         if (motion != null)
         {
@@ -1007,8 +934,6 @@ public class DragonAI : MonoBehaviour
                 interval = phase.ApplyActionInterval(interval);
             }
 
-            interval = ApplyActionIntervalByDifficulty(interval);
-
             if (interval > 0f)
             {
                 yield return new WaitForSeconds(interval);
@@ -1050,12 +975,6 @@ public class DragonAI : MonoBehaviour
         }
 
         DragonAction action;
-
-        if (forceApproachWhenVeryFar && enableApproachAction && distance >= Mathf.Max(farRange, forceApproachDistance))
-        {
-            yield return ExecuteAction(DragonAction.Approach);
-            yield break;
-        }
 
         if (distance < closeRange)
         {
@@ -1208,11 +1127,6 @@ public class DragonAI : MonoBehaviour
 
     private DragonAction PickFarAction(float distance)
     {
-        if (forceApproachWhenVeryFar && enableApproachAction && distance >= Mathf.Max(farRange, forceApproachDistance))
-        {
-            return DragonAction.Approach;
-        }
-
         WeightedActionPicker picker = new WeightedActionPicker();
 
         if (enableApproachAction)
@@ -1391,6 +1305,7 @@ public class DragonAI : MonoBehaviour
 
         float checkTimer = 0f;
         float moveAnimSafetyTimer = 0f;
+        float moveAnimLoopTimer = 0f;
         Vector3 previousPosition = transform.position;
 
         while (player != null && motion.GetDistanceToPlayer() > approachStopDistance)
@@ -1420,6 +1335,7 @@ public class DragonAI : MonoBehaviour
                 PlayMoveAnimSafe(moveAnim);
                 checkTimer = 0f;
                 moveAnimSafetyTimer = 0f;
+                moveAnimLoopTimer = 0f;
             }
 
             motion.FacePlayerSmooth(motion.actionTurnSpeed);
@@ -1431,8 +1347,6 @@ public class DragonAI : MonoBehaviour
                 speed = phase.ApplySpeed(speed);
             }
 
-            speed = ApplyMoveSpeedByDifficulty(speed);
-
             Vector3 moveDelta = motion.GetMoveForward() * speed * Time.deltaTime;
             motion.MoveDragon(moveDelta);
 
@@ -1442,10 +1356,14 @@ public class DragonAI : MonoBehaviour
             checkTimer += Time.deltaTime;
             KeepMoveAnimSafe(moveAnim, ref checkTimer, ref moveAnimSafetyTimer);
 
-            if (movedDistance > Mathf.Max(0.00001f, movingDistanceThreshold))
+            bool isActuallyMoving = movedDistance > 0.002f;
+
+            if (isActuallyMoving)
             {
                 ForceMoveAnimationIfNeeded(moveAnim);
             }
+
+            KeepMoveAnimationAliveIfNeeded(moveAnim, ref moveAnimLoopTimer, isActuallyMoving);
 
             yield return null;
         }
@@ -1470,7 +1388,7 @@ public class DragonAI : MonoBehaviour
 
         if (innerBackStepRecovery > 0f)
         {
-            yield return new WaitForSeconds(ScaleActionDuration(innerBackStepRecovery));
+            yield return new WaitForSeconds(innerBackStepRecovery);
         }
 
         if (innerBackStepConnectNextActionImmediately)
@@ -1494,13 +1412,13 @@ public class DragonAI : MonoBehaviour
             yield return motion.MoveInDirectionForSeconds(
                 backDirection,
                 innerBackStepMoveDistance,
-                ScaleActionDuration(innerBackStepMoveDuration),
+                innerBackStepMoveDuration,
                 motion.stepAnim
             );
 
             if (backStepInterval > 0f)
             {
-                yield return new WaitForSeconds(ScaleActionDuration(backStepInterval));
+                yield return new WaitForSeconds(backStepInterval);
             }
         }
     }
@@ -1520,11 +1438,11 @@ public class DragonAI : MonoBehaviour
             yield return motion.MoveInDirectionForSeconds(
                 backDirection,
                 backStepDistance,
-                ScaleActionDuration(backStepDuration),
+                backStepDuration,
                 motion.stepAnim
             );
 
-            yield return new WaitForSeconds(ScaleActionDuration(backStepInterval));
+            yield return new WaitForSeconds(backStepInterval);
         }
     }
 
@@ -1541,11 +1459,11 @@ public class DragonAI : MonoBehaviour
             yield return motion.MoveInDirectionForSeconds(
                 backDirection,
                 backStepDistance,
-                ScaleActionDuration(backStepDuration),
+                backStepDuration,
                 motion.stepAnim
             );
 
-            yield return new WaitForSeconds(ScaleActionDuration(backStepInterval));
+            yield return new WaitForSeconds(backStepInterval);
         }
     }
 
@@ -1659,8 +1577,8 @@ public class DragonAI : MonoBehaviour
 
         float rawAnticipationDuration = Mathf.Max(0.01f, anticipationEndAnimTime);
         float rawAttackDuration = Mathf.Max(0.01f, attackEndAnimTime - anticipationEndAnimTime);
-        float targetAnticipationDuration = Mathf.Max(0.01f, ScaleActionDuration(swipeAnticipationDuration));
-        float targetAttackDuration = Mathf.Max(0.01f, ScaleActionDuration(swipeAttackDuration));
+        float targetAnticipationDuration = Mathf.Max(0.01f, swipeAnticipationDuration);
+        float targetAttackDuration = Mathf.Max(0.01f, swipeAttackDuration);
 
         bool shouldStretchAnticipation = stretchSwipeAnticipation && targetAnticipationDuration > rawAnticipationDuration;
         bool shouldStretchAttack = stretchSwipeAttack && targetAttackDuration > rawAttackDuration;
@@ -1685,7 +1603,7 @@ public class DragonAI : MonoBehaviour
         if (shouldStretchAnticipation)
         {
             float anticipationAnimatorSpeed = rawAnticipationDuration / targetAnticipationDuration;
-            SetAnimatorSpeedByDifficulty(anticipationAnimatorSpeed);
+            motion.SetAnimatorSpeed(anticipationAnimatorSpeed);
         }
         else
         {
@@ -1716,7 +1634,7 @@ public class DragonAI : MonoBehaviour
         if (shouldStretchAttack)
         {
             float attackAnimatorSpeed = rawAttackDuration / targetAttackDuration;
-            SetAnimatorSpeedByDifficulty(attackAnimatorSpeed);
+            motion.SetAnimatorSpeed(attackAnimatorSpeed);
         }
         else
         {
@@ -1788,7 +1706,7 @@ public class DragonAI : MonoBehaviour
         float afterAttackDuration = Mathf.Max(0f, swipeAnimDuration - attackEndAnimTime);
         if (afterAttackDuration > 0f)
         {
-            yield return new WaitForSeconds(ScaleActionDuration(afterAttackDuration));
+            yield return new WaitForSeconds(afterAttackDuration);
         }
 
         if (swipeAnticipationParticle != null)
@@ -1815,7 +1733,7 @@ public class DragonAI : MonoBehaviour
 
         yield return motion.FacePlayerForSeconds(breathTurnTime);
 
-        SetAnimatorSpeedByDifficulty(breathAnimatorSpeed);
+        motion.SetAnimatorSpeed(breathAnimatorSpeed);
         motion.PlayAnim(motion.breathAnim, true);
 
         if (wideBreathChargeParticle != null) wideBreathChargeParticle.Play();
@@ -1843,7 +1761,7 @@ public class DragonAI : MonoBehaviour
 
         if (wideBreathHitbox != null) wideBreathHitbox.EnableHitbox();
 
-        yield return new WaitForSeconds(ScaleActionDuration(Mathf.Max(0f, end - start)));
+        yield return new WaitForSeconds(Mathf.Max(0f, end - start));
 
         if (wideBreathHitbox != null) wideBreathHitbox.DisableHitbox();
 
@@ -1852,8 +1770,8 @@ public class DragonAI : MonoBehaviour
             wideBreathFireParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
-        yield return new WaitForSeconds(ScaleActionDuration(Mathf.Max(0f, breathDuration - end)));
-        yield return new WaitForSeconds(ScaleActionDuration(wideBreathRecovery));
+        yield return new WaitForSeconds(Mathf.Max(0f, breathDuration - end));
+        yield return new WaitForSeconds(wideBreathRecovery);
 
         ReturnToIdle();
     }
@@ -1872,7 +1790,7 @@ public class DragonAI : MonoBehaviour
 
         yield return motion.FacePlayerForSeconds(breathTurnTime);
 
-        SetAnimatorSpeedByDifficulty(breathAnimatorSpeed);
+        motion.SetAnimatorSpeed(breathAnimatorSpeed);
         motion.PlayAnim(motion.breathAnim, true);
 
         if (beamBreathAimer != null)
@@ -1945,7 +1863,7 @@ public class DragonAI : MonoBehaviour
             beamBreathFireParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
-        yield return new WaitForSeconds(ScaleActionDuration(beamBreathRecovery));
+        yield return new WaitForSeconds(beamBreathRecovery);
 
         ReturnToIdle();
     }
@@ -1972,7 +1890,7 @@ public class DragonAI : MonoBehaviour
         yield return motion.FacePlayerForSeconds(0.15f);
 
         motion.PlayAnim(motion.runAnim, true);
-        SetAnimatorSpeedByDifficulty(chargeTellAnimationSpeed);
+        motion.SetAnimatorSpeed(chargeTellAnimationSpeed);
 
         if (chargeHoldParticle != null) chargeHoldParticle.Play();
         PlaySfx(chargeHoldSfx);
@@ -1980,15 +1898,13 @@ public class DragonAI : MonoBehaviour
         float tellTimer = 0f;
         float checkTimer = 0f;
 
-        float effectiveChargeTellTime = ScaleActionDuration(chargeTellTime);
-
-        while (tellTimer < effectiveChargeTellTime)
+        while (tellTimer < chargeTellTime)
         {
             tellTimer += Time.deltaTime;
             checkTimer += Time.deltaTime;
 
             motion.KeepMoveAnim(motion.runAnim, ref checkTimer);
-            SetAnimatorSpeedByDifficulty(chargeTellAnimationSpeed);
+            motion.SetAnimatorSpeed(chargeTellAnimationSpeed);
             motion.FacePlayerSmooth(motion.actionTurnSpeed);
 
             yield return null;
@@ -2005,7 +1921,7 @@ public class DragonAI : MonoBehaviour
         ResetAnimatorSpeedHard();
         PlayMoveAnimSafe(motion.runAnim);
 
-        yield return new WaitForSeconds(ScaleActionDuration(chargeReadyPauseTime));
+        yield return new WaitForSeconds(chargeReadyPauseTime);
 
         Vector3 chargeDirection = motion.GetDirectionToPlayer();
         float targetDistance = GetChargeTargetDistance(chargeDirection);
@@ -2017,9 +1933,7 @@ public class DragonAI : MonoBehaviour
             baseSpeed = phase.ApplyChargeSpeed(baseSpeed);
         }
 
-        baseSpeed = ApplyMoveSpeedByDifficulty(baseSpeed);
-
-        float chargeTime = Mathf.Clamp(targetDistance / Mathf.Max(0.01f, baseSpeed), ScaleActionDuration(chargeMinDuration), ScaleActionDuration(chargeMaxDuration));
+        float chargeTime = Mathf.Clamp(targetDistance / Mathf.Max(0.01f, baseSpeed), chargeMinDuration, chargeMaxDuration);
 
         float timer = 0f;
         float previousDistance = 0f;
@@ -2034,6 +1948,7 @@ public class DragonAI : MonoBehaviour
         ResetAnimatorSpeedHard();
 
         float chargeMoveAnimSafetyTimer = 0f;
+        float chargeMoveAnimLoopTimer = 0f;
 
         while (timer < chargeTime)
         {
@@ -2049,6 +1964,7 @@ public class DragonAI : MonoBehaviour
             previousDistance = currentDistance;
 
             motion.MoveDragon(chargeDirection * deltaDistance);
+            KeepMoveAnimationAliveIfNeeded(motion.runAnim, ref chargeMoveAnimLoopTimer, deltaDistance > 0.002f);
 
             yield return null;
         }
@@ -2059,7 +1975,7 @@ public class DragonAI : MonoBehaviour
         motion.ResetAnimatorSpeed();
         PlaySfx(chargeEndSfx);
 
-        yield return new WaitForSeconds(ScaleActionDuration(chargeRecoveryTime));
+        yield return new WaitForSeconds(chargeRecoveryTime);
 
         ReturnToIdle();
     }
@@ -2077,7 +1993,7 @@ public class DragonAI : MonoBehaviour
         isBusy = true;
         state = DragonState.Acting;
 
-        yield return new WaitForSeconds(ScaleActionDuration(doubleChargeInterval));
+        yield return new WaitForSeconds(doubleChargeInterval);
 
         if (state == DragonState.Dead || state == DragonState.Down) yield break;
 
@@ -2086,7 +2002,7 @@ public class DragonAI : MonoBehaviour
         isBusy = true;
         state = DragonState.Acting;
 
-        yield return new WaitForSeconds(ScaleActionDuration(doubleChargeRecovery));
+        yield return new WaitForSeconds(doubleChargeRecovery);
 
         ReturnToIdle();
     }
@@ -2441,7 +2357,7 @@ public class DragonAI : MonoBehaviour
         float targetTellDuration = Mathf.Max(rawTellDuration, tailSwipeSecondTellDuration);
 
         float animatorSpeed = rawTellDuration / targetTellDuration;
-        SetAnimatorSpeedByDifficulty(animatorSpeed);
+        motion.SetAnimatorSpeed(animatorSpeed);
 
         float timer = 0f;
 
@@ -2671,13 +2587,13 @@ public class DragonAI : MonoBehaviour
 
         if (!tailSwipeSpinForceAnimationLoop)
         {
-            SetAnimatorSpeedByDifficulty(animatorSpeed);
+            motion.SetAnimatorSpeed(animatorSpeed);
             return;
         }
 
         if (dragonAnimator == null)
         {
-            SetAnimatorSpeedByDifficulty(animatorSpeed);
+            motion.SetAnimatorSpeed(animatorSpeed);
             motion.PlayAnim(motion.tailSwipeAnim, true);
             return;
         }
@@ -2778,8 +2694,7 @@ public class DragonAI : MonoBehaviour
             yield break;
         }
 
-        ReturnToIdle();
-        StartAILoopSafely();
+        ReturnFromDownToAI();
     }
 
     private void HandleTailCrystalBroken()
@@ -2824,7 +2739,29 @@ public class DragonAI : MonoBehaviour
             yield break;
         }
 
-        ReturnToIdle();
+        ReturnFromDownToAI();
+    }
+
+    private void ReturnFromDownToAI()
+    {
+        if (state == DragonState.Dead)
+        {
+            return;
+        }
+
+        DisableAllHitboxes();
+        StopAllSpecialParticles();
+        ResetAnimatorSpeedHard();
+
+        state = DragonState.Idle;
+        isBusy = false;
+        downRoutineCoroutine = null;
+
+        if (motion != null)
+        {
+            motion.PlayAnim(motion.idleAnim, true);
+        }
+
         StartAILoopSafely();
     }
 
@@ -2867,90 +2804,11 @@ public class DragonAI : MonoBehaviour
     private bool CanUseCharge()
     {
         if (!enableChargeAction) return false;
-        if (Time.time < lastChargeTime + ScaleActionInterval(chargeCooldown)) return false;
+        if (Time.time < lastChargeTime + chargeCooldown) return false;
 
         return true;
     }
 
-
-    public void SetDifficulty(DifficultyMode newDifficulty)
-    {
-        difficultyMode = newDifficulty;
-        ApplyDifficultyPreset(difficultyMode);
-    }
-
-    private void ApplyDifficultyPreset(DifficultyMode mode)
-    {
-        switch (mode)
-        {
-            case DifficultyMode.Easy:
-                actionAnimationSpeedMultiplier = easyActionAnimationSpeedMultiplier;
-                movementSpeedMultiplier = easyMovementSpeedMultiplier;
-                actionIntervalMultiplier = easyActionIntervalMultiplier;
-                actionDurationMultiplier = easyActionDurationMultiplier;
-                moveAnimationSpeedMultiplier = easyMovementSpeedMultiplier;
-                break;
-
-            case DifficultyMode.Hard:
-                actionAnimationSpeedMultiplier = hardActionAnimationSpeedMultiplier;
-                movementSpeedMultiplier = hardMovementSpeedMultiplier;
-                actionIntervalMultiplier = hardActionIntervalMultiplier;
-                actionDurationMultiplier = hardActionDurationMultiplier;
-                moveAnimationSpeedMultiplier = hardMovementSpeedMultiplier;
-                break;
-
-            default:
-                actionAnimationSpeedMultiplier = normalActionAnimationSpeedMultiplier;
-                movementSpeedMultiplier = normalMovementSpeedMultiplier;
-                actionIntervalMultiplier = normalActionIntervalMultiplier;
-                actionDurationMultiplier = normalActionDurationMultiplier;
-                moveAnimationSpeedMultiplier = normalMovementSpeedMultiplier;
-                break;
-        }
-    }
-
-    private float ApplyMoveSpeedByDifficulty(float baseSpeed)
-    {
-        return baseSpeed * Mathf.Max(0.05f, movementSpeedMultiplier);
-    }
-
-    private float ApplyActionIntervalByDifficulty(float seconds)
-    {
-        return Mathf.Max(0f, seconds) * Mathf.Max(0.05f, actionIntervalMultiplier);
-    }
-
-    private float ScaleActionInterval(float seconds)
-    {
-        return ApplyActionIntervalByDifficulty(seconds);
-    }
-
-    private float ScaleActionDuration(float seconds)
-    {
-        return Mathf.Max(0f, seconds) * Mathf.Max(0.05f, actionDurationMultiplier);
-    }
-
-    private float GetActionAnimationSpeedMultiplier()
-    {
-        return Mathf.Max(0.05f, actionAnimationSpeedMultiplier);
-    }
-
-    private float GetMoveAnimationSpeedMultiplier()
-    {
-        return Mathf.Max(0.05f, moveAnimationSpeedMultiplier);
-    }
-
-    private void SetAnimatorSpeedByDifficulty(float speed)
-    {
-        if (motion == null) return;
-
-        float finalSpeed = Mathf.Max(0f, speed) * GetActionAnimationSpeedMultiplier();
-        motion.SetAnimatorSpeed(finalSpeed);
-
-        if (dragonAnimator != null)
-        {
-            dragonAnimator.speed = finalSpeed;
-        }
-    }
 
     private void ResetAnimatorSpeedHard()
     {
@@ -2967,29 +2825,7 @@ public class DragonAI : MonoBehaviour
 
     private void PlayMoveAnimSafe(string animName)
     {
-        if (motion == null || string.IsNullOrEmpty(animName))
-        {
-            return;
-        }
-
-        if (dragonAnimator != null && dragonAnimator.speed <= 0.01f)
-        {
-            dragonAnimator.speed = GetMoveAnimationSpeedMultiplier();
-        }
-
-        motion.PlayAnim(animName, true);
-
-        if (dragonAnimator != null)
-        {
-            dragonAnimator.speed = GetMoveAnimationSpeedMultiplier();
-
-            if (hardOverrideMoveAnimationOnStart)
-            {
-                dragonAnimator.CrossFadeInFixedTime(animName, Mathf.Max(0f, hardMoveAnimationCrossFadeTime), 0, 0f);
-            }
-
-            dragonAnimator.Update(0f);
-        }
+        ReplayMoveAnimation(animName, true);
     }
 
     private void KeepMoveAnimSafe(string animName, ref float keepTimer, ref float safetyTimer)
@@ -2999,12 +2835,12 @@ public class DragonAI : MonoBehaviour
             return;
         }
 
-        if (dragonAnimator != null && forceAnimatorSpeedOneWhenMoving && dragonAnimator.speed <= 0.01f)
+        if (forceAnimatorSpeedOneWhenMoving)
         {
-            dragonAnimator.speed = GetMoveAnimationSpeedMultiplier();
+            ResetAnimatorSpeedHard();
         }
 
-        // 既存の保持処理も使う。ここでPlayAnimの連打になりすぎないよう、内部タイマーを利用する。
+        // 既存の保持処理。現在状態がWalk/Runから外れた時の復帰用。
         motion.KeepMoveAnim(animName, ref keepTimer);
 
         if (!forceMoveAnimationWhileMoving)
@@ -3023,6 +2859,61 @@ public class DragonAI : MonoBehaviour
         ForceMoveAnimationIfNeeded(animName);
     }
 
+    private void KeepMoveAnimationAliveIfNeeded(string animName, ref float loopTimer, bool isActuallyMoving)
+    {
+        if (!keepMoveAnimationAliveWhileMoving) return;
+        if (!isActuallyMoving) return;
+        if (string.IsNullOrEmpty(animName)) return;
+
+        loopTimer += Time.deltaTime;
+
+        if (forceAnimatorSpeedOneWhenMoving)
+        {
+            ResetAnimatorSpeedHard();
+        }
+
+        if (dragonAnimator == null)
+        {
+            if (loopTimer >= Mathf.Max(0.2f, moveAnimationHardRefreshInterval))
+            {
+                ReplayMoveAnimation(animName, true);
+                loopTimer = 0f;
+            }
+
+            return;
+        }
+
+        AnimatorStateInfo current = dragonAnimator.GetCurrentAnimatorStateInfo(0);
+        AnimatorStateInfo next = dragonAnimator.GetNextAnimatorStateInfo(0);
+
+        bool inTransition = dragonAnimator.IsInTransition(0);
+        bool currentIsMoveAnim = current.IsName(animName);
+        bool nextIsMoveAnim = inTransition && next.IsName(animName);
+
+        if (!currentIsMoveAnim && !nextIsMoveAnim)
+        {
+            ReplayMoveAnimation(animName, true);
+            loopTimer = 0f;
+            return;
+        }
+
+        // 非ループアニメが終端に近づいたら、止まる前に0秒から再再生する。
+        // Walk/RunクリップのLoop TimeがOFFでも、移動中は疑似ループできる。
+        if (currentIsMoveAnim && !current.loop && current.normalizedTime >= moveAnimationRestartNormalizedTimeWhileMoving)
+        {
+            ReplayMoveAnimation(animName, true);
+            loopTimer = 0f;
+            return;
+        }
+
+        // クリップ名判定が取れていても3秒前後で止まる環境向けの保険。
+        if (loopTimer >= Mathf.Max(0.2f, moveAnimationHardRefreshInterval))
+        {
+            ReplayMoveAnimation(animName, true);
+            loopTimer = 0f;
+        }
+    }
+
     private void ForceMoveAnimationIfNeeded(string animName)
     {
         if (!forceMoveAnimationWhileMoving) return;
@@ -3036,7 +2927,7 @@ public class DragonAI : MonoBehaviour
 
         if (forceAnimatorSpeedOneWhenMoving && dragonAnimator.speed <= 0.01f)
         {
-            dragonAnimator.speed = GetMoveAnimationSpeedMultiplier();
+            dragonAnimator.speed = 1f;
         }
 
         AnimatorStateInfo current = dragonAnimator.GetCurrentAnimatorStateInfo(0);
@@ -3047,39 +2938,58 @@ public class DragonAI : MonoBehaviour
 
         if (!currentIsMoveAnim && !nextIsMoveAnim)
         {
-            if (hardOverrideMoveAnimationWhileMoving)
-            {
-                dragonAnimator.speed = GetMoveAnimationSpeedMultiplier();
-                dragonAnimator.CrossFadeInFixedTime(animName, Mathf.Max(0f, hardMoveAnimationCrossFadeTime), 0, 0f);
-                dragonAnimator.Update(0f);
-            }
-            else
-            {
-                motion.PlayAnim(animName, true);
-            }
+            ReplayMoveAnimation(animName, true);
         }
-        else if (currentIsMoveAnim || nextIsMoveAnim)
+    }
+
+    private void ReplayMoveAnimation(string animName, bool resetToStart)
+    {
+        if (motion == null || string.IsNullOrEmpty(animName))
         {
-            dragonAnimator.speed = GetMoveAnimationSpeedMultiplier();
+            return;
+        }
+
+        ResetAnimatorSpeedHard();
+
+        if (useDirectAnimatorReplayForMoveAnimation && dragonAnimator != null)
+        {
+            float normalizedTime = resetToStart ? 0f : float.NegativeInfinity;
+            float fade = Mathf.Max(0f, directMoveAnimCrossFadeTime);
+
+            dragonAnimator.CrossFadeInFixedTime(animName, fade, 0, normalizedTime);
+            dragonAnimator.Update(0f);
+
+            // DragonDragonMotion側の現在アニメ名も合わせるために呼ぶ。
+            // force=trueなので、内部のcurrentAnimNameが別名でも確実に更新される。
+            motion.PlayAnim(animName, true);
+            return;
+        }
+
+        motion.PlayAnim(animName, true);
+
+        if (dragonAnimator != null)
+        {
+            dragonAnimator.Update(0f);
         }
     }
 
     private void ReturnToIdle()
     {
+        if (state == DragonState.Dead)
+        {
+            return;
+        }
+
         DisableAllHitboxes();
         StopAllSpecialParticles();
         ResetAnimatorSpeedHard();
 
+        state = DragonState.Idle;
         isBusy = false;
 
-        if (state != DragonState.Dead && state != DragonState.Down)
+        if (motion != null)
         {
-            state = DragonState.Idle;
-
-            if (motion != null)
-            {
-                motion.PlayAnim(motion.idleAnim, true);
-            }
+            motion.PlayAnim(motion.idleAnim, true);
         }
     }
 

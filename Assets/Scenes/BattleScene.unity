@@ -4178,7 +4178,7 @@ MonoBehaviour:
     m_Bits: 256
   roarParticle: {fileID: 0}
   roarSfx: {fileID: 0}
-  downDuration: 9.11
+  downDuration: 8
   downParticle: {fileID: 0}
   deathParticle: {fileID: 0}
   downSfx: {fileID: 0}

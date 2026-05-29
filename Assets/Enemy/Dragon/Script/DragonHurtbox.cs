@@ -14,19 +14,36 @@ public class DragonHurtbox : MonoBehaviour
     [Tooltip("尻尾クリスタルなど、クリスタル部位ならオン")]
     public bool isCrystalPart = false;
 
+    [Tooltip("クリスタル破壊後、このDragonHurtbox自体を無効化します。クリスタル部位ならオン推奨です。")]
+    [SerializeField] private bool disableThisHurtboxWhenCrystalBroken = true;
+
+    [Tooltip("クリスタル破壊後、このGameObjectについているColliderを自動でOFFにします。")]
+    [SerializeField] private bool disableCollidersWhenCrystalBroken = true;
+
     [Header("Hit VFX")]
+    [Tooltip("本体にヒットした時のパーティクル")]
     public ParticleSystem bodyHitParticle;
+
+    [Tooltip("クリスタルにヒットした時のパーティクル")]
     public ParticleSystem crystalHitParticle;
 
     [Header("Hit SFX")]
+    [Tooltip("効果音再生用AudioSource。未設定なら自分か親から探します。")]
     public AudioSource audioSource;
+
+    [Tooltip("本体にヒットした時の効果音")]
     public AudioClip bodyHitSfx;
+
+    [Tooltip("クリスタルにヒットした時の効果音")]
     public AudioClip crystalHitSfx;
 
     [Range(0f, 1f)]
+    [Tooltip("ヒット効果音の音量")]
     public float hitSfxVolume = 1f;
 
     private DragonDamageTextSettings damageTextSettings;
+    private Collider[] cachedColliders;
+    private bool crystalDisabled = false;
 
     private void Awake()
     {
@@ -46,6 +63,12 @@ public class DragonHurtbox : MonoBehaviour
         }
 
         damageTextSettings = GetComponentInParent<DragonDamageTextSettings>();
+        cachedColliders = GetComponents<Collider>();
+    }
+
+    private void OnEnable()
+    {
+        crystalDisabled = false;
     }
 
     public void OnHit(float baseDamage)
@@ -55,25 +78,65 @@ public class DragonHurtbox : MonoBehaviour
 
     public void OnHit(float baseDamage, Vector3 hitPosition)
     {
-        float finalDamage = baseDamage * damageMultiplier;
-
         if (dragonHP == null)
         {
             Debug.LogWarning($"{name}: DragonHPがセットされていません");
             return;
         }
 
-        ShowDamageText(finalDamage, hitPosition);
+        if (dragonHP.isDead) return;
 
         if (isCrystalPart)
         {
-            dragonHP.TakeCrystalDamage(finalDamage);
+            if (dragonHP.IsCrystalBroken())
+            {
+                DisableCrystalHurtboxIfNeeded();
+                return;
+            }
+
+            float crystalDamage = Mathf.Max(0f, baseDamage * damageMultiplier);
+
+            ShowDamageText(crystalDamage, hitPosition);
+            dragonHP.TakeCrystalDamage(crystalDamage);
             PlayCrystalHitFeedback();
+
+            if (dragonHP.IsCrystalBroken())
+            {
+                DisableCrystalHurtboxIfNeeded();
+            }
+
             return;
         }
 
-        dragonHP.TakeDamage(finalDamage);
+        float bodyDamage = Mathf.Max(0f, baseDamage * damageMultiplier);
+
+        ShowDamageText(bodyDamage, hitPosition);
+        dragonHP.TakeDamage(bodyDamage);
         PlayBodyHitFeedback();
+    }
+
+    private void DisableCrystalHurtboxIfNeeded()
+    {
+        if (!isCrystalPart) return;
+        if (crystalDisabled) return;
+
+        crystalDisabled = true;
+
+        if (disableCollidersWhenCrystalBroken && cachedColliders != null)
+        {
+            foreach (Collider col in cachedColliders)
+            {
+                if (col != null)
+                {
+                    col.enabled = false;
+                }
+            }
+        }
+
+        if (disableThisHurtboxWhenCrystalBroken)
+        {
+            enabled = false;
+        }
     }
 
     private void ShowDamageText(float damage, Vector3 hitPosition)
@@ -82,7 +145,6 @@ public class DragonHurtbox : MonoBehaviour
         if (damageTextSettings.damageTextSpawner == null) return;
 
         Vector3 spawnPosition = hitPosition + Vector3.up * damageTextSettings.heightOffset;
-
         damageTextSettings.damageTextSpawner.SpawnDamageText(damage, spawnPosition);
     }
 

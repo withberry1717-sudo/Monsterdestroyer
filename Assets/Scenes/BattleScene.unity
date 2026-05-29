@@ -1228,7 +1228,7 @@ MonoBehaviour:
   audioSource: {fileID: 1301633505}
   stampSE: {fileID: 0}
   playOnPanelEnable: 1
-  delayAfterPanelShown: 9.3
+  delayAfterPanelShown: 1
   dropFromY: 120
   useCurrentTransformAsFinal: 1
   moveDuration: 0.5
@@ -2672,6 +2672,68 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1001 &243944621
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 356980421}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 008af2c968b9cc24b87c4015b2476d13, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.032421917
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 008af2c968b9cc24b87c4015b2476d13, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.023865987
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 008af2c968b9cc24b87c4015b2476d13, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.1216702
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 008af2c968b9cc24b87c4015b2476d13, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 008af2c968b9cc24b87c4015b2476d13, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 008af2c968b9cc24b87c4015b2476d13, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 008af2c968b9cc24b87c4015b2476d13, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 008af2c968b9cc24b87c4015b2476d13, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 008af2c968b9cc24b87c4015b2476d13, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 008af2c968b9cc24b87c4015b2476d13, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 008af2c968b9cc24b87c4015b2476d13, type: 3}
+      propertyPath: m_Name
+      value: DragonMesh_Broken
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 008af2c968b9cc24b87c4015b2476d13, type: 3}
+--- !u!4 &243944622 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 008af2c968b9cc24b87c4015b2476d13, type: 3}
+  m_PrefabInstance: {fileID: 243944621}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &246507874
 GameObject:
   m_ObjectHideFlags: 0
@@ -2720,6 +2782,8 @@ MonoBehaviour:
   dragonHP: {fileID: 78498549}
   damageMultiplier: 1
   isCrystalPart: 1
+  disableThisHurtboxWhenCrystalBroken: 1
+  disableCollidersWhenCrystalBroken: 1
   bodyHitParticle: {fileID: 0}
   crystalHitParticle: {fileID: 0}
   audioSource: {fileID: 0}
@@ -18856,6 +18920,8 @@ MonoBehaviour:
   dragonHP: {fileID: 78498549}
   damageMultiplier: 1
   isCrystalPart: 1
+  disableThisHurtboxWhenCrystalBroken: 1
+  disableCollidersWhenCrystalBroken: 1
   bodyHitParticle: {fileID: 0}
   crystalHitParticle: {fileID: 0}
   audioSource: {fileID: 0}
@@ -20045,6 +20111,8 @@ MonoBehaviour:
   dragonHP: {fileID: 78498549}
   damageMultiplier: 1
   isCrystalPart: 1
+  disableThisHurtboxWhenCrystalBroken: 1
+  disableCollidersWhenCrystalBroken: 1
   bodyHitParticle: {fileID: 0}
   crystalHitParticle: {fileID: 0}
   audioSource: {fileID: 0}
@@ -28588,6 +28656,8 @@ MonoBehaviour:
   dragonHP: {fileID: 78498549}
   damageMultiplier: 1
   isCrystalPart: 1
+  disableThisHurtboxWhenCrystalBroken: 1
+  disableCollidersWhenCrystalBroken: 1
   bodyHitParticle: {fileID: 0}
   crystalHitParticle: {fileID: 0}
   audioSource: {fileID: 0}
@@ -29038,7 +29108,7 @@ ParticleSystem:
       serializedVersion: 2
       minMaxState: 0
       minColor: {r: 1, g: 1, b: 1, a: 1}
-      maxColor: {r: 1, g: 1, b: 1, a: 1}
+      maxColor: {r: 1, g: 0.61752665, b: 0, a: 1}
       maxGradient:
         serializedVersion: 2
         key0: {r: 1, g: 1, b: 1, a: 1}
@@ -29102,7 +29172,7 @@ ParticleSystem:
     startSize:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0.34
+      scalar: 0.1
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -29155,7 +29225,7 @@ ParticleSystem:
     startSizeY:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 1
+      scalar: 0.1
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -29208,7 +29278,7 @@ ParticleSystem:
     startSizeZ:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 1
+      scalar: 0.1
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -29566,7 +29636,7 @@ ParticleSystem:
     sphericalDirectionAmount: 0
     randomPositionAmount: 0
     radius:
-      value: 0.2
+      value: 1
       mode: 0
       spread: 0
       speed:
@@ -29685,7 +29755,7 @@ ParticleSystem:
     rateOverTime:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0
+      scalar: 300
       minScalar: 10
       maxCurve:
         serializedVersion: 2
@@ -34179,6 +34249,8 @@ MonoBehaviour:
   dragonHP: {fileID: 78498549}
   damageMultiplier: 1
   isCrystalPart: 1
+  disableThisHurtboxWhenCrystalBroken: 1
+  disableCollidersWhenCrystalBroken: 1
   bodyHitParticle: {fileID: 0}
   crystalHitParticle: {fileID: 0}
   audioSource: {fileID: 0}
@@ -37916,6 +37988,68 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1750906427}
   m_CullTransparentMesh: 1
+--- !u!1 &1772008151
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1772008152}
+  - component: {fileID: 1772008153}
+  m_Layer: 0
+  m_Name: TailseverController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1772008152
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1772008151}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1681397579}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1772008153
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1772008151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a25de19f309d3f04e8e1119749edc8c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TailSeverController
+  normalDragonMeshObject: {fileID: 0}
+  brokenDragonMeshObject: {fileID: 0}
+  severedTailPrefab: {fileID: 0}
+  severedTailSpawnPoint: {fileID: 0}
+  severedTailForceDirection: {fileID: 0}
+  tailFlyForce: 8
+  tailUpForce: 3
+  tailTorqueForce: 8
+  severedTailDestroyDelay: 12
+  collidersToDisable: []
+  hurtboxesToDisable: []
+  objectsToDisable: []
+  severParticlePrefab: {fileID: 0}
+  severParticlePoint: {fileID: 0}
+  particleDestroyDelay: 5
+  audioSource: {fileID: 0}
+  severSfx: {fileID: 0}
+  severSfxVolume: 1
 --- !u!1 &1775728923
 GameObject:
   m_ObjectHideFlags: 0
@@ -49931,6 +50065,8 @@ MonoBehaviour:
   dragonHP: {fileID: 78498549}
   damageMultiplier: 1
   isCrystalPart: 1
+  disableThisHurtboxWhenCrystalBroken: 1
+  disableCollidersWhenCrystalBroken: 1
   bodyHitParticle: {fileID: 0}
   crystalHitParticle: {fileID: 0}
   audioSource: {fileID: 0}
@@ -51817,7 +51953,7 @@ PrefabInstance:
       objectReference: {fileID: 1036172109}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: maxHP
-      value: 2200
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: isCrystalBroken
@@ -52044,12 +52180,18 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8618759901867992113, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1684910518}
+    - targetCorrespondingSourceObject: {fileID: 8618759901867992113, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1772008152}
     - targetCorrespondingSourceObject: {fileID: 6805329374342380691, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       insertIndex: 0
       addedObject: {fileID: 585711686}
     - targetCorrespondingSourceObject: {fileID: 6805329374342380691, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       insertIndex: 1
       addedObject: {fileID: 1358320790}
+    - targetCorrespondingSourceObject: {fileID: 6805329374342380691, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 243944622}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 6247785882281703331, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       insertIndex: -1

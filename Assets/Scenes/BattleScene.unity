@@ -1004,7 +1004,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e39226cd7178e6d47bf014ce32086d39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonAttackHitbox
-  damage: 40
+  damage: 35
   knockbackPower: 5
   knockbackUpPower: 0.2
   staggerTime: 0.5
@@ -10678,7 +10678,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.99084455, z: -0, w: 0.13500798}
   m_LocalPosition: {x: 0.001, y: 0.105, z: 0.046}
-  m_LocalScale: {x: 0.500194, y: 0.57105, z: 0.53956944}
+  m_LocalScale: {x: 0.7191751, y: 0.82105124, z: 0.7757887}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 356980421}
@@ -18958,87 +18958,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 970284485}
   m_CullTransparentMesh: 1
---- !u!1 &970590808
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 970590809}
-  - component: {fileID: 970590811}
-  - component: {fileID: 970590810}
-  m_Layer: 3
-  m_Name: Tail4_AttackHitbox (1)
-  m_TagString: Enemy
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &970590809
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 970590808}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0.26311553, y: 0.6982287, z: 0.58791107, w: 0.31242204}
-  m_LocalPosition: {x: -6.8740406, y: 1.0164368, z: -2.9145212}
-  m_LocalScale: {x: 0.83843464, y: 2.614353, z: 0.79556096}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1042702303}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &970590810
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 970590808}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!1773428102 &970590811
-ParentConstraint:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 970590808}
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Weight: 1
-  m_TranslationAtRest: {x: 0, y: 0, z: 0}
-  m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_TranslationOffsets:
-  - {x: 0, y: 0, z: 0}
-  m_RotationOffsets:
-  - {x: 0, y: 0, z: 0}
-  m_AffectTranslationX: 1
-  m_AffectTranslationY: 1
-  m_AffectTranslationZ: 1
-  m_AffectRotationX: 1
-  m_AffectRotationY: 1
-  m_AffectRotationZ: 1
-  m_Active: 1
-  m_IsLocked: 1
-  m_Sources:
-  - sourceTransform: {fileID: 560103032}
-    weight: 1
 --- !u!4 &975296131 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3986688746380100063, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
@@ -19633,7 +19552,6 @@ Transform:
   - {fileID: 274110719}
   - {fileID: 794397}
   - {fileID: 573127643}
-  - {fileID: 970590809}
   - {fileID: 690437551}
   m_Father: {fileID: 1684910518}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -19649,7 +19567,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e39226cd7178e6d47bf014ce32086d39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonAttackHitbox
-  damage: 40
+  damage: 35
   knockbackPower: 5
   knockbackUpPower: 0.2
   staggerTime: 0.5
@@ -33909,7 +33827,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e39226cd7178e6d47bf014ce32086d39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragonAttackHitbox
-  damage: 30
+  damage: 25
   knockbackPower: 5
   knockbackUpPower: 0.2
   staggerTime: 0.5

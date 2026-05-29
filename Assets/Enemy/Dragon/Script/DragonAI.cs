@@ -732,6 +732,22 @@ public class DragonAI : MonoBehaviour
     [Tooltip("Direct Replay時のCrossFade秒数。小さくすると止まりにくく、大きくすると滑らかですが切り替えが遅れます。")]
     public float directMoveAnimCrossFadeTime = 0.04f;
 
+    [Header("移動アニメ手動ループ 最終対策")]
+    [Tooltip("ON推奨。Walk/RunningをAnimatorのLoop設定に頼らず、移動中だけ47フレームを手動で回し続けます。")]
+    public bool useFrameDrivenMoveAnimation = true;
+
+    [Tooltip("Walk/Runningの実フレーム数。今回のアニメが47フレームなら47にします。")]
+    public int moveAnimationFrameCount = 47;
+
+    [Tooltip("Walk/RunningのFPS。FBXが30fpsなら30です。")]
+    public float moveAnimationLoopFPS = 30f;
+
+    [Tooltip("ONなら、座標移動を試みている間は毎フレームWalk/Runningの再生位置を進めます。非ループFBXでも止まりません。")]
+    public bool driveMoveAnimationWhileTryingToMove = true;
+
+    [Tooltip("移動アニメの手動再生速度倍率。足が遅く見えたら上げ、速く見えたら下げます。")]
+    public float moveAnimationManualSpeedMultiplier = 1f;
+
     [Header("共通サウンド")]
     [Tooltip("SEを再生するAudioSourceです。未設定の場合は自分または親から自動で探します。")]
     public AudioSource audioSource;
@@ -1306,7 +1322,9 @@ public class DragonAI : MonoBehaviour
         float checkTimer = 0f;
         float moveAnimSafetyTimer = 0f;
         float moveAnimLoopTimer = 0f;
-        Vector3 previousPosition = transform.position;
+        float frameDrivenMoveAnimTimer = 0f;
+        StartFrameDrivenMoveAnimation(moveAnim, ref frameDrivenMoveAnimTimer);
+        Vector3 previousPosition = motion != null ? motion.transform.position : transform.position;
 
         while (player != null && motion.GetDistanceToPlayer() > approachStopDistance)
         {
@@ -1336,6 +1354,7 @@ public class DragonAI : MonoBehaviour
                 checkTimer = 0f;
                 moveAnimSafetyTimer = 0f;
                 moveAnimLoopTimer = 0f;
+                StartFrameDrivenMoveAnimation(moveAnim, ref frameDrivenMoveAnimTimer);
             }
 
             motion.FacePlayerSmooth(motion.actionTurnSpeed);
@@ -1350,20 +1369,32 @@ public class DragonAI : MonoBehaviour
             Vector3 moveDelta = motion.GetMoveForward() * speed * Time.deltaTime;
             motion.MoveDragon(moveDelta);
 
-            float movedDistance = Vector3.Distance(transform.position, previousPosition);
-            previousPosition = transform.position;
-
-            checkTimer += Time.deltaTime;
-            KeepMoveAnimSafe(moveAnim, ref checkTimer, ref moveAnimSafetyTimer);
+            Vector3 currentPosition = motion != null ? motion.transform.position : transform.position;
+            float movedDistance = Vector3.Distance(currentPosition, previousPosition);
+            previousPosition = currentPosition;
 
             bool isActuallyMoving = movedDistance > 0.002f;
+            bool isTryingToMove = moveDelta.sqrMagnitude > 0.000001f;
 
-            if (isActuallyMoving)
+            if (useFrameDrivenMoveAnimation)
             {
-                ForceMoveAnimationIfNeeded(moveAnim);
+                if (driveMoveAnimationWhileTryingToMove ? isTryingToMove : isActuallyMoving)
+                {
+                    DriveMoveAnimationByFrameTimer(moveAnim, ref frameDrivenMoveAnimTimer);
+                }
             }
+            else
+            {
+                checkTimer += Time.deltaTime;
+                KeepMoveAnimSafe(moveAnim, ref checkTimer, ref moveAnimSafetyTimer);
 
-            KeepMoveAnimationAliveIfNeeded(moveAnim, ref moveAnimLoopTimer, isActuallyMoving);
+                if (isActuallyMoving)
+                {
+                    ForceMoveAnimationIfNeeded(moveAnim);
+                }
+
+                KeepMoveAnimationAliveIfNeeded(moveAnim, ref moveAnimLoopTimer, isActuallyMoving);
+            }
 
             yield return null;
         }
@@ -2857,6 +2888,53 @@ public class DragonAI : MonoBehaviour
 
         safetyTimer = 0f;
         ForceMoveAnimationIfNeeded(animName);
+    }
+
+    private void StartFrameDrivenMoveAnimation(string animName, ref float playbackTimer)
+    {
+        playbackTimer = 0f;
+
+        if (!useFrameDrivenMoveAnimation)
+        {
+            return;
+        }
+
+        ApplyFrameDrivenMoveAnimation(animName, 0f);
+    }
+
+    private void DriveMoveAnimationByFrameTimer(string animName, ref float playbackTimer)
+    {
+        if (!useFrameDrivenMoveAnimation) return;
+        if (dragonAnimator == null) return;
+        if (string.IsNullOrEmpty(animName)) return;
+
+        ResetAnimatorSpeedHard();
+
+        float fps = Mathf.Max(1f, moveAnimationLoopFPS > 0f ? moveAnimationLoopFPS : (motion != null ? motion.animationFPS : 30f));
+        int frameCount = Mathf.Max(2, moveAnimationFrameCount);
+        float loopDuration = frameCount / fps;
+
+        playbackTimer += Time.deltaTime * Mathf.Max(0.01f, moveAnimationManualSpeedMultiplier);
+
+        if (playbackTimer >= loopDuration)
+        {
+            playbackTimer %= loopDuration;
+        }
+
+        float normalizedTime = Mathf.Clamp01(playbackTimer / Mathf.Max(0.01f, loopDuration));
+        ApplyFrameDrivenMoveAnimation(animName, normalizedTime);
+    }
+
+    private void ApplyFrameDrivenMoveAnimation(string animName, float normalizedTime)
+    {
+        if (dragonAnimator == null) return;
+        if (string.IsNullOrEmpty(animName)) return;
+
+        // CrossFadeを繰り返すと0.5秒ほど無姿勢/停止に見えることがあるので、
+        // 移動中はPlayで再生位置を直接指定して疑似ループさせる。
+        dragonAnimator.speed = 1f;
+        dragonAnimator.Play(animName, 0, normalizedTime);
+        dragonAnimator.Update(0f);
     }
 
     private void KeepMoveAnimationAliveIfNeeded(string animName, ref float loopTimer, bool isActuallyMoving)

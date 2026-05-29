@@ -4,7 +4,7 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 
-public class SettingsManager : MonoBehaviour
+public class SettingManager : MonoBehaviour
 {
     [Header("Panel")]
     [SerializeField] private GameObject settingsPanel;
@@ -39,7 +39,29 @@ public class SettingsManager : MonoBehaviour
     {
         SetupQualityDropdown();
         SetupResolutionDropdown();
+        SetupVolumeSlider();
+
         LoadSettings();
+
+        // イベントをコード側で自動登録する
+        // InspectorのOnValueChangedを設定し忘れても動く
+        if (qualityDropdown != null)
+        {
+            qualityDropdown.onValueChanged.RemoveAllListeners();
+            qualityDropdown.onValueChanged.AddListener(ChangeQuality);
+        }
+
+        if (resolutionDropdown != null)
+        {
+            resolutionDropdown.onValueChanged.RemoveAllListeners();
+            resolutionDropdown.onValueChanged.AddListener(ChangeResolution);
+        }
+
+        if (volumeSlider != null)
+        {
+            volumeSlider.onValueChanged.RemoveAllListeners();
+            volumeSlider.onValueChanged.AddListener(ChangeVolume);
+        }
 
         if (settingsPanel != null)
         {
@@ -67,7 +89,11 @@ public class SettingsManager : MonoBehaviour
 
     private void SetupQualityDropdown()
     {
-        if (qualityDropdown == null) return;
+        if (qualityDropdown == null)
+        {
+            Debug.LogWarning("QualityDropdownが設定されていません。");
+            return;
+        }
 
         qualityDropdown.ClearOptions();
 
@@ -81,7 +107,11 @@ public class SettingsManager : MonoBehaviour
 
     private void SetupResolutionDropdown()
     {
-        if (resolutionDropdown == null) return;
+        if (resolutionDropdown == null)
+        {
+            Debug.LogWarning("ResolutionDropdownが設定されていません。");
+            return;
+        }
 
         resolutionDropdown.ClearOptions();
 
@@ -95,38 +125,45 @@ public class SettingsManager : MonoBehaviour
         resolutionDropdown.AddOptions(options);
     }
 
+    private void SetupVolumeSlider()
+    {
+        if (volumeSlider == null)
+        {
+            Debug.LogWarning("VolumeSliderが設定されていません。");
+            return;
+        }
+
+        volumeSlider.minValue = 0f;
+        volumeSlider.maxValue = 1f;
+    }
+
     public void ChangeQuality(int qualityIndex)
     {
         qualityIndex = Mathf.Clamp(qualityIndex, 0, 2);
 
-        // Laptop：ノーパソ・低スペック向け
         if (qualityIndex == 0)
         {
-            QualitySettings.SetQualityLevel(0);
+            // Laptop
+            QualitySettings.SetQualityLevel(0, true);
 
-            // 影をかなり軽くする
             QualitySettings.shadows = ShadowQuality.Disable;
             QualitySettings.shadowDistance = 0f;
             QualitySettings.shadowResolution = ShadowResolution.Low;
 
-            // ギザギザ補正OFF
             QualitySettings.antiAliasing = 0;
 
-            // 遠景やLODを軽くする
             QualitySettings.lodBias = 0.5f;
             QualitySettings.maximumLODLevel = 1;
 
-            // テクスチャを少し軽くする
             QualitySettings.globalTextureMipmapLimit = 1;
 
-            // フレームレートは60狙い
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 60;
         }
-        // Normal：普通のPC向け
         else if (qualityIndex == 1)
         {
-            QualitySettings.SetQualityLevel(0);
+            // Normal
+            QualitySettings.SetQualityLevel(0, true);
 
             QualitySettings.shadows = ShadowQuality.HardOnly;
             QualitySettings.shadowDistance = 45f;
@@ -142,10 +179,10 @@ public class SettingsManager : MonoBehaviour
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 60;
         }
-        // High：見栄え重視
         else if (qualityIndex == 2)
         {
-            QualitySettings.SetQualityLevel(0);
+            // High
+            QualitySettings.SetQualityLevel(0, true);
 
             QualitySettings.shadows = ShadowQuality.All;
             QualitySettings.shadowDistance = 100f;
@@ -164,6 +201,8 @@ public class SettingsManager : MonoBehaviour
 
         PlayerPrefs.SetInt(QualityKey, qualityIndex);
         PlayerPrefs.Save();
+
+        Debug.Log("画質変更: " + qualityIndex);
     }
 
     public void ChangeResolution(int resolutionIndex)
@@ -175,22 +214,31 @@ public class SettingsManager : MonoBehaviour
         Screen.SetResolution(
             selectedResolution.x,
             selectedResolution.y,
-            Screen.fullScreen
+            Screen.fullScreenMode
         );
 
         PlayerPrefs.SetInt(ResolutionKey, resolutionIndex);
         PlayerPrefs.Save();
+
+        Debug.Log("解像度変更: " + selectedResolution.x + " x " + selectedResolution.y);
     }
 
     public void ChangeVolume(float volume)
     {
+        volume = Mathf.Clamp01(volume);
+
         AudioListener.volume = volume;
+
         PlayerPrefs.SetFloat(VolumeKey, volume);
         PlayerPrefs.Save();
+
+        Debug.Log("音量変更: " + volume);
     }
 
     public void StartChangeBlinkKey()
     {
+        if (isWaitingForBlinkKey) return;
+
         isWaitingForBlinkKey = true;
 
         if (blinkKeyText != null)
@@ -219,6 +267,8 @@ public class SettingsManager : MonoBehaviour
                         blinkKeyText.text = "Blink Key : " + key.ToString();
                     }
 
+                    Debug.Log("Blinkキー変更: " + key);
+
                     isWaitingForBlinkKey = false;
                     yield break;
                 }
@@ -230,35 +280,36 @@ public class SettingsManager : MonoBehaviour
 
     private void LoadSettings()
     {
-        // デフォルトはLaptopにしておくと、ノーパソの人でも安心
         int quality = PlayerPrefs.GetInt(QualityKey, 0);
         quality = Mathf.Clamp(quality, 0, 2);
 
-        ChangeQuality(quality);
-
         if (qualityDropdown != null)
         {
-            qualityDropdown.value = quality;
+            qualityDropdown.SetValueWithoutNotify(quality);
             qualityDropdown.RefreshShownValue();
         }
+
+        ApplyQualityWithoutSave(quality);
 
         int resolutionIndex = PlayerPrefs.GetInt(ResolutionKey, 2);
         resolutionIndex = Mathf.Clamp(resolutionIndex, 0, resolutions.Length - 1);
 
-        ChangeResolution(resolutionIndex);
-
         if (resolutionDropdown != null)
         {
-            resolutionDropdown.value = resolutionIndex;
+            resolutionDropdown.SetValueWithoutNotify(resolutionIndex);
             resolutionDropdown.RefreshShownValue();
         }
 
+        ApplyResolutionWithoutSave(resolutionIndex);
+
         float volume = PlayerPrefs.GetFloat(VolumeKey, 1f);
+        volume = Mathf.Clamp01(volume);
+
         AudioListener.volume = volume;
 
         if (volumeSlider != null)
         {
-            volumeSlider.value = volume;
+            volumeSlider.SetValueWithoutNotify(volume);
         }
 
         string blinkKey = PlayerPrefs.GetString(BlinkKey, KeyCode.LeftShift.ToString());
@@ -267,5 +318,61 @@ public class SettingsManager : MonoBehaviour
         {
             blinkKeyText.text = "Blink Key : " + blinkKey;
         }
+    }
+
+    private void ApplyQualityWithoutSave(int qualityIndex)
+    {
+        if (qualityIndex == 0)
+        {
+            QualitySettings.SetQualityLevel(0, true);
+            QualitySettings.shadows = ShadowQuality.Disable;
+            QualitySettings.shadowDistance = 0f;
+            QualitySettings.shadowResolution = ShadowResolution.Low;
+            QualitySettings.antiAliasing = 0;
+            QualitySettings.lodBias = 0.5f;
+            QualitySettings.maximumLODLevel = 1;
+            QualitySettings.globalTextureMipmapLimit = 1;
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = 60;
+        }
+        else if (qualityIndex == 1)
+        {
+            QualitySettings.SetQualityLevel(0, true);
+            QualitySettings.shadows = ShadowQuality.HardOnly;
+            QualitySettings.shadowDistance = 45f;
+            QualitySettings.shadowResolution = ShadowResolution.Medium;
+            QualitySettings.antiAliasing = 2;
+            QualitySettings.lodBias = 1.0f;
+            QualitySettings.maximumLODLevel = 0;
+            QualitySettings.globalTextureMipmapLimit = 0;
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = 60;
+        }
+        else
+        {
+            QualitySettings.SetQualityLevel(0, true);
+            QualitySettings.shadows = ShadowQuality.All;
+            QualitySettings.shadowDistance = 100f;
+            QualitySettings.shadowResolution = ShadowResolution.High;
+            QualitySettings.antiAliasing = 4;
+            QualitySettings.lodBias = 1.5f;
+            QualitySettings.maximumLODLevel = 0;
+            QualitySettings.globalTextureMipmapLimit = 0;
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = 60;
+        }
+    }
+
+    private void ApplyResolutionWithoutSave(int resolutionIndex)
+    {
+        resolutionIndex = Mathf.Clamp(resolutionIndex, 0, resolutions.Length - 1);
+
+        Vector2Int selectedResolution = resolutions[resolutionIndex];
+
+        Screen.SetResolution(
+            selectedResolution.x,
+            selectedResolution.y,
+            Screen.fullScreenMode
+        );
     }
 }

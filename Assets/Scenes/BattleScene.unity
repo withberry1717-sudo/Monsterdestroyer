@@ -8936,7 +8936,7 @@ MonoBehaviour:
   enableBeamBreathAction: 0
   enableChargeAction: 1
   enableDoubleChargeAction: 1
-  introIdleBeforeRoarTime: 100
+  introIdleBeforeRoarTime: 0
   closeRange: 6
   middleRange: 15
   farRange: 25
@@ -26530,8 +26530,8 @@ MonoBehaviour:
   hardDragonHpMultiplier: 1.1
   hardCrystalHpMultiplier: 1.5
   hardActionIntervalMultiplier: 0.7
-  hardMoveSpeedMultiplier: 1.2
-  hardAnimationSpeedMultiplier: 1.2
+  hardMoveSpeedMultiplier: 1.3
+  hardAnimationSpeedMultiplier: 1.3
   hardDragonScaleMultiplier: 1.1
   hardHalfHPDownDuration: 5
   hardTailBreakBigHitDuration: 1

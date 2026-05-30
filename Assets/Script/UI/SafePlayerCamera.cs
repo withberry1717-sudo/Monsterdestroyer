@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 namespace NaughtyCharacter
@@ -6,6 +7,19 @@ namespace NaughtyCharacter
     public class SafePlayerCamera : MonoBehaviour
     {
         public static SafePlayerCamera Instance;
+
+        [System.Serializable]
+        public class DifficultyMonsterIconData
+        {
+            [Header("難易度")]
+            public QuestDifficultyImageSelector.Difficulty difficulty;
+
+            [Header("この難易度で表示するモンスターアイコン")]
+            public Sprite monsterIconSprite;
+
+            [Header("この難易度で使うロックオン重ね画像。共通なら全難易度に同じ画像を入れてOK")]
+            public Sprite lockOnOverlaySprite;
+        }
 
         [Header("References")]
         public Transform Rig;
@@ -66,14 +80,14 @@ namespace NaughtyCharacter
         [Tooltip("水平方向が近すぎる時にYawを更新しない。急な後ろ向きバグ防止")]
         [SerializeField] private float minHorizontalDistanceForYaw = 0.5f;
 
-        [Header("Lock On Marker")]
-        [Tooltip("ロックオン中に表示するマークのPrefab。SpriteRenderer推奨")]
+        [Header("World Lock On Marker")]
+        [Tooltip("ロックオン中にワールド上へ表示するマークのPrefab。SpriteRenderer推奨")]
         [SerializeField] private GameObject lockOnMarkerPrefab;
 
-        [Tooltip("ロックオンマークを表示するか")]
+        [Tooltip("ワールド上のロックオンマークを表示するか")]
         [SerializeField] private bool enableLockOnMarker = true;
 
-        [Tooltip("ロックオン開始から何秒間だけマーカーを表示するか")]
+        [Tooltip("ロックオン開始から何秒間だけワールドマーカーを表示するか")]
         [SerializeField] private float lockOnMarkerVisibleTime = 1.2f;
 
         [Tooltip("ロックオン中心からの表示位置補正")]
@@ -102,6 +116,34 @@ namespace NaughtyCharacter
 
         [Tooltip("マーカーの描画順。大きいほど手前に出やすい")]
         [SerializeField] private int lockOnMarkerSortingOrder = 5000;
+
+        [Header("Monster Icon UI")]
+        [Tooltip("画面上に表示するモンスターアイコンImage")]
+        [SerializeField] private Image monsterIconImage;
+
+        [Tooltip("ロックオン中だけモンスターアイコンの上に重ねる白いロックオン画像")]
+        [SerializeField] private Image monsterLockOnOverlayImage;
+
+        [Tooltip("ONならタイトルで選んだ難易度に応じてモンスターアイコン画像を切り替える")]
+        [SerializeField] private bool useDifficultyMonsterIcon = true;
+
+        [Tooltip("難易度ごとのモンスターアイコン画像")]
+        [SerializeField] private DifficultyMonsterIconData[] difficultyMonsterIcons;
+
+        [Tooltip("モンスターアイコン上のロックオン表示を使うか")]
+        [SerializeField] private bool enableMonsterIconLockOnOverlay = true;
+
+        [Tooltip("ロックオンしていない時に白いロックオン画像を非表示にする")]
+        [SerializeField] private bool hideMonsterOverlayWhenNotLocked = true;
+
+        [Tooltip("ロックオンした瞬間にアイコン上のロックオン画像を少し拡大して戻す")]
+        [SerializeField] private bool useMonsterOverlayPopAnimation = true;
+
+        [Tooltip("アイコン上ロックオン画像の開始拡大率")]
+        [SerializeField] private float monsterOverlayStartPopScale = 1.18f;
+
+        [Tooltip("アイコン上ロックオン画像が通常サイズへ戻る時間")]
+        [SerializeField] private float monsterOverlayPopDuration = 0.16f;
 
         [Header("Camera Shake")]
         [SerializeField] private bool enableCameraShake = true;
@@ -132,6 +174,9 @@ namespace NaughtyCharacter
         private Vector3 lockOnMarkerBaseScale;
         private bool markerShouldBeVisible;
 
+        private Coroutine monsterOverlayPopCoroutine;
+        private Vector3 monsterOverlayBaseScale = Vector3.one;
+
         public bool IsLockingOn => currentLockOnTarget != null;
         public Transform CurrentLockOnTarget => currentLockOnTarget;
 
@@ -156,6 +201,9 @@ namespace NaughtyCharacter
 
             currentPitch = Pivot != null ? NormalizeAngle(Pivot.localEulerAngles.x) : 0f;
             targetPitch = currentPitch;
+
+            SetupMonsterIconUI();
+            ApplyDifficultyMonsterIcon();
         }
 
         private void LateUpdate()
@@ -182,6 +230,82 @@ namespace NaughtyCharacter
             {
                 UpdateNormalCamera();
             }
+        }
+
+        private void SetupMonsterIconUI()
+        {
+            if (monsterLockOnOverlayImage != null)
+            {
+                monsterOverlayBaseScale = monsterLockOnOverlayImage.transform.localScale;
+                monsterLockOnOverlayImage.transform.SetAsLastSibling();
+
+                if (hideMonsterOverlayWhenNotLocked)
+                {
+                    monsterLockOnOverlayImage.gameObject.SetActive(false);
+                }
+            }
+
+            if (monsterIconImage != null)
+            {
+                monsterIconImage.raycastTarget = false;
+                monsterIconImage.preserveAspect = true;
+            }
+
+            if (monsterLockOnOverlayImage != null)
+            {
+                monsterLockOnOverlayImage.raycastTarget = false;
+                monsterLockOnOverlayImage.preserveAspect = true;
+            }
+        }
+
+        private void ApplyDifficultyMonsterIcon()
+        {
+            if (!useDifficultyMonsterIcon) return;
+            if (monsterIconImage == null) return;
+
+            QuestDifficultyImageSelector.Difficulty difficulty =
+                QuestDifficultyImageSelector.LoadSavedDifficulty();
+
+            DifficultyMonsterIconData data = FindDifficultyMonsterIconData(difficulty);
+
+            if (data == null)
+            {
+                Debug.LogWarning("SafePlayerCamera: 難易度に対応するモンスターアイコン設定がありません: " + difficulty);
+                return;
+            }
+
+            if (data.monsterIconSprite != null)
+            {
+                monsterIconImage.sprite = data.monsterIconSprite;
+                monsterIconImage.enabled = true;
+                monsterIconImage.preserveAspect = true;
+            }
+
+            if (monsterLockOnOverlayImage != null && data.lockOnOverlaySprite != null)
+            {
+                monsterLockOnOverlayImage.sprite = data.lockOnOverlaySprite;
+                monsterLockOnOverlayImage.preserveAspect = true;
+            }
+
+            Debug.Log("Monster Icon Applied: " + difficulty);
+        }
+
+        private DifficultyMonsterIconData FindDifficultyMonsterIconData(QuestDifficultyImageSelector.Difficulty difficulty)
+        {
+            if (difficultyMonsterIcons == null || difficultyMonsterIcons.Length == 0)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < difficultyMonsterIcons.Length; i++)
+            {
+                if (difficultyMonsterIcons[i].difficulty == difficulty)
+                {
+                    return difficultyMonsterIcons[i];
+                }
+            }
+
+            return null;
         }
 
         private void HandleLockOnInput()
@@ -225,6 +349,7 @@ namespace NaughtyCharacter
                 hasLockOnCenter = true;
 
                 ShowLockOnMarker(smoothedLockOnCenter);
+                SetMonsterIconLockOnOverlay(true);
             }
         }
 
@@ -346,6 +471,7 @@ namespace NaughtyCharacter
             lockOnCenterVelocity = Vector3.zero;
 
             HideLockOnMarker();
+            SetMonsterIconLockOnOverlay(false);
         }
 
         private void ShowLockOnMarker(Vector3 position)
@@ -557,6 +683,75 @@ namespace NaughtyCharacter
             }
 
             return worldPosition + directionToCamera.normalized * lockOnMarkerPullTowardCamera;
+        }
+
+        private void SetMonsterIconLockOnOverlay(bool active)
+        {
+            if (!enableMonsterIconLockOnOverlay) return;
+            if (monsterLockOnOverlayImage == null) return;
+
+            monsterLockOnOverlayImage.gameObject.SetActive(active);
+
+            if (!active)
+            {
+                if (monsterOverlayPopCoroutine != null)
+                {
+                    StopCoroutine(monsterOverlayPopCoroutine);
+                    monsterOverlayPopCoroutine = null;
+                }
+
+                monsterLockOnOverlayImage.transform.localScale = monsterOverlayBaseScale;
+                return;
+            }
+
+            monsterLockOnOverlayImage.transform.SetAsLastSibling();
+
+            if (useMonsterOverlayPopAnimation)
+            {
+                if (monsterOverlayPopCoroutine != null)
+                {
+                    StopCoroutine(monsterOverlayPopCoroutine);
+                }
+
+                monsterOverlayPopCoroutine = StartCoroutine(MonsterOverlayPopRoutine());
+            }
+        }
+
+        private IEnumerator MonsterOverlayPopRoutine()
+        {
+            if (monsterLockOnOverlayImage == null)
+            {
+                yield break;
+            }
+
+            Vector3 startScale = monsterOverlayBaseScale * monsterOverlayStartPopScale;
+            Vector3 endScale = monsterOverlayBaseScale;
+
+            monsterLockOnOverlayImage.transform.localScale = startScale;
+
+            float timer = 0f;
+
+            while (timer < monsterOverlayPopDuration)
+            {
+                timer += Time.unscaledDeltaTime;
+
+                float t = Mathf.Clamp01(timer / Mathf.Max(monsterOverlayPopDuration, 0.001f));
+                float easedT = 1f - Mathf.Pow(1f - t, 3f);
+
+                if (monsterLockOnOverlayImage != null)
+                {
+                    monsterLockOnOverlayImage.transform.localScale = Vector3.Lerp(startScale, endScale, easedT);
+                }
+
+                yield return null;
+            }
+
+            if (monsterLockOnOverlayImage != null)
+            {
+                monsterLockOnOverlayImage.transform.localScale = endScale;
+            }
+
+            monsterOverlayPopCoroutine = null;
         }
 
         private void UpdateNormalCamera()

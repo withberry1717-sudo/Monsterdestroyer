@@ -703,8 +703,21 @@ public class DragonAI : MonoBehaviour
     public AudioClip roarSfx;
 
     [Header("ダウン・死亡")]
-    [Tooltip("尻尾クリスタル破壊後のダウン時間です。大きくするとプレイヤーが攻撃できる時間が長くなります。")]
+    [Tooltip("HP50%で第2形態に入る時のダウン時間です。DifficultyApplierから難易度別に変更できます。")]
+    public float halfHPDownDuration = 5.5f;
+
+    [Tooltip("旧設定・互換用です。Half HP Down Durationが0以下の場合だけHP50%ダウン時間として使います。")]
     public float downDuration = 9.11f;
+
+    [Header("尻尾切断リアクション")]
+    [Tooltip("オンなら尻尾クリスタル破壊時はDownではなくBigHitリアクションを再生します。")]
+    public bool useBigHitOnTailBreak = true;
+
+    [Tooltip("尻尾切断時に再生するBigHitアニメーション名です。Animator側のState名と完全一致させてください。")]
+    public string tailBreakBigHitAnim = "Big hit";
+
+    [Tooltip("尻尾切断時のBigHit硬直時間です。短くすると尻尾破壊が強すぎなくなります。")]
+    public float tailBreakBigHitDuration = 1.2f;
 
     [Tooltip("ダウン時に再生するパーティクルです。未設定なら何も再生されません。")]
     public ParticleSystem downParticle;
@@ -2735,7 +2748,7 @@ public class DragonAI : MonoBehaviour
 
         PlaySfx(downSfx);
 
-        yield return new WaitForSeconds(downDuration);
+        yield return new WaitForSeconds(GetHalfHPDownDuration());
 
         if (state == DragonState.Dead)
         {
@@ -2749,7 +2762,7 @@ public class DragonAI : MonoBehaviour
     {
         if (state == DragonState.Dead) return;
 
-        // ダウン中に尻尾切断が入った場合も、現在のダウンを一度止めて最初からやり直す。
+        // 尻尾切断が入ったら、現在の行動やダウンを止めてリアクションへ移る。
         StopAllCoroutines();
         aiLoopCoroutine = null;
         downRoutineCoroutine = null;
@@ -2758,7 +2771,44 @@ public class DragonAI : MonoBehaviour
         StopAllSpecialParticles();
         ResetAnimatorSpeedHard();
 
-        downRoutineCoroutine = StartCoroutine(DownRoutine());
+        if (useBigHitOnTailBreak)
+        {
+            downRoutineCoroutine = StartCoroutine(TailBreakBigHitRoutine());
+        }
+        else
+        {
+            downRoutineCoroutine = StartCoroutine(DownRoutine());
+        }
+    }
+
+    private IEnumerator TailBreakBigHitRoutine()
+    {
+        DisableAllHitboxes();
+        StopAllSpecialParticles();
+        ResetAnimatorSpeedHard();
+
+        isBusy = true;
+        state = DragonState.Down;
+
+        string animName = string.IsNullOrEmpty(tailBreakBigHitAnim) ? string.Empty : tailBreakBigHitAnim;
+        PlayAnimationFromStart(animName);
+
+        if (downParticle != null)
+        {
+            downParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            downParticle.Play();
+        }
+
+        PlaySfx(downSfx);
+
+        yield return new WaitForSeconds(Mathf.Max(0.05f, tailBreakBigHitDuration));
+
+        if (state == DragonState.Dead)
+        {
+            yield break;
+        }
+
+        ReturnFromDownToAI();
     }
 
     private IEnumerator DownRoutine()
@@ -2780,7 +2830,7 @@ public class DragonAI : MonoBehaviour
 
         PlaySfx(downSfx);
 
-        yield return new WaitForSeconds(downDuration);
+        yield return new WaitForSeconds(GetHalfHPDownDuration());
 
         if (state == DragonState.Dead)
         {
@@ -2872,6 +2922,23 @@ public class DragonAI : MonoBehaviour
         ResetAnimatorSpeedHard();
     }
 
+    public void SetDifficultyHalfHPDownDuration(float duration)
+    {
+        halfHPDownDuration = Mathf.Max(0.05f, duration);
+    }
+
+    public void SetTailBreakBigHitSettings(bool useBigHit, string bigHitAnimName, float duration)
+    {
+        useBigHitOnTailBreak = useBigHit;
+
+        if (!string.IsNullOrEmpty(bigHitAnimName))
+        {
+            tailBreakBigHitAnim = bigHitAnimName;
+        }
+
+        tailBreakBigHitDuration = Mathf.Max(0.05f, duration);
+    }
+
     public void SetDifficultyActionProfile(float actionSpeedMultiplier)
     {
         actionSpeedMultiplier = Mathf.Max(0.05f, actionSpeedMultiplier);
@@ -2880,6 +2947,16 @@ public class DragonAI : MonoBehaviour
             actionSpeedMultiplier,
             actionSpeedMultiplier
         );
+    }
+
+    private float GetHalfHPDownDuration()
+    {
+        if (halfHPDownDuration > 0f)
+        {
+            return halfHPDownDuration;
+        }
+
+        return Mathf.Max(0.05f, downDuration);
     }
 
     private float ApplyDifficultyActionInterval(float interval)

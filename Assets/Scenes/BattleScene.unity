@@ -1154,7 +1154,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &67639263
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4226,7 +4226,11 @@ MonoBehaviour:
     m_Bits: 256
   roarParticle: {fileID: 0}
   roarSfx: {fileID: 0}
-  downDuration: 8
+  halfHPDownDuration: 5.5
+  downDuration: 5
+  useBigHitOnTailBreak: 1
+  tailBreakBigHitAnim: Big hit
+  tailBreakBigHitDuration: 1.2
   downParticle: {fileID: 0}
   deathParticle: {fileID: 0}
   downSfx: {fileID: 0}
@@ -21410,24 +21414,32 @@ MonoBehaviour:
   dragonHP: {fileID: 78498549}
   dragonAI: {fileID: 356980422}
   dragonRoot: {fileID: 1681397579}
+  useBigHitOnTailBreak: 1
+  tailBreakBigHitAnimName: Big hit
   easyDragonHpMultiplier: 0.6
   easyCrystalHpMultiplier: 0.6
   easyActionIntervalMultiplier: 1.15
   easyMoveSpeedMultiplier: 0.9
   easyAnimationSpeedMultiplier: 0.9
   easyDragonScaleMultiplier: 0.8
+  easyHalfHPDownDuration: 8
+  easyTailBreakBigHitDuration: 1
   normalDragonHpMultiplier: 0.8
   normalCrystalHpMultiplier: 0.9
   normalActionIntervalMultiplier: 1
   normalMoveSpeedMultiplier: 1
   normalAnimationSpeedMultiplier: 1
   normalDragonScaleMultiplier: 1
+  normalHalfHPDownDuration: 8
+  normalTailBreakBigHitDuration: 1.2
   hardDragonHpMultiplier: 1.5
   hardCrystalHpMultiplier: 1.5
   hardActionIntervalMultiplier: 0.85
   hardMoveSpeedMultiplier: 1.1
   hardAnimationSpeedMultiplier: 1.1
   hardDragonScaleMultiplier: 1.1
+  hardHalfHPDownDuration: 5
+  hardTailBreakBigHitDuration: 1
 --- !u!4 &658696243
 Transform:
   m_ObjectHideFlags: 0
@@ -31015,14 +31027,41 @@ MonoBehaviour:
   deathPenaltyText: {fileID: 1002429371}
   finalScoreText: {fileID: 139783534}
   rankText: {fileID: 329226134}
-  startScore: 12000
-  scoreDecreasePerSecond: 36
-  crystalBreakBonus: 500
-  deathPenalty: 500
+  easySetting:
+    difficulty: 0
+    startScore: 9600
+    scoreDecreasePerSecond: 35
+    crystalBreakBonus: 500
+    deathPenalty: 0
+    sRankScore: 9000
+    aRankScore: 8500
+    bRankScore: 7000
+    cRankScore: 4000
+  normalSetting:
+    difficulty: 1
+    startScore: 12000
+    scoreDecreasePerSecond: 36
+    crystalBreakBonus: 500
+    deathPenalty: 300
+    sRankScore: 10700
+    aRankScore: 8000
+    bRankScore: 6000
+    cRankScore: 3000
+  hardSetting:
+    difficulty: 2
+    startScore: 14400
+    scoreDecreasePerSecond: 44
+    crystalBreakBonus: 500
+    deathPenalty: 1000
+    sRankScore: 12250
+    aRankScore: 10000
+    bRankScore: 7500
+    cRankScore: 4500
   showDelay: 0.35
   typeInterval: 0.03
   rankTypeInterval: 0.08
   countDuration: 0.8
+  showDifficultyInConsole: 1
 --- !u!4 &1160423106
 Transform:
   m_ObjectHideFlags: 0
@@ -33280,7 +33319,7 @@ MonoBehaviour:
   lockOnMarkerSmoothTime: 0.04
   lockOnMarkerPullTowardCamera: 0.8
   tryMakeMarkerVisibleThroughDragon: 1
-  lockOnMarkerSortingOrder: 5000
+  lockOnMarkerSortingOrder: 8000
   enableCameraShake: 1
   shakeTarget: {fileID: 426628364}
   defaultShakeDuration: 0.25
@@ -57116,7 +57155,7 @@ PrefabInstance:
       objectReference: {fileID: 1036172109}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: maxHP
-      value: 1
+      value: 2200
       objectReference: {fileID: 0}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: isCrystalBroken
@@ -57124,7 +57163,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: maxTailCrystalHP
-      value: 100
+      value: 400
       objectReference: {fileID: 0}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: tailSeverController

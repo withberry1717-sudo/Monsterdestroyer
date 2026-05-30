@@ -18,17 +18,92 @@ public class ScoreManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI finalScoreText;
     [SerializeField] private TextMeshProUGUI rankText;
 
-    [Header("スコア設定")]
-    [SerializeField] private int startScore = 11200;
-    [SerializeField] private float scoreDecreasePerSecond = 33f;
-    [SerializeField] private int crystalBreakBonus = 1500;
-    [SerializeField] private int deathPenalty = 1000;
+    [System.Serializable]
+    public class DifficultyScoreSetting
+    {
+        [Header("難易度")]
+        public QuestDifficultyImageSelector.Difficulty difficulty;
+
+        [Header("基本スコア")]
+        [Tooltip("ゲーム開始時のスコア")]
+        public int startScore = 12000;
+
+        [Tooltip("1秒ごとに減るスコア")]
+        public float scoreDecreasePerSecond = 36f;
+
+        [Tooltip("尻尾・結晶破壊ボーナス")]
+        public int crystalBreakBonus = 500;
+
+        [Tooltip("1回死亡ごとのペナルティ")]
+        public int deathPenalty = 300;
+
+        [Header("ランクしきい値")]
+        [Tooltip("このスコア以上ならS")]
+        public int sRankScore = 10000;
+
+        [Tooltip("このスコア以上ならA")]
+        public int aRankScore = 8000;
+
+        [Tooltip("このスコア以上ならB")]
+        public int bRankScore = 6000;
+
+        [Tooltip("このスコア以上ならC")]
+        public int cRankScore = 4000;
+    }
+
+    [Header("難易度別スコア設定")]
+    [SerializeField]
+    private DifficultyScoreSetting easySetting = new DifficultyScoreSetting
+    {
+        difficulty = QuestDifficultyImageSelector.Difficulty.Easy,
+        startScore = 9600,
+        scoreDecreasePerSecond = 24f,
+        crystalBreakBonus = 500,
+        deathPenalty = 0,
+        sRankScore = 8500,
+        aRankScore = 7200,
+        bRankScore = 5600,
+        cRankScore = 4000
+    };
+
+    [SerializeField]
+    private DifficultyScoreSetting normalSetting = new DifficultyScoreSetting
+    {
+        difficulty = QuestDifficultyImageSelector.Difficulty.Normal,
+        startScore = 12000,
+        scoreDecreasePerSecond = 36f,
+        crystalBreakBonus = 500,
+        deathPenalty = 300,
+        sRankScore = 10000,
+        aRankScore = 8000,
+        bRankScore = 6000,
+        cRankScore = 4000
+    };
+
+    [SerializeField]
+    private DifficultyScoreSetting hardSetting = new DifficultyScoreSetting
+    {
+        difficulty = QuestDifficultyImageSelector.Difficulty.Hard,
+        startScore = 14400,
+        scoreDecreasePerSecond = 44f,
+        crystalBreakBonus = 500,
+        deathPenalty = 1000,
+        sRankScore = 12000,
+        aRankScore = 9500,
+        bRankScore = 7000,
+        cRankScore = 4500
+    };
 
     [Header("演出設定")]
     [SerializeField] private float showDelay = 0.35f;
     [SerializeField] private float typeInterval = 0.03f;
     [SerializeField] private float rankTypeInterval = 0.08f;
     [SerializeField] private float countDuration = 0.8f;
+
+    [Header("デバッグ")]
+    [SerializeField] private bool showDifficultyInConsole = true;
+
+    private DifficultyScoreSetting currentSetting;
 
     private int partBonus = 0;
     private int deathCount = 0;
@@ -39,6 +114,8 @@ public class ScoreManager : MonoBehaviour
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+
+        ApplyDifficultyScoreSetting();
     }
 
     void Start()
@@ -55,12 +132,48 @@ public class ScoreManager : MonoBehaviour
         }
     }
 
+    private void ApplyDifficultyScoreSetting()
+    {
+        QuestDifficultyImageSelector.Difficulty difficulty =
+            QuestDifficultyImageSelector.LoadSavedDifficulty();
+
+        switch (difficulty)
+        {
+            case QuestDifficultyImageSelector.Difficulty.Easy:
+                currentSetting = easySetting;
+                break;
+
+            case QuestDifficultyImageSelector.Difficulty.Normal:
+                currentSetting = normalSetting;
+                break;
+
+            case QuestDifficultyImageSelector.Difficulty.Hard:
+                currentSetting = hardSetting;
+                break;
+
+            default:
+                currentSetting = normalSetting;
+                break;
+        }
+
+        if (showDifficultyInConsole && currentSetting != null)
+        {
+            Debug.Log(
+                "Score Difficulty Applied: " + currentSetting.difficulty +
+                " / StartScore: " + currentSetting.startScore +
+                " / DecreasePerSecond: " + currentSetting.scoreDecreasePerSecond +
+                " / DeathPenalty: " + currentSetting.deathPenalty +
+                " / CrystalBonus: " + currentSetting.crystalBreakBonus
+            );
+        }
+    }
+
     public void AddCrystalBreakBonus()
     {
         if (crystalBonusAdded) return;
 
         crystalBonusAdded = true;
-        partBonus += crystalBreakBonus;
+        partBonus += GetCrystalBreakBonus();
         UpdateInGameScoreUI();
     }
 
@@ -75,10 +188,10 @@ public class ScoreManager : MonoBehaviour
         float time = GameManager.Instance != null ? GameManager.Instance.CurrentTime : 0f;
 
         int score =
-            startScore
-            - Mathf.RoundToInt(time * scoreDecreasePerSecond)
+            GetStartScore()
+            - Mathf.RoundToInt(time * GetScoreDecreasePerSecond())
             + partBonus
-            - (deathCount * deathPenalty);
+            - (deathCount * GetDeathPenalty());
 
         return Mathf.Max(0, score);
     }
@@ -86,10 +199,10 @@ public class ScoreManager : MonoBehaviour
     public int GetFinalScore(float clearTime)
     {
         int score =
-            startScore
-            - Mathf.RoundToInt(clearTime * scoreDecreasePerSecond)
+            GetStartScore()
+            - Mathf.RoundToInt(clearTime * GetScoreDecreasePerSecond())
             + partBonus
-            - (deathCount * deathPenalty);
+            - (deathCount * GetDeathPenalty());
 
         return Mathf.Max(0, score);
     }
@@ -98,10 +211,10 @@ public class ScoreManager : MonoBehaviour
     {
         int score = GetFinalScore(clearTime);
 
-        if (score >= 10000) return "S";
-        if (score >= 8000) return "A";
-        if (score >= 6000) return "B";
-        if (score >= 4000) return "C";
+        if (score >= GetSRankScore()) return "S";
+        if (score >= GetARankScore()) return "A";
+        if (score >= GetBRankScore()) return "B";
+        if (score >= GetCRankScore()) return "C";
         return "D";
     }
 
@@ -117,8 +230,8 @@ public class ScoreManager : MonoBehaviour
     {
         ResetClearResultUI();
 
-        int timePenalty = Mathf.RoundToInt(clearTime * scoreDecreasePerSecond);
-        int deathTotalPenalty = deathCount * deathPenalty;
+        int timePenalty = Mathf.RoundToInt(clearTime * GetScoreDecreasePerSecond());
+        int deathTotalPenalty = deathCount * GetDeathPenalty();
         int finalScore = GetFinalScore(clearTime);
         string rank = GetRank(clearTime);
 
@@ -134,7 +247,7 @@ public class ScoreManager : MonoBehaviour
 
         yield return StartCoroutine(TypeText(
             startScoreText,
-            "Start Score     " + startScore,
+            "Start Score     " + GetStartScore(),
             typeInterval
         ));
 
@@ -276,5 +389,45 @@ public class ScoreManager : MonoBehaviour
         int seconds = Mathf.FloorToInt(time % 60f);
 
         return minutes.ToString("00") + ":" + seconds.ToString("00");
+    }
+
+    private int GetStartScore()
+    {
+        return currentSetting != null ? currentSetting.startScore : 12000;
+    }
+
+    private float GetScoreDecreasePerSecond()
+    {
+        return currentSetting != null ? currentSetting.scoreDecreasePerSecond : 36f;
+    }
+
+    private int GetCrystalBreakBonus()
+    {
+        return currentSetting != null ? currentSetting.crystalBreakBonus : 500;
+    }
+
+    private int GetDeathPenalty()
+    {
+        return currentSetting != null ? currentSetting.deathPenalty : 300;
+    }
+
+    private int GetSRankScore()
+    {
+        return currentSetting != null ? currentSetting.sRankScore : 10000;
+    }
+
+    private int GetARankScore()
+    {
+        return currentSetting != null ? currentSetting.aRankScore : 8000;
+    }
+
+    private int GetBRankScore()
+    {
+        return currentSetting != null ? currentSetting.bRankScore : 6000;
+    }
+
+    private int GetCRankScore()
+    {
+        return currentSetting != null ? currentSetting.cRankScore : 4000;
     }
 }

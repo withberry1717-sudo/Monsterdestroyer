@@ -9,13 +9,16 @@ namespace NaughtyCharacter
         public static SafePlayerCamera Instance;
 
         [System.Serializable]
-        public class DifficultyMonsterIconData
+        public class DifficultyMonsterUIData
         {
             [Header("難易度")]
             public QuestDifficultyImageSelector.Difficulty difficulty;
 
-            [Header("この難易度で表示するモンスターアイコン")]
+            [Header("この難易度で表示するモンスターアイコン画像")]
             public Sprite monsterIconSprite;
+
+            [Header("この難易度で表示するモンスター名画像")]
+            public Sprite monsterNameSprite;
 
             [Header("この難易度で使うロックオン重ね画像。共通なら全難易度に同じ画像を入れてOK")]
             public Sprite lockOnOverlaySprite;
@@ -117,18 +120,21 @@ namespace NaughtyCharacter
         [Tooltip("マーカーの描画順。大きいほど手前に出やすい")]
         [SerializeField] private int lockOnMarkerSortingOrder = 5000;
 
-        [Header("Monster Icon UI")]
+        [Header("Monster Icon / Name UI")]
         [Tooltip("画面上に表示するモンスターアイコンImage")]
         [SerializeField] private Image monsterIconImage;
+
+        [Tooltip("画面上に表示するモンスター名Image。難易度別に画像を切り替えます")]
+        [SerializeField] private Image monsterNameImage;
 
         [Tooltip("ロックオン中だけモンスターアイコンの上に重ねる白いロックオン画像")]
         [SerializeField] private Image monsterLockOnOverlayImage;
 
-        [Tooltip("ONならタイトルで選んだ難易度に応じてモンスターアイコン画像を切り替える")]
-        [SerializeField] private bool useDifficultyMonsterIcon = true;
+        [Tooltip("ONならタイトルで選んだ難易度に応じてモンスターアイコン・名前画像を切り替える")]
+        [SerializeField] private bool useDifficultyMonsterUI = true;
 
-        [Tooltip("難易度ごとのモンスターアイコン画像")]
-        [SerializeField] private DifficultyMonsterIconData[] difficultyMonsterIcons;
+        [Tooltip("難易度ごとのモンスターアイコン・名前画像")]
+        [SerializeField] private DifficultyMonsterUIData[] difficultyMonsterUIs;
 
         [Tooltip("モンスターアイコン上のロックオン表示を使うか")]
         [SerializeField] private bool enableMonsterIconLockOnOverlay = true;
@@ -202,8 +208,8 @@ namespace NaughtyCharacter
             currentPitch = Pivot != null ? NormalizeAngle(Pivot.localEulerAngles.x) : 0f;
             targetPitch = currentPitch;
 
-            SetupMonsterIconUI();
-            ApplyDifficultyMonsterIcon();
+            SetupMonsterUI();
+            ApplyDifficultyMonsterUI();
         }
 
         private void LateUpdate()
@@ -232,11 +238,25 @@ namespace NaughtyCharacter
             }
         }
 
-        private void SetupMonsterIconUI()
+        private void SetupMonsterUI()
         {
+            if (monsterIconImage != null)
+            {
+                monsterIconImage.raycastTarget = false;
+                monsterIconImage.preserveAspect = true;
+            }
+
+            if (monsterNameImage != null)
+            {
+                monsterNameImage.raycastTarget = false;
+                monsterNameImage.preserveAspect = true;
+            }
+
             if (monsterLockOnOverlayImage != null)
             {
                 monsterOverlayBaseScale = monsterLockOnOverlayImage.transform.localScale;
+                monsterLockOnOverlayImage.raycastTarget = false;
+                monsterLockOnOverlayImage.preserveAspect = true;
                 monsterLockOnOverlayImage.transform.SetAsLastSibling();
 
                 if (hideMonsterOverlayWhenNotLocked)
@@ -244,41 +264,35 @@ namespace NaughtyCharacter
                     monsterLockOnOverlayImage.gameObject.SetActive(false);
                 }
             }
-
-            if (monsterIconImage != null)
-            {
-                monsterIconImage.raycastTarget = false;
-                monsterIconImage.preserveAspect = true;
-            }
-
-            if (monsterLockOnOverlayImage != null)
-            {
-                monsterLockOnOverlayImage.raycastTarget = false;
-                monsterLockOnOverlayImage.preserveAspect = true;
-            }
         }
 
-        private void ApplyDifficultyMonsterIcon()
+        private void ApplyDifficultyMonsterUI()
         {
-            if (!useDifficultyMonsterIcon) return;
-            if (monsterIconImage == null) return;
+            if (!useDifficultyMonsterUI) return;
 
             QuestDifficultyImageSelector.Difficulty difficulty =
                 QuestDifficultyImageSelector.LoadSavedDifficulty();
 
-            DifficultyMonsterIconData data = FindDifficultyMonsterIconData(difficulty);
+            DifficultyMonsterUIData data = FindDifficultyMonsterUIData(difficulty);
 
             if (data == null)
             {
-                Debug.LogWarning("SafePlayerCamera: 難易度に対応するモンスターアイコン設定がありません: " + difficulty);
+                Debug.LogWarning("SafePlayerCamera: 難易度に対応するモンスターUI設定がありません: " + difficulty);
                 return;
             }
 
-            if (data.monsterIconSprite != null)
+            if (monsterIconImage != null && data.monsterIconSprite != null)
             {
                 monsterIconImage.sprite = data.monsterIconSprite;
                 monsterIconImage.enabled = true;
                 monsterIconImage.preserveAspect = true;
+            }
+
+            if (monsterNameImage != null && data.monsterNameSprite != null)
+            {
+                monsterNameImage.sprite = data.monsterNameSprite;
+                monsterNameImage.enabled = true;
+                monsterNameImage.preserveAspect = true;
             }
 
             if (monsterLockOnOverlayImage != null && data.lockOnOverlaySprite != null)
@@ -287,21 +301,21 @@ namespace NaughtyCharacter
                 monsterLockOnOverlayImage.preserveAspect = true;
             }
 
-            Debug.Log("Monster Icon Applied: " + difficulty);
+            Debug.Log("Monster UI Applied: " + difficulty);
         }
 
-        private DifficultyMonsterIconData FindDifficultyMonsterIconData(QuestDifficultyImageSelector.Difficulty difficulty)
+        private DifficultyMonsterUIData FindDifficultyMonsterUIData(QuestDifficultyImageSelector.Difficulty difficulty)
         {
-            if (difficultyMonsterIcons == null || difficultyMonsterIcons.Length == 0)
+            if (difficultyMonsterUIs == null || difficultyMonsterUIs.Length == 0)
             {
                 return null;
             }
 
-            for (int i = 0; i < difficultyMonsterIcons.Length; i++)
+            for (int i = 0; i < difficultyMonsterUIs.Length; i++)
             {
-                if (difficultyMonsterIcons[i].difficulty == difficulty)
+                if (difficultyMonsterUIs[i].difficulty == difficulty)
                 {
-                    return difficultyMonsterIcons[i];
+                    return difficultyMonsterUIs[i];
                 }
             }
 

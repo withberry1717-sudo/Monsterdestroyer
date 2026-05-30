@@ -64,6 +64,13 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private Image blinkSlot1Fill;
         [SerializeField] private Image blinkSlot2Fill;
 
+        [Header("Charge Blink")]
+        [Tooltip("Combat側からONにされた時だけ、攻撃中でもブリンクを許可する")]
+        [SerializeField] private bool allowBlinkWhileAttacking = false;
+
+        [Tooltip("溜め中ブリンク距離倍率。0.5なら通常の半分")]
+        [SerializeField] private float attackBlinkDistanceMultiplier = 0.5f;
+
         [Header("Dragon Stagger")]
         [SerializeField] private bool canBeStaggeredByDragon = true;
         [SerializeField] private float staggerStopPower = 0.15f;
@@ -76,10 +83,6 @@ namespace Retro.ThirdPersonCharacter
 
         private bool isDashing = false;
         private float dashAttackWindowTimer = 0f;
-
-        [Header("Charge Blink")]
-        [Tooltip("Combat側からONにされた時だけ、攻撃中でもブリンクを許可する")]
-        [SerializeField] private bool allowBlinkWhileAttacking = false;
 
         private bool isDragonStaggered = false;
         private Coroutine dragonStaggerRoutine;
@@ -149,7 +152,8 @@ namespace Retro.ThirdPersonCharacter
             bool allowTurn,
             float moveMultiplier,
             float turnMultiplier,
-            bool allowBlink
+            bool allowBlink,
+            float blinkDistanceMultiplier
         )
         {
             if (isDragonStaggered) return;
@@ -169,6 +173,25 @@ namespace Retro.ThirdPersonCharacter
             attackTurnSpeedMultiplier = allowTurn ? Mathf.Max(0f, turnMultiplier) : 0f;
 
             allowBlinkWhileAttacking = allowBlink;
+            attackBlinkDistanceMultiplier = Mathf.Clamp(blinkDistanceMultiplier, 0.05f, 1f);
+        }
+
+        public void BeginChargeAttackMove(
+            bool allowMove,
+            bool allowTurn,
+            float moveMultiplier,
+            float turnMultiplier,
+            bool allowBlink
+        )
+        {
+            BeginChargeAttackMove(
+                allowMove,
+                allowTurn,
+                moveMultiplier,
+                turnMultiplier,
+                allowBlink,
+                attackBlinkDistanceMultiplier
+            );
         }
 
         public void BeginChargeAttackMove(
@@ -183,7 +206,8 @@ namespace Retro.ThirdPersonCharacter
                 allowTurn,
                 moveMultiplier,
                 turnMultiplier,
-                false
+                false,
+                attackBlinkDistanceMultiplier
             );
         }
 
@@ -206,6 +230,7 @@ namespace Retro.ThirdPersonCharacter
             attackTurnSpeedMultiplier = defaultAttackTurnSpeedMultiplier;
 
             allowBlinkWhileAttacking = false;
+            attackBlinkDistanceMultiplier = 0.5f;
         }
 
         public void ForceStopTrail()
@@ -479,6 +504,13 @@ namespace Retro.ThirdPersonCharacter
             isDashing = true;
             dashAttackWindowTimer = dashAttackInputWindow;
 
+            float currentDashSpeed = dashSpeed;
+
+            if (isAttacking && allowBlinkWhileAttacking)
+            {
+                currentDashSpeed *= attackBlinkDistanceMultiplier;
+            }
+
             if (_trailRenderer != null)
             {
                 _trailRenderer.Clear();
@@ -508,7 +540,7 @@ namespace Retro.ThirdPersonCharacter
                     break;
                 }
 
-                _characterController.Move(dashDir * dashSpeed * Time.deltaTime);
+                _characterController.Move(dashDir * currentDashSpeed * Time.deltaTime);
                 yield return null;
             }
 

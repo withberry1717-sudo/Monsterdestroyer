@@ -12,8 +12,11 @@ namespace Retro.ThirdPersonCharacter
             None,
             Light1,
             Light2,
+
             Heavy1,
+            Heavy2,
             HeavyLight,
+
             ChargedHeavyDone,
             ChargedLight1,
             ChargedLight2,
@@ -41,6 +44,7 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private Vector3 chargeEffectLocalPosition = new Vector3(0f, 1.2f, 0.3f);
 
         private bool chargeReadyEffectPlayed = false;
+        private bool maxChargeEffectPlayed = false;
 
         [Header("Attack Forward Movement")]
         [SerializeField] private bool useAttackForwardMove = true;
@@ -50,6 +54,7 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private float heavyComboLightForwardDistance = 0.42f;
         [SerializeField] private float dashAttackForwardDistance = 0.35f;
         [SerializeField] private float quickHeavyForwardDistance = 0.55f;
+        [SerializeField] private float quickHeavySecondForwardDistance = 0.60f;
         [SerializeField] private float chargedHeavyForwardDistance = 0.85f;
         [SerializeField] private float comboHeavyFinisherForwardDistance = 0.85f;
 
@@ -72,8 +77,8 @@ namespace Retro.ThirdPersonCharacter
         [Header("Cooldown")]
         [SerializeField] private float comboFinishCooldown = 0.32f;
 
-        [Tooltip("強攻撃単押しを連打できないようにするクールタイム。短め")]
-        [SerializeField] private float neutralHeavyCooldown = 0.18f;
+        [Tooltip("強攻撃単押し2連後やコンボ締め後の強攻撃クールタイム")]
+        [SerializeField] private float neutralHeavyCooldown = 0.22f;
 
         [Header("Dash Attack")]
         [SerializeField] private float dashAttackStart = 0.08f;
@@ -88,15 +93,28 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private float heavyHoldToStartChargeTime = 0.22f;
 
         [SerializeField] private float quickHeavyAnimationStartNormalized = 0.28f;
+        [SerializeField] private float quickHeavySecondAnimationStartNormalized = 0.23f;
+
         [SerializeField] private float quickHeavyAnimationSpeed = 1.35f;
+        [SerializeField] private float quickHeavySecondAnimationSpeed = 1.4f;
+
         [SerializeField] private float quickHeavyStart = 0.08f;
         [SerializeField] private float quickHeavyEnd = 0.40f;
 
-        [Tooltip("単押し強。基本倍率は上げない")]
-        [SerializeField] private float quickHeavyDamageMultiplier = 1.0f;
+        [SerializeField] private float quickHeavySecondStart = 0.07f;
+        [SerializeField] private float quickHeavySecondEnd = 0.42f;
 
-        [Tooltip("単発強の硬直。短めにして強弱強がつながりやすくする")]
-        [SerializeField] private float quickHeavyEndDelay = 0.55f;
+        [Tooltip("単発強1発目。連打可能にする代わりに低め")]
+        [SerializeField] private float quickHeavyDamageMultiplier = 0.85f;
+
+        [Tooltip("単発強2発目。少しだけ上げるが、コンボ締めより弱い")]
+        [SerializeField] private float quickHeavySecondDamageMultiplier = 0.90f;
+
+        [Tooltip("単発強1発目の硬直。2発目につながりやすいよう短め")]
+        [SerializeField] private float quickHeavyEndDelay = 0.45f;
+
+        [Tooltip("単発強2発目の硬直。ここで連打を止める")]
+        [SerializeField] private float quickHeavySecondEndDelay = 0.65f;
 
         [Header("Heavy Combo Finisher")]
         [SerializeField] private float heavyFinisherAnimationStartNormalized = 0.18f;
@@ -149,6 +167,9 @@ namespace Retro.ThirdPersonCharacter
         [Tooltip("ONなら溜め中でもブリンクできる")]
         [SerializeField] private bool allowBlinkWhileCharging = true;
 
+        [Tooltip("溜め中ブリンクの距離倍率。0.5なら通常の半分")]
+        [SerializeField] private float chargeBlinkDistanceMultiplier = 0.5f;
+
         [Header("Combo")]
         [SerializeField] private float comboResetTime = 1.0f;
         [SerializeField] private float comboInputBufferTime = 0.35f;
@@ -165,12 +186,13 @@ namespace Retro.ThirdPersonCharacter
         private float heavyDecisionTimer = 0f;
 
         private bool isChargingHeavy = false;
-        private float chargeTimer = 0f;
+
+        private float chargeHeldTimer = 0f;
+        private float chargePowerTimer = 0f;
 
         private bool isComboCooldown = false;
         private bool isNeutralHeavyCooldown = false;
 
-        private Coroutine currentAttackRoutine;
         private Coroutine comboCooldownRoutine;
         private Coroutine neutralHeavyCooldownRoutine;
 
@@ -260,8 +282,6 @@ namespace Retro.ThirdPersonCharacter
                 {
                     Debug.Log("このタイミングでは強攻撃に派生できません");
                 }
-
-                return;
             }
         }
 
@@ -276,6 +296,11 @@ namespace Retro.ThirdPersonCharacter
 
             if (comboTimer <= 0f)
             {
+                if (comboStage == ComboStage.Heavy1)
+                {
+                    StartNeutralHeavyCooldown();
+                }
+
                 ResetCombo();
             }
         }
@@ -355,6 +380,7 @@ namespace Retro.ThirdPersonCharacter
             switch (comboStage)
             {
                 case ComboStage.Light2:
+                case ComboStage.Heavy1:
                 case ComboStage.HeavyLight:
                 case ComboStage.ChargedHeavyDone:
                 case ComboStage.ChargedLight2:
@@ -418,9 +444,12 @@ namespace Retro.ThirdPersonCharacter
         private void StartHeavyCharge(float initialChargeTime = 0f)
         {
             isChargingHeavy = true;
-            chargeTimer = Mathf.Max(0f, initialChargeTime);
+            chargeHeldTimer = Mathf.Max(0f, initialChargeTime);
+            chargePowerTimer = Mathf.Min(chargeHeldTimer, maxChargeTime);
+
             AttackInProgress = true;
             chargeReadyEffectPlayed = false;
+            maxChargeEffectPlayed = false;
 
             if (_movement != null)
             {
@@ -433,7 +462,8 @@ namespace Retro.ThirdPersonCharacter
                         allowTurnWhileCharging,
                         chargeMoveMultiplier,
                         chargeTurnMultiplier,
-                        allowBlinkWhileCharging
+                        allowBlinkWhileCharging,
+                        chargeBlinkDistanceMultiplier
                     );
                 }
                 else
@@ -456,17 +486,10 @@ namespace Retro.ThirdPersonCharacter
 
         private void UpdateHeavyCharge()
         {
-            if (chargeTimer < maxChargeTime)
-            {
-                chargeTimer += Time.deltaTime;
+            chargeHeldTimer += Time.deltaTime;
+            chargePowerTimer = Mathf.Min(chargeHeldTimer, maxChargeTime);
 
-                if (chargeTimer > maxChargeTime)
-                {
-                    chargeTimer = maxChargeTime;
-                }
-            }
-
-            if (!chargeReadyEffectPlayed && chargeTimer >= chargeRequiredTime)
+            if (!chargeReadyEffectPlayed && chargeHeldTimer >= chargeRequiredTime)
             {
                 chargeReadyEffectPlayed = true;
 
@@ -475,7 +498,19 @@ namespace Retro.ThirdPersonCharacter
                     chargeReadyEffect.Play();
                 }
 
-                Debug.Log("溜め完了！");
+                Debug.Log("溜め攻撃可能！");
+            }
+
+            if (!maxChargeEffectPlayed && chargeHeldTimer >= maxChargeTime)
+            {
+                maxChargeEffectPlayed = true;
+
+                if (chargeReadyEffect != null)
+                {
+                    chargeReadyEffect.Play();
+                }
+
+                Debug.Log("最大溜め完了！");
             }
 
             if (_animator != null)
@@ -494,7 +529,7 @@ namespace Retro.ThirdPersonCharacter
 
             if (_playerInput.SpecialAttackReleased)
             {
-                bool isCharged = chargeTimer >= chargeRequiredTime;
+                bool isCharged = chargeHeldTimer >= chargeRequiredTime;
 
                 isChargingHeavy = false;
 
@@ -512,7 +547,7 @@ namespace Retro.ThirdPersonCharacter
 
                 if (isCharged)
                 {
-                    StartChargedHeavyAttack(chargeTimer);
+                    StartChargedHeavyAttack(chargePowerTimer);
                 }
                 else
                 {
@@ -585,7 +620,7 @@ namespace Retro.ThirdPersonCharacter
 
             PlayAttackAnimation(attackStateName, 0f);
 
-            currentAttackRoutine = StartCoroutine(
+            StartCoroutine(
                 AttackRoutine(
                     daggerHitbox,
                     start,
@@ -614,7 +649,7 @@ namespace Retro.ThirdPersonCharacter
 
             PlayAttackAnimation(attackStateName, 0f);
 
-            currentAttackRoutine = StartCoroutine(
+            StartCoroutine(
                 AttackRoutine(
                     daggerHitbox,
                     dashAttackStart,
@@ -633,18 +668,19 @@ namespace Retro.ThirdPersonCharacter
             comboStage = ComboStage.Heavy1;
             RefreshComboTimer();
 
-            Debug.Log("強攻撃 単押し / 強弱強の1段目");
+            Debug.Log("強攻撃 単押し1発目");
 
             if (_movement != null)
             {
                 _movement.isAttacking = true;
                 _movement.canMoveWhileAttacking = false;
+                _movement.SetAllowBlinkWhileAttacking(false);
                 StartAttackForwardMove(quickHeavyForwardDistance);
             }
 
             PlayAttackAnimation(abilityStateName, quickHeavyAnimationStartNormalized);
 
-            currentAttackRoutine = StartCoroutine(
+            StartCoroutine(
                 AttackRoutine(
                     swordHitbox,
                     quickHeavyStart,
@@ -653,6 +689,37 @@ namespace Retro.ThirdPersonCharacter
                     quickHeavyEndDelay,
                     quickHeavyAnimationSpeed,
                     false,
+                    false
+                )
+            );
+        }
+
+        private void StartSecondQuickHeavyAttack()
+        {
+            comboStage = ComboStage.Heavy2;
+            RefreshComboTimer();
+
+            Debug.Log("強攻撃 単押し2発目");
+
+            if (_movement != null)
+            {
+                _movement.isAttacking = true;
+                _movement.canMoveWhileAttacking = false;
+                _movement.SetAllowBlinkWhileAttacking(false);
+                StartAttackForwardMove(quickHeavySecondForwardDistance);
+            }
+
+            PlayAttackAnimation(abilityStateName, quickHeavySecondAnimationStartNormalized);
+
+            StartCoroutine(
+                AttackRoutine(
+                    swordHitbox,
+                    quickHeavySecondStart,
+                    quickHeavySecondEnd,
+                    quickHeavySecondDamageMultiplier,
+                    quickHeavySecondEndDelay,
+                    quickHeavySecondAnimationSpeed,
+                    true,
                     true
                 )
             );
@@ -664,6 +731,10 @@ namespace Retro.ThirdPersonCharacter
             {
                 case ComboStage.Light2:
                     StartHeavyFinisher("弱弱強", weakWeakHeavyFinisherMultiplier);
+                    break;
+
+                case ComboStage.Heavy1:
+                    StartSecondQuickHeavyAttack();
                     break;
 
                 case ComboStage.HeavyLight:
@@ -695,12 +766,13 @@ namespace Retro.ThirdPersonCharacter
             {
                 _movement.isAttacking = true;
                 _movement.canMoveWhileAttacking = false;
+                _movement.SetAllowBlinkWhileAttacking(false);
                 StartAttackForwardMove(quickHeavyForwardDistance);
             }
 
             PlayAttackAnimation(abilityStateName, quickHeavyAnimationStartNormalized);
 
-            currentAttackRoutine = StartCoroutine(
+            StartCoroutine(
                 AttackRoutine(
                     swordHitbox,
                     quickHeavyStart,
@@ -724,12 +796,13 @@ namespace Retro.ThirdPersonCharacter
             {
                 _movement.isAttacking = true;
                 _movement.canMoveWhileAttacking = false;
+                _movement.SetAllowBlinkWhileAttacking(false);
                 StartAttackForwardMove(comboHeavyFinisherForwardDistance);
             }
 
             PlayAttackAnimation(abilityStateName, heavyFinisherAnimationStartNormalized);
 
-            currentAttackRoutine = StartCoroutine(
+            StartCoroutine(
                 AttackRoutine(
                     swordHitbox,
                     heavyFinisherStart,
@@ -743,9 +816,9 @@ namespace Retro.ThirdPersonCharacter
             );
         }
 
-        private void StartChargedHeavyAttack(float finalChargeTime)
+        private void StartChargedHeavyAttack(float finalChargePowerTime)
         {
-            Debug.Log("溜め強攻撃 Charge: " + finalChargeTime);
+            Debug.Log("溜め強攻撃 PowerTime: " + finalChargePowerTime);
 
             comboStage = ComboStage.ChargedHeavyDone;
             RefreshComboTimer();
@@ -758,12 +831,12 @@ namespace Retro.ThirdPersonCharacter
                 StartAttackForwardMove(chargedHeavyForwardDistance);
             }
 
-            float chargeRate = Mathf.Clamp01(finalChargeTime / maxChargeTime);
+            float chargeRate = Mathf.Clamp01(finalChargePowerTime / maxChargeTime);
             float multiplier = Mathf.Lerp(chargedHeavyMinMultiplier, chargedHeavyMaxMultiplier, chargeRate);
 
             PlayAttackAnimation(abilityStateName, chargeHoldNormalizedTime);
 
-            currentAttackRoutine = StartCoroutine(
+            StartCoroutine(
                 AttackRoutine(
                     swordHitbox,
                     chargedAttackStartDelay,
@@ -868,6 +941,8 @@ namespace Retro.ThirdPersonCharacter
             isChargingHeavy = false;
             isWaitingHeavyDecision = false;
             heavyDecisionTimer = 0f;
+            chargeHeldTimer = 0f;
+            chargePowerTimer = 0f;
 
             StopChargeEffects();
 
@@ -960,7 +1035,6 @@ namespace Retro.ThirdPersonCharacter
                 bufferedHeavy = false;
 
                 StartHeavyFromComboInput();
-                return;
             }
         }
 
@@ -990,6 +1064,7 @@ namespace Retro.ThirdPersonCharacter
             }
 
             chargeReadyEffectPlayed = false;
+            maxChargeEffectPlayed = false;
         }
 
         private void CreateChargeEffectsIfNeeded()

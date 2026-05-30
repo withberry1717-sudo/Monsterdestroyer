@@ -81,6 +81,10 @@ namespace Retro.ThirdPersonCharacter
         private Coroutine dragonStaggerRoutine;
         private Coroutine attackForwardMoveRoutine;
 
+        private bool chargeAttackMoveOverrideActive = false;
+        private float defaultAttackMoveSpeedMultiplier;
+        private float defaultAttackTurnSpeedMultiplier;
+
         public bool IsDashing => isDashing;
         public bool CanDashAttack => isDashing || dashAttackWindowTimer > 0f;
         public bool IsDragonStaggered => isDragonStaggered;
@@ -103,6 +107,9 @@ namespace Retro.ThirdPersonCharacter
                 _cameraTransform = Camera.main.transform;
             }
 
+            defaultAttackMoveSpeedMultiplier = attackMoveSpeedMultiplier;
+            defaultAttackTurnSpeedMultiplier = attackTurnSpeedMultiplier;
+
             currentBlinkCharges = maxBlinkCharges;
             blinkRecoverTimer = 0f;
             blinkRecoverDelayTimer = 0f;
@@ -121,6 +128,7 @@ namespace Retro.ThirdPersonCharacter
         {
             ForceStopTrail();
             StopAttackForwardMove();
+            EndChargeAttackMove();
 
             if (dragonStaggerRoutine != null)
             {
@@ -129,6 +137,40 @@ namespace Retro.ThirdPersonCharacter
             }
 
             isDragonStaggered = false;
+        }
+
+        public void BeginChargeAttackMove(
+            bool allowMove,
+            bool allowTurn,
+            float moveMultiplier,
+            float turnMultiplier
+        )
+        {
+            if (isDragonStaggered) return;
+
+            if (!chargeAttackMoveOverrideActive)
+            {
+                defaultAttackMoveSpeedMultiplier = attackMoveSpeedMultiplier;
+                defaultAttackTurnSpeedMultiplier = attackTurnSpeedMultiplier;
+            }
+
+            chargeAttackMoveOverrideActive = true;
+
+            isAttacking = true;
+            canMoveWhileAttacking = allowMove || allowTurn;
+
+            attackMoveSpeedMultiplier = allowMove ? Mathf.Max(0f, moveMultiplier) : 0f;
+            attackTurnSpeedMultiplier = allowTurn ? Mathf.Max(0f, turnMultiplier) : 0f;
+        }
+
+        public void EndChargeAttackMove()
+        {
+            if (!chargeAttackMoveOverrideActive) return;
+
+            chargeAttackMoveOverrideActive = false;
+
+            attackMoveSpeedMultiplier = defaultAttackMoveSpeedMultiplier;
+            attackTurnSpeedMultiplier = defaultAttackTurnSpeedMultiplier;
         }
 
         public void ForceStopTrail()
@@ -590,10 +632,12 @@ namespace Retro.ThirdPersonCharacter
 
             ForceStopTrail();
             StopAttackForwardMove();
+            EndChargeAttackMove();
 
             if (stopAttackWhenStaggered)
             {
                 isAttacking = false;
+                canMoveWhileAttacking = false;
             }
 
             isDashing = false;

@@ -4041,7 +4041,7 @@ MonoBehaviour:
   enableBeamBreathAction: 0
   enableChargeAction: 1
   enableDoubleChargeAction: 1
-  introIdleBeforeRoarTime: 1
+  introIdleBeforeRoarTime: 100
   closeRange: 6
   middleRange: 15
   farRange: 25
@@ -27454,8 +27454,24 @@ PrefabInstance:
       value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: weakWeakHeavyFinisherMultiplier
+      value: 1.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyWeakHeavyFinisherMultiplier
+      value: 1.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: quickHeavyAnimationStartNormalized
       value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: chargedWeakWeakHeavyFinisherMultiplier
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: chargedHeavyWeakHeavyFinisherMultiplier
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 9100586787817664071, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: m_Layer

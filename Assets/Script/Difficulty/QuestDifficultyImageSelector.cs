@@ -13,6 +13,8 @@ public class QuestDifficultyImageSelector : MonoBehaviour
 
     public static Difficulty SelectedDifficulty = Difficulty.Normal;
 
+    public const string DifficultySaveKey = "SelectedDifficulty";
+
     [System.Serializable]
     public class DifficultyImageData
     {
@@ -57,6 +59,9 @@ public class QuestDifficultyImageSelector : MonoBehaviour
     [Header("開始設定")]
     [SerializeField] private Difficulty defaultDifficulty = Difficulty.Normal;
 
+    [Tooltip("前回選んだ難易度を読み込む。OFFなら毎回Default Difficultyから開始")]
+    [SerializeField] private bool loadSavedDifficultyOnStart = true;
+
     private int currentIndex = 0;
     private Vector3 paperOriginalScale;
     private Vector3 textOriginalScale;
@@ -79,8 +84,15 @@ public class QuestDifficultyImageSelector : MonoBehaviour
     {
         RegisterButtonEvents();
 
-        SelectedDifficulty = defaultDifficulty;
-        currentIndex = FindIndexByDifficulty(defaultDifficulty);
+        Difficulty startDifficulty = defaultDifficulty;
+
+        if (loadSavedDifficultyOnStart)
+        {
+            startDifficulty = LoadSavedDifficulty(defaultDifficulty);
+        }
+
+        SelectedDifficulty = startDifficulty;
+        currentIndex = FindIndexByDifficulty(startDifficulty);
 
         ApplyDifficulty();
     }
@@ -153,6 +165,7 @@ public class QuestDifficultyImageSelector : MonoBehaviour
         DifficultyImageData data = difficulties[currentIndex];
 
         SelectedDifficulty = data.difficulty;
+        SaveDifficulty(SelectedDifficulty);
 
         if (questPaperImage != null)
         {
@@ -177,6 +190,26 @@ public class QuestDifficultyImageSelector : MonoBehaviour
         {
             PlayPopAnimation();
         }
+
+        Debug.Log("Difficulty Selected: " + SelectedDifficulty);
+    }
+
+    private void SaveDifficulty(Difficulty difficulty)
+    {
+        PlayerPrefs.SetInt(DifficultySaveKey, (int)difficulty);
+        PlayerPrefs.Save();
+    }
+
+    public static Difficulty LoadSavedDifficulty(Difficulty fallback = Difficulty.Normal)
+    {
+        int savedValue = PlayerPrefs.GetInt(DifficultySaveKey, (int)fallback);
+
+        if (System.Enum.IsDefined(typeof(Difficulty), savedValue))
+        {
+            return (Difficulty)savedValue;
+        }
+
+        return fallback;
     }
 
     private void PlayPopAnimation()

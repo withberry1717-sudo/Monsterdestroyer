@@ -3985,6 +3985,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DragonAI
   motion: {fileID: 356980424}
   phase: {fileID: 356980423}
+  useExternalDifficultyMultipliers: 1
+  difficultyActionIntervalMultiplier: 1
+  difficultyMoveSpeedMultiplier: 1
+  difficultyAnimationSpeedMultiplier: 1
   dragonHP: {fileID: 78498549}
   effectPlayer: {fileID: 356980425}
   player: {fileID: 426628364}
@@ -4207,6 +4211,11 @@ MonoBehaviour:
   moveAnimationHardRefreshInterval: 2.1
   useDirectAnimatorReplayForMoveAnimation: 1
   directMoveAnimCrossFadeTime: 0.04
+  useFrameDrivenMoveAnimation: 1
+  moveAnimationFrameCount: 47
+  moveAnimationLoopFPS: 30
+  driveMoveAnimationWhileTryingToMove: 1
+  moveAnimationManualSpeedMultiplier: 1
   audioSource: {fileID: 0}
   sfxVolume: 1
 --- !u!114 &356980423
@@ -21341,6 +21350,71 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 653409694}
   m_CullTransparentMesh: 1
+--- !u!1 &658696241
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 658696243}
+  - component: {fileID: 658696242}
+  m_Layer: 0
+  m_Name: DifficultyManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &658696242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 658696241}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ccdf23d81d403a46b5f9c71dd4891a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DifficultyApplier
+  dragonHP: {fileID: 78498549}
+  dragonAI: {fileID: 356980422}
+  dragonRoot: {fileID: 1681397579}
+  easyDragonHpMultiplier: 0.6
+  easyCrystalHpMultiplier: 0.6
+  easyActionIntervalMultiplier: 1.15
+  easyMoveSpeedMultiplier: 0.9
+  easyAnimationSpeedMultiplier: 0.9
+  easyDragonScaleMultiplier: 0.8
+  normalDragonHpMultiplier: 0.8
+  normalCrystalHpMultiplier: 0.9
+  normalActionIntervalMultiplier: 1
+  normalMoveSpeedMultiplier: 1
+  normalAnimationSpeedMultiplier: 1
+  normalDragonScaleMultiplier: 1
+  hardDragonHpMultiplier: 1.5
+  hardCrystalHpMultiplier: 1.5
+  hardActionIntervalMultiplier: 0.85
+  hardMoveSpeedMultiplier: 1.1
+  hardAnimationSpeedMultiplier: 1.1
+  hardDragonScaleMultiplier: 1.1
+--- !u!4 &658696243
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 658696241}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 789.0855, y: 781.4514, z: -147.70483}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &670598650 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 497028, guid: 80844b2319340044da27db99208a9eac, type: 3}
@@ -33153,6 +33227,32 @@ MonoBehaviour:
   followSmoothTime: 0.04
   minPitch: -25
   maxPitch: 55
+  enableLockOn: 1
+  lockOnKey: 116
+  lockOnTargetTag: Enemy
+  manualLockOnPoint: {fileID: 0}
+  lockOnRange: 50
+  screenCenterPriority: 2
+  lockOnRotationSmoothTime: 0.16
+  lockOnMaxTurnSpeed: 220
+  lockOnCenterHeightOffset: 1
+  lockOnCenterSmoothTime: 0.18
+  lockOnCenterDeadZone: 0.25
+  allowPitchInputWhileLockOn: 0
+  lockOnPitchInputSensitivity: 0.25
+  minHorizontalDistanceForYaw: 0.5
+  lockOnMarkerPrefab: {fileID: 0}
+  enableLockOnMarker: 1
+  lockOnMarkerVisibleTime: 1.2
+  lockOnMarkerOffset: {x: 0, y: 0, z: 0}
+  lockOnMarkerScale: 1
+  lockOnMarkerStartPopScale: 1.5
+  lockOnMarkerPopDuration: 0.18
+  lockOnMarkerFaceCamera: 1
+  lockOnMarkerSmoothTime: 0.04
+  lockOnMarkerPullTowardCamera: 0.8
+  tryMakeMarkerVisibleThroughDragon: 1
+  lockOnMarkerSortingOrder: 5000
   enableCameraShake: 1
   shakeTarget: {fileID: 426628364}
   defaultShakeDuration: 0.25
@@ -57519,6 +57619,7 @@ SceneRoots:
   - {fileID: 7334120}
   - {fileID: 1160423106}
   - {fileID: 322212537}
+  - {fileID: 658696243}
   - {fileID: 1419259878}
   - {fileID: 952253255}
   - {fileID: 366261101}

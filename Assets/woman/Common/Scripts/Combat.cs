@@ -46,6 +46,22 @@ namespace Retro.ThirdPersonCharacter
         private bool chargeReadyEffectPlayed = false;
         private bool maxChargeEffectPlayed = false;
 
+        [Header("Combo Finisher Particle")]
+        [Tooltip("弱弱強 / 強弱強 / 溜め強弱弱強 / 溜め強強弱強 の最後の強で出すパーティクル")]
+        [SerializeField] private ParticleSystem comboFinisherParticlePrefab;
+
+        [Tooltip("パーティクルを出す位置。空ならプレイヤーの前に出す")]
+        [SerializeField] private Transform comboFinisherParticlePoint;
+
+        [Tooltip("パーティクル生成位置の補正")]
+        [SerializeField] private Vector3 comboFinisherParticleOffset = new Vector3(0f, 1.0f, 1.0f);
+
+        [Tooltip("生成したパーティクルを何秒後に消すか")]
+        [SerializeField] private float comboFinisherParticleDestroyTime = 2.0f;
+
+        [Tooltip("ONならフィニッシャーの判定が出る瞬間にパーティクルを出す")]
+        [SerializeField] private bool playFinisherParticleOnHitStart = true;
+
         [Header("Attack Forward Movement")]
         [SerializeField] private bool useAttackForwardMove = true;
 
@@ -86,10 +102,7 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private float dashAttackDamageMultiplier = 1.0f;
 
         [Header("Quick Heavy / 右クリック単押し")]
-        [Tooltip("この秒数以内に右クリックを離したら、溜めではなく強単発にする")]
         [SerializeField] private float heavyTapTime = 0.18f;
-
-        [Tooltip("この秒数以上右クリックを押しっぱなしにしたら、溜め開始")]
         [SerializeField] private float heavyHoldToStartChargeTime = 0.22f;
 
         [SerializeField] private float quickHeavyAnimationStartNormalized = 0.28f;
@@ -117,16 +130,9 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private float quickHeavySecondEndDelay = 0.95f;
 
         [Header("Heavy Movement Unlock")]
-        [Tooltip("強攻撃1発目で、攻撃開始から何秒後に移動を少し許可するか。最後らへんだけ動かしたいので大きめ")]
         [SerializeField] private float quickHeavyMoveUnlockTime = 0.72f;
-
-        [Tooltip("強攻撃2発目で、攻撃開始から何秒後に移動を少し許可するか")]
         [SerializeField] private float quickHeavySecondMoveUnlockTime = 0.76f;
-
-        [Tooltip("コンボ締め強で、攻撃開始から何秒後に移動を少し許可するか")]
         [SerializeField] private float heavyFinisherMoveUnlockTime = 0.78f;
-
-        [Tooltip("溜め強で、攻撃開始から何秒後に移動を少し許可するか")]
         [SerializeField] private float chargedHeavyMoveUnlockTime = 0.76f;
 
         [Header("Heavy Combo Finisher")]
@@ -136,7 +142,7 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private float heavyFinisherEnd = 0.46f;
         [SerializeField] private float heavyFinisherEndDelay = 0.95f;
 
-        [Tooltip("弱弱強の締め。少しだけ強い")]
+        [Tooltip("弱弱強の締め")]
         [SerializeField] private float weakWeakHeavyFinisherMultiplier = 1.20f;
 
         [Tooltip("強弱強の締め。強弱強は当てやすいので少し抑える")]
@@ -149,10 +155,7 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private float chargedHeavyWeakHeavyFinisherMultiplier = 1.20f;
 
         [Header("Charge Heavy / 右クリック長押し")]
-        [Tooltip("この秒数以上押してから離すと、溜め強として扱う")]
         [SerializeField] private float chargeRequiredTime = 0.45f;
-
-        [Tooltip("最大溜めになるまでの時間。最大後もボタンを離すまで溜め状態を維持できる")]
         [SerializeField] private float maxChargeTime = 1.5f;
 
         [SerializeField] private float chargeHoldNormalizedTime = 0.27f;
@@ -161,12 +164,10 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private float chargedAttackStartDelay = 0.12f;
         [SerializeField] private float chargedAttackEndDelay = 0.55f;
 
-        [Tooltip("溜め強本体。倍率は高すぎないようにする")]
+        [Tooltip("溜め強本体。専用パーティクルは既存のCharge Effects側で管理")]
         [SerializeField] private float chargedHeavyMinMultiplier = 1.15f;
 
-        [Tooltip("最大溜め強本体")]
         [SerializeField] private float chargedHeavyMaxMultiplier = 1.45f;
-
         [SerializeField] private float chargedHeavyEndDelay = 0.95f;
 
         [Header("Charge Movement")]
@@ -177,40 +178,8 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private float chargeMoveMultiplier = 0.22f;
 
         [Header("Charge Blink")]
-        [Tooltip("ONなら溜め中でもブリンクできる")]
         [SerializeField] private bool allowBlinkWhileCharging = true;
-
-        [Tooltip("溜め中ブリンクの距離倍率。0.5なら通常の半分")]
         [SerializeField] private float chargeBlinkDistanceMultiplier = 0.5f;
-
-        [Header("Beginner Assist Combo")]
-        [Tooltip("初心者救済用の1ボタンコンボを使うか")]
-        [SerializeField] private bool beginnerAssistComboEnabled = true;
-
-        [Tooltip("初心者救済コンボを出すキー")]
-        [SerializeField] private KeyCode beginnerAssistComboKey = KeyCode.E;
-
-        [Tooltip("初心者救済コンボのON/OFFを切り替えるキー")]
-        [SerializeField] private KeyCode beginnerAssistComboToggleKey = KeyCode.B;
-
-        [Tooltip("ONならゲーム開始時に初心者救済コンボを使える状態にする")]
-        [SerializeField] private bool beginnerAssistComboStartsEnabled = true;
-
-        [Tooltip("初心者救済コンボ後のクールタイム")]
-        [SerializeField] private float beginnerAssistComboCooldown = 1.0f;
-
-        [Tooltip("初心者救済コンボの1段目倍率")]
-        [SerializeField] private float beginnerAssistLight1Multiplier = 0.90f;
-
-        [Tooltip("初心者救済コンボの2段目倍率")]
-        [SerializeField] private float beginnerAssistLight2Multiplier = 0.95f;
-
-        [Tooltip("初心者救済コンボの締め倍率。強すぎるなら1.10くらいに下げる")]
-        [SerializeField] private float beginnerAssistFinisherMultiplier = 1.15f;
-
-        [SerializeField] private float beginnerAssistLight1Duration = 0.42f;
-        [SerializeField] private float beginnerAssistLight2Duration = 0.42f;
-        [SerializeField] private float beginnerAssistFinisherDuration = 0.95f;
 
         [Header("Combo")]
         [SerializeField] private float comboResetTime = 1.0f;
@@ -235,13 +204,8 @@ namespace Retro.ThirdPersonCharacter
         private bool isComboCooldown = false;
         private bool isNeutralHeavyCooldown = false;
 
-        private bool isBeginnerAssistComboRunning = false;
-        private bool isBeginnerAssistComboCooldown = false;
-
         private Coroutine comboCooldownRoutine;
         private Coroutine neutralHeavyCooldownRoutine;
-        private Coroutine beginnerAssistComboRoutine;
-        private Coroutine beginnerAssistComboCooldownRoutine;
 
         private void Start()
         {
@@ -249,23 +213,14 @@ namespace Retro.ThirdPersonCharacter
             _playerInput = GetComponent<PlayerInput>();
             _movement = GetComponent<Movement>();
 
-            beginnerAssistComboEnabled = beginnerAssistComboStartsEnabled;
-
             CreateChargeEffectsIfNeeded();
             StopChargeEffects();
         }
 
         private void Update()
         {
-            HandleBeginnerAssistToggle();
-
             UpdateComboTimer();
             UpdateBufferTimer();
-
-            if (isBeginnerAssistComboRunning)
-            {
-                return;
-            }
 
             if (isWaitingHeavyDecision)
             {
@@ -282,12 +237,6 @@ namespace Retro.ThirdPersonCharacter
             if (AttackInProgress)
             {
                 ReadBufferedInput();
-                return;
-            }
-
-            if (CanStartBeginnerAssistCombo())
-            {
-                StartBeginnerAssistCombo();
                 return;
             }
 
@@ -345,208 +294,6 @@ namespace Retro.ThirdPersonCharacter
                     Debug.Log("このタイミングでは強攻撃に派生できません");
                 }
             }
-        }
-
-        private void HandleBeginnerAssistToggle()
-        {
-            if (Input.GetKeyDown(beginnerAssistComboToggleKey))
-            {
-                beginnerAssistComboEnabled = !beginnerAssistComboEnabled;
-                Debug.Log("Beginner Assist Combo: " + (beginnerAssistComboEnabled ? "ON" : "OFF"));
-            }
-        }
-
-        private bool CanStartBeginnerAssistCombo()
-        {
-            if (!beginnerAssistComboEnabled) return false;
-            if (isBeginnerAssistComboCooldown) return false;
-            if (!Input.GetKeyDown(beginnerAssistComboKey)) return false;
-
-            if (AttackInProgress) return false;
-            if (isComboCooldown) return false;
-            if (isNeutralHeavyCooldown) return false;
-            if (isChargingHeavy) return false;
-            if (isWaitingHeavyDecision) return false;
-            if (comboStage != ComboStage.None) return false;
-
-            return true;
-        }
-
-        private void StartBeginnerAssistCombo()
-        {
-            if (beginnerAssistComboRoutine != null)
-            {
-                StopCoroutine(beginnerAssistComboRoutine);
-            }
-
-            beginnerAssistComboRoutine = StartCoroutine(BeginnerAssistComboRoutine());
-        }
-
-        private IEnumerator BeginnerAssistComboRoutine()
-        {
-            Debug.Log("初心者救済コンボ開始");
-
-            isBeginnerAssistComboRunning = true;
-            AttackInProgress = true;
-            ResetCombo();
-
-            if (_movement != null)
-            {
-                _movement.isAttacking = true;
-                _movement.canMoveWhileAttacking = false;
-                _movement.SetAllowBlinkWhileAttacking(false);
-                _movement.StopAttackForwardMove();
-            }
-
-            yield return BeginnerAssistAttackSegment(
-                attackStateName,
-                0f,
-                1f,
-                daggerHitbox,
-                light1Start,
-                light1End,
-                beginnerAssistLight1Multiplier,
-                beginnerAssistLight1Duration,
-                light1ForwardDistance,
-                false,
-                999f
-            );
-
-            yield return BeginnerAssistAttackSegment(
-                attackStateName,
-                0f,
-                1f,
-                daggerHitbox,
-                light2Start,
-                light2End,
-                beginnerAssistLight2Multiplier,
-                beginnerAssistLight2Duration,
-                light2ForwardDistance,
-                false,
-                999f
-            );
-
-            yield return BeginnerAssistAttackSegment(
-                abilityStateName,
-                heavyFinisherAnimationStartNormalized,
-                heavyFinisherAnimationSpeed,
-                swordHitbox,
-                heavyFinisherStart,
-                heavyFinisherEnd,
-                beginnerAssistFinisherMultiplier,
-                beginnerAssistFinisherDuration,
-                comboHeavyFinisherForwardDistance,
-                true,
-                heavyFinisherMoveUnlockTime
-            );
-
-            EndAttack();
-
-            isBeginnerAssistComboRunning = false;
-            beginnerAssistComboRoutine = null;
-
-            StartBeginnerAssistComboCooldown();
-            StartComboCooldown();
-
-            Debug.Log("初心者救済コンボ終了");
-        }
-
-        private IEnumerator BeginnerAssistAttackSegment(
-            string stateName,
-            float normalizedStart,
-            float animationSpeed,
-            WeaponHitbox hitbox,
-            float hitStart,
-            float hitEnd,
-            float damageMultiplier,
-            float totalDuration,
-            float forwardDistance,
-            bool allowLateMovement,
-            float lateMovementUnlockTime
-        )
-        {
-            if (_movement != null)
-            {
-                _movement.isAttacking = true;
-                _movement.canMoveWhileAttacking = false;
-                _movement.SetAllowBlinkWhileAttacking(false);
-                StartAttackForwardMove(forwardDistance);
-            }
-
-            PlayAttackAnimation(stateName, normalizedStart);
-
-            if (_animator != null)
-            {
-                _animator.speed = animationSpeed;
-            }
-
-            float timer = 0f;
-            bool hitboxEnabled = false;
-            bool lateMoveEnabled = false;
-
-            totalDuration = Mathf.Max(totalDuration, hitEnd + 0.05f);
-
-            while (timer < totalDuration)
-            {
-                timer += Time.deltaTime;
-
-                if (!hitboxEnabled && timer >= hitStart)
-                {
-                    hitboxEnabled = true;
-
-                    if (hitbox != null)
-                    {
-                        hitbox.EnableHitbox(damageMultiplier);
-                    }
-                }
-
-                if (hitboxEnabled && timer >= hitEnd)
-                {
-                    hitboxEnabled = false;
-
-                    if (hitbox != null)
-                    {
-                        hitbox.DisableHitbox();
-                    }
-                }
-
-                if (allowLateMovement && !lateMoveEnabled && timer >= lateMovementUnlockTime)
-                {
-                    lateMoveEnabled = true;
-                    EnableLateAttackMovement();
-                }
-
-                yield return null;
-            }
-
-            if (hitbox != null)
-            {
-                hitbox.DisableHitbox();
-            }
-
-            if (_movement != null)
-            {
-                _movement.StopAttackForwardMove();
-            }
-        }
-
-        private void StartBeginnerAssistComboCooldown()
-        {
-            if (beginnerAssistComboCooldownRoutine != null)
-            {
-                StopCoroutine(beginnerAssistComboCooldownRoutine);
-            }
-
-            beginnerAssistComboCooldownRoutine = StartCoroutine(BeginnerAssistComboCooldownRoutine());
-        }
-
-        private IEnumerator BeginnerAssistComboCooldownRoutine()
-        {
-            isBeginnerAssistComboCooldown = true;
-
-            yield return new WaitForSeconds(beginnerAssistComboCooldown);
-
-            isBeginnerAssistComboCooldown = false;
         }
 
         private void UpdateComboTimer()
@@ -887,7 +634,7 @@ namespace Retro.ThirdPersonCharacter
             StartCoroutine(
                 AttackRoutine(
                     daggerHitbox,
-                    light1Start,
+                    start,
                     end,
                     multiplier,
                     attackEndDelay,
@@ -895,7 +642,8 @@ namespace Retro.ThirdPersonCharacter
                     false,
                     false,
                     false,
-                    999f
+                    999f,
+                    false
                 )
             );
         }
@@ -926,7 +674,8 @@ namespace Retro.ThirdPersonCharacter
                     true,
                     false,
                     false,
-                    999f
+                    999f,
+                    false
                 )
             );
         }
@@ -959,7 +708,8 @@ namespace Retro.ThirdPersonCharacter
                     false,
                     false,
                     true,
-                    quickHeavyMoveUnlockTime
+                    quickHeavyMoveUnlockTime,
+                    false
                 )
             );
         }
@@ -992,7 +742,8 @@ namespace Retro.ThirdPersonCharacter
                     true,
                     true,
                     true,
-                    quickHeavySecondMoveUnlockTime
+                    quickHeavySecondMoveUnlockTime,
+                    false
                 )
             );
         }
@@ -1055,7 +806,8 @@ namespace Retro.ThirdPersonCharacter
                     false,
                     false,
                     true,
-                    quickHeavyMoveUnlockTime
+                    quickHeavyMoveUnlockTime,
+                    false
                 )
             );
         }
@@ -1087,7 +839,8 @@ namespace Retro.ThirdPersonCharacter
                     true,
                     true,
                     true,
-                    heavyFinisherMoveUnlockTime
+                    heavyFinisherMoveUnlockTime,
+                    true
                 )
             );
         }
@@ -1123,7 +876,8 @@ namespace Retro.ThirdPersonCharacter
                     false,
                     false,
                     true,
-                    chargedHeavyMoveUnlockTime
+                    chargedHeavyMoveUnlockTime,
+                    false
                 )
             );
         }
@@ -1162,7 +916,8 @@ namespace Retro.ThirdPersonCharacter
             bool finishComboAfterEnd,
             bool startNeutralHeavyCooldownAfterEnd,
             bool allowLateMovement,
-            float lateMovementUnlockTime
+            float lateMovementUnlockTime,
+            bool playComboFinisherParticle
         )
         {
             AttackInProgress = true;
@@ -1171,11 +926,7 @@ namespace Retro.ThirdPersonCharacter
             {
                 _movement.isAttacking = true;
 
-                if (!allowLateMovement)
-                {
-                    _movement.canMoveWhileAttacking = _movement.canMoveWhileAttacking;
-                }
-                else
+                if (allowLateMovement)
                 {
                     _movement.canMoveWhileAttacking = false;
                 }
@@ -1196,6 +947,7 @@ namespace Retro.ThirdPersonCharacter
             float timer = 0f;
             bool hitboxEnabled = false;
             bool lateMoveEnabled = false;
+            bool finisherParticlePlayed = false;
 
             totalDuration = Mathf.Max(totalDuration, hitEnd + 0.05f);
 
@@ -1208,6 +960,12 @@ namespace Retro.ThirdPersonCharacter
                     hitboxEnabled = true;
                     hitbox.EnableHitbox(damageMultiplier);
                     Debug.Log("判定ON / 倍率: " + damageMultiplier);
+
+                    if (playComboFinisherParticle && playFinisherParticleOnHitStart && !finisherParticlePlayed)
+                    {
+                        finisherParticlePlayed = true;
+                        PlayComboFinisherParticle();
+                    }
                 }
 
                 if (hitboxEnabled && timer >= hitEnd)
@@ -1245,6 +1003,42 @@ namespace Retro.ThirdPersonCharacter
             }
 
             TryConsumeBuffer();
+        }
+
+        private void PlayComboFinisherParticle()
+        {
+            if (comboFinisherParticlePrefab == null)
+            {
+                return;
+            }
+
+            Vector3 spawnPosition;
+            Quaternion spawnRotation;
+
+            if (comboFinisherParticlePoint != null)
+            {
+                spawnPosition = comboFinisherParticlePoint.position;
+                spawnRotation = comboFinisherParticlePoint.rotation;
+            }
+            else
+            {
+                spawnPosition = transform.position
+                    + transform.forward * comboFinisherParticleOffset.z
+                    + transform.right * comboFinisherParticleOffset.x
+                    + transform.up * comboFinisherParticleOffset.y;
+
+                spawnRotation = transform.rotation;
+            }
+
+            ParticleSystem particle = Instantiate(
+                comboFinisherParticlePrefab,
+                spawnPosition,
+                spawnRotation
+            );
+
+            particle.Play();
+
+            Destroy(particle.gameObject, comboFinisherParticleDestroyTime);
         }
 
         private void EnableLateAttackMovement()

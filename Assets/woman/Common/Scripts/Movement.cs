@@ -77,6 +77,10 @@ namespace Retro.ThirdPersonCharacter
         private bool isDashing = false;
         private float dashAttackWindowTimer = 0f;
 
+        [Header("Charge Blink")]
+        [Tooltip("Combat側からONにされた時だけ、攻撃中でもブリンクを許可する")]
+        [SerializeField] private bool allowBlinkWhileAttacking = false;
+
         private bool isDragonStaggered = false;
         private Coroutine dragonStaggerRoutine;
         private Coroutine attackForwardMoveRoutine;
@@ -129,6 +133,7 @@ namespace Retro.ThirdPersonCharacter
             ForceStopTrail();
             StopAttackForwardMove();
             EndChargeAttackMove();
+            SetAllowBlinkWhileAttacking(false);
 
             if (dragonStaggerRoutine != null)
             {
@@ -143,7 +148,8 @@ namespace Retro.ThirdPersonCharacter
             bool allowMove,
             bool allowTurn,
             float moveMultiplier,
-            float turnMultiplier
+            float turnMultiplier,
+            bool allowBlink
         )
         {
             if (isDragonStaggered) return;
@@ -161,16 +167,45 @@ namespace Retro.ThirdPersonCharacter
 
             attackMoveSpeedMultiplier = allowMove ? Mathf.Max(0f, moveMultiplier) : 0f;
             attackTurnSpeedMultiplier = allowTurn ? Mathf.Max(0f, turnMultiplier) : 0f;
+
+            allowBlinkWhileAttacking = allowBlink;
+        }
+
+        public void BeginChargeAttackMove(
+            bool allowMove,
+            bool allowTurn,
+            float moveMultiplier,
+            float turnMultiplier
+        )
+        {
+            BeginChargeAttackMove(
+                allowMove,
+                allowTurn,
+                moveMultiplier,
+                turnMultiplier,
+                false
+            );
+        }
+
+        public void SetAllowBlinkWhileAttacking(bool allow)
+        {
+            allowBlinkWhileAttacking = allow;
         }
 
         public void EndChargeAttackMove()
         {
-            if (!chargeAttackMoveOverrideActive) return;
+            if (!chargeAttackMoveOverrideActive)
+            {
+                allowBlinkWhileAttacking = false;
+                return;
+            }
 
             chargeAttackMoveOverrideActive = false;
 
             attackMoveSpeedMultiplier = defaultAttackMoveSpeedMultiplier;
             attackTurnSpeedMultiplier = defaultAttackTurnSpeedMultiplier;
+
+            allowBlinkWhileAttacking = false;
         }
 
         public void ForceStopTrail()
@@ -326,7 +361,12 @@ namespace Retro.ThirdPersonCharacter
 
         private bool CanBlink()
         {
-            return !isDashing && !isAttacking && !isDragonStaggered && currentBlinkCharges > 0;
+            bool canBlinkDuringAttack = isAttacking && allowBlinkWhileAttacking;
+
+            return !isDashing
+                && !isDragonStaggered
+                && currentBlinkCharges > 0
+                && (!isAttacking || canBlinkDuringAttack);
         }
 
         private void UseBlink()
@@ -633,6 +673,7 @@ namespace Retro.ThirdPersonCharacter
             ForceStopTrail();
             StopAttackForwardMove();
             EndChargeAttackMove();
+            SetAllowBlinkWhileAttacking(false);
 
             if (stopAttackWhenStaggered)
             {

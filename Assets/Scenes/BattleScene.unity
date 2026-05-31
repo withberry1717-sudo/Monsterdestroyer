@@ -17073,6 +17073,11 @@ Camera:
   m_CorrespondingSourceObject: {fileID: 4479908057211236910, guid: 80844b2319340044da27db99208a9eac, type: 3}
   m_PrefabInstance: {fileID: 131519520}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &627449060 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9110754215300669177, guid: 80844b2319340044da27db99208a9eac, type: 3}
+  m_PrefabInstance: {fileID: 131519520}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &631478442
 GameObject:
   m_ObjectHideFlags: 0
@@ -33034,7 +33039,7 @@ PrefabInstance:
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: _cameraTransform
       value: 
-      objectReference: {fileID: 1254087227}
+      objectReference: {fileID: 627449060}
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: airRotationSpeed
       value: 30
@@ -33046,6 +33051,10 @@ PrefabInstance:
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: blinkRecoverDelay
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: lockCameraYawWhileMoveInputHeld
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6102168432905421709, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: m_Name
@@ -33556,8 +33565,12 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: repeatedHeavyMinimumMultiplier
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: repeatedLightMinimumMultiplier
-      value: 0.4
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedWeakWeakHeavyHitboxScale
@@ -33913,6 +33926,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 827466116691285449, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+    - {fileID: 1358346619967761938, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+    - {fileID: 6102168432905421811, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
     m_RemovedGameObjects:
     - {fileID: 1402941904125249194, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
     m_AddedGameObjects:
@@ -39024,17 +39039,6 @@ MonoBehaviour:
   - {fileID: 1254087228}
   - {fileID: 1254087228}
   - {fileID: 1254087228}
---- !u!114 &1572162868 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1358346619967761938, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
-  m_PrefabInstance: {fileID: 1167488825}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1572162854}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4afcbcabfc04f2e45a8a965b42d31c2a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!82 &1572162875
 AudioSource:
   m_ObjectHideFlags: 0
@@ -40333,7 +40337,7 @@ MonoBehaviour:
   hideClearPanelOnStart: 1
   pauseGameOnClear: 0
   disableOnClear:
-  - {fileID: 1572162868}
+  - {fileID: 0}
   - {fileID: 1254087228}
   - {fileID: 78498549}
   - {fileID: 2120810689}

@@ -69,24 +69,33 @@ namespace Retro.ThirdPersonCharacter
         public float rotationSpeed = 15.0f;
         public float airRotationSpeed = 3.0f;
 
-        [Header("Rotation Fix / 通常移動の向き修正")]
-        [Tooltip("ON推奨。カメラのY角だけを使って移動方向を作ります。真後ろ入力時に斜めへブレる問題を防ぎます。")]
-        [SerializeField] private bool useCameraYawOnlyForMoveDirection = true;
+        [Header("Rotation Stability / 通常移動の向き安定化")]
+        [Tooltip("OFF推奨。ONにすると移動入力開始時のカメラ向きを固定します。通常はOFFにして、現在のカメラ向き基準で移動します。")]
+        [SerializeField] private bool lockCameraYawWhileMoveInputHeld = false;
 
-        [Tooltip("ON推奨。SlerpではなくRotateTowardsで一定角速度で回します。180度反転時のプルプルを防ぎます。")]
+        [Tooltip("ON推奨。SlerpではなくRotateTowardsで一定角速度回転にします。真後ろ入力時の斜めプルプル対策です。")]
         [SerializeField] private bool useStableRotateTowards = true;
 
-        [Tooltip("この角度以上の方向転換は旋回速度を上げます。真後ろ入力対策です。")]
+        [Tooltip("ON推奨。AnimatorのRoot Motionが体の向きを上書きしている場合に止めます。通常移動の向きバグ対策です。")]
+        [SerializeField] private bool forceAnimatorRootMotionOff = true;
+
+        [Tooltip("移動入力として扱う最小値です。小さすぎるスティック/キー入力のブレを無視します。")]
+        [SerializeField] private float moveInputDeadZone = 0.08f;
+
+        [Tooltip("入力方向が前回からこの角度以上変わったら、カメラ基準を取り直します。")]
+        [SerializeField] private float inputDirectionRefreshAngle = 25f;
+
+        [Tooltip("真後ろなど大きく振り向く時、この角度以上なら旋回速度を上げます。")]
         [SerializeField] private float backTurnBoostAngle = 135f;
 
-        [Tooltip("真後ろなど大きく向きを変える時の旋回速度倍率です。大きいほどすぐ後ろを向きます。")]
-        [SerializeField] private float backTurnSpeedMultiplier = 2.2f;
+        [Tooltip("真後ろ振り向き時の旋回速度倍率です。")]
+        [SerializeField] private float backTurnSpeedMultiplier = 2.5f;
 
-        [Tooltip("目標角度との差がこの角度以下ならピタッと合わせます。小刻みな揺れ防止です。")]
+        [Tooltip("目標角度との差がこの角度以下ならスナップして震えを止めます。")]
         [SerializeField] private float rotationSnapAngle = 1.5f;
 
-        [Tooltip("この入力未満なら向き変更しません。スティックやAxisの微振動対策です。キーボードなら0.05〜0.15推奨。")]
-        [SerializeField] private float moveInputDeadZone = 0.08f;
+        [Tooltip("移動入力がなくなってから向き更新を完全停止するまでの猶予です。小さくすると停止時の向きブレが減ります。")]
+        [SerializeField] private float rotationInputReleaseGraceTime = 0.03f;
 
         private float DecelerationOnStop = 0.00f;
 
@@ -138,6 +147,12 @@ namespace Retro.ThirdPersonCharacter
         private float defaultAttackMoveSpeedMultiplier;
         private float defaultAttackTurnSpeedMultiplier;
 
+        private bool hasLockedMoveCameraYaw = false;
+        private Quaternion lockedMoveCameraYawRotation = Quaternion.identity;
+        private Vector2 lastRawMoveInput = Vector2.zero;
+        private Vector3 desiredLookDirection = Vector3.zero;
+        private float noMoveInputTimer = 0f;
+
         public bool IsDashing => isDashing;
         public bool CanDashAttack => isDashing || dashAttackWindowTimer > 0f;
         public bool IsDragonStaggered => isDragonStaggered;
@@ -145,6 +160,12 @@ namespace Retro.ThirdPersonCharacter
         private void Start()
         {
             _animator = GetComponent<Animator>();
+
+            if (_animator != null && forceAnimatorRootMotionOff)
+            {
+                _animator.applyRootMotion = false;
+            }
+
             _playerInput = GetComponent<PlayerInput>();
             _combat = GetComponent<Combat>();
             _characterController = GetComponent<CharacterController>();
@@ -156,9 +177,27 @@ namespace Retro.ThirdPersonCharacter
 
             ForceStopTrail();
 
-            if (_cameraTransform == null && Camera.main != null)
+            // Inspectorで回転しない親オブジェクトを入れた場合の自動補正
+            if (_cameraTransform != null && _cameraTransform.GetComponent<Camera>() == null)
             {
-                _cameraTransform = Camera.main.transform;
+                Camera childCam = _cameraTransform.GetComponentInChildren<Camera>();
+                if (childCam != null)
+                {
+                    _cameraTransform = childCam.transform;
+                }
+            }
+
+            // SafePlayerCameraの取得をCamera.mainより優先させる
+            if (_cameraTransform == null)
+            {
+                if (SafePlayerCamera.Instance != null && SafePlayerCamera.Instance.Camera != null)
+                {
+                    _cameraTransform = SafePlayerCamera.Instance.Camera.transform;
+                }
+                else if (Camera.main != null)
+                {
+                    _cameraTransform = Camera.main.transform;
+                }
             }
 
             defaultAttackMoveSpeedMultiplier = attackMoveSpeedMultiplier;
@@ -415,8 +454,13 @@ namespace Retro.ThirdPersonCharacter
             if (Input.GetKeyDown(dashKey) && CanBlink())
             {
                 Vector3 dashDir = transform.forward;
+                Vector2 dashInput = _playerInput != null ? _playerInput.MovementInput : Vector2.zero;
 
-                if (moveDirection.x != 0 || moveDirection.z != 0)
+                if (dashInput.magnitude > moveInputDeadZone)
+                {
+                    dashDir = GetStableCameraRelativeMoveDirection(dashInput).normalized;
+                }
+                else if (moveDirection.x != 0 || moveDirection.z != 0)
                 {
                     dashDir = new Vector3(moveDirection.x, 0, moveDirection.z).normalized;
                 }
@@ -615,61 +659,29 @@ namespace Retro.ThirdPersonCharacter
 
             float x = _playerInput.MovementInput.x;
             float y = _playerInput.MovementInput.y;
-
-            bool grounded = _characterController.isGrounded;
-
             Vector2 rawInput = new Vector2(x, y);
             float inputMagnitude = Mathf.Clamp01(rawInput.magnitude);
             bool hasMoveInput = inputMagnitude > moveInputDeadZone;
 
-            Vector3 desiredMoveDirection = Vector3.zero;
+            bool grounded = _characterController.isGrounded;
+
+            Vector3 inputDirection = Vector3.zero;
 
             if (hasMoveInput)
             {
-                Vector3 localInputDirection = new Vector3(x, 0f, y);
+                inputDirection = GetStableCameraRelativeMoveDirection(rawInput) * MaxSpeed;
+                noMoveInputTimer = 0f;
+            }
+            else
+            {
+                noMoveInputTimer += Time.deltaTime;
 
-                if (localInputDirection.sqrMagnitude > 1f)
+                if (noMoveInputTimer >= rotationInputReleaseGraceTime)
                 {
-                    localInputDirection.Normalize();
-                }
-
-                if (_cameraTransform != null)
-                {
-                    if (useCameraYawOnlyForMoveDirection)
-                    {
-                        // カメラのforward/rightを毎回投影して使うと、真後ろ入力で微妙に斜めへブレることがある。
-                        // Yawだけを使うと、S入力は必ずカメラ基準の真後ろ方向になる。
-                        Quaternion cameraYaw = Quaternion.Euler(0f, _cameraTransform.eulerAngles.y, 0f);
-                        desiredMoveDirection = cameraYaw * localInputDirection;
-                    }
-                    else
-                    {
-                        Vector3 camForward = _cameraTransform.forward;
-                        Vector3 camRight = _cameraTransform.right;
-
-                        camForward.y = 0f;
-                        camRight.y = 0f;
-
-                        camForward.Normalize();
-                        camRight.Normalize();
-
-                        desiredMoveDirection = camForward * y + camRight * x;
-                    }
-                }
-                else
-                {
-                    desiredMoveDirection = localInputDirection;
-                }
-
-                desiredMoveDirection.y = 0f;
-
-                if (desiredMoveDirection.sqrMagnitude > 1f)
-                {
-                    desiredMoveDirection.Normalize();
+                    hasLockedMoveCameraYaw = false;
+                    desiredLookDirection = Vector3.zero;
                 }
             }
-
-            Vector3 inputDirection = desiredMoveDirection * MaxSpeed;
 
             if (isAttacking)
             {
@@ -679,20 +691,32 @@ namespace Retro.ThirdPersonCharacter
 
                     moveDirection.x = inputDirection.x;
                     moveDirection.z = inputDirection.z;
+
+                    if (hasMoveInput)
+                    {
+                        desiredLookDirection = new Vector3(inputDirection.x, 0f, inputDirection.z);
+                    }
                 }
                 else
                 {
                     inputDirection = Vector3.zero;
 
                     float deceleration = 10.0f;
-                    moveDirection.x = Mathf.Lerp(moveDirection.x, 0f, deceleration * Time.deltaTime);
-                    moveDirection.z = Mathf.Lerp(moveDirection.z, 0f, deceleration * Time.deltaTime);
+                    moveDirection.x = Mathf.Lerp(moveDirection.x, 0, deceleration * Time.deltaTime);
+                    moveDirection.z = Mathf.Lerp(moveDirection.z, 0, deceleration * Time.deltaTime);
+
+                    desiredLookDirection = Vector3.zero;
                 }
             }
             else if (grounded)
             {
                 moveDirection.x = inputDirection.x;
                 moveDirection.z = inputDirection.z;
+
+                if (hasMoveInput)
+                {
+                    desiredLookDirection = new Vector3(inputDirection.x, 0f, inputDirection.z);
+                }
 
                 if (Input.GetKeyDown(jumpKey))
                 {
@@ -705,15 +729,11 @@ namespace Retro.ThirdPersonCharacter
                 {
                     moveDirection.x = Mathf.Lerp(moveDirection.x, inputDirection.x, airControl * Time.deltaTime);
                     moveDirection.z = Mathf.Lerp(moveDirection.z, inputDirection.z, airControl * Time.deltaTime);
+                    desiredLookDirection = new Vector3(inputDirection.x, 0f, inputDirection.z);
                 }
             }
 
-            bool canTurnNow = !isAttacking || canMoveWhileAttacking;
-
-            if (canTurnNow && hasMoveInput && desiredMoveDirection.sqrMagnitude > 0.0001f)
-            {
-                RotatePlayerToMoveDirection(desiredMoveDirection, grounded);
-            }
+            ApplyStablePlayerRotation(grounded);
 
             moveDirection.y -= gravity * Time.deltaTime;
             _characterController.Move(moveDirection * Time.deltaTime);
@@ -730,18 +750,117 @@ namespace Retro.ThirdPersonCharacter
             }
 
             _animator.SetBool("IsInAir", !grounded);
+
+            lastRawMoveInput = hasMoveInput ? rawInput.normalized : Vector2.zero;
         }
 
-        private void RotatePlayerToMoveDirection(Vector3 desiredMoveDirection, bool grounded)
+        private Vector3 GetStableCameraRelativeMoveDirection(Vector2 rawInput)
         {
-            desiredMoveDirection.y = 0f;
+            Vector2 normalizedInput = rawInput;
 
-            if (desiredMoveDirection.sqrMagnitude < 0.0001f)
+            if (normalizedInput.sqrMagnitude > 1f)
+            {
+                normalizedInput.Normalize();
+            }
+
+            Quaternion cameraYawRotation;
+
+            // 通常移動は「今のカメラ向き」を毎フレーム使う。
+            // 前版のように入力開始時のカメラ向きを固定すると、
+            // カメラを回しても移動方向が古いままになり「カメラと関係なく移動する」原因になる。
+            if (!lockCameraYawWhileMoveInputHeld)
+            {
+                cameraYawRotation = GetCurrentCameraYawRotation();
+                hasLockedMoveCameraYaw = false;
+            }
+            else
+            {
+                bool shouldRefreshCameraYaw = !hasLockedMoveCameraYaw;
+
+                if (!shouldRefreshCameraYaw && lastRawMoveInput.sqrMagnitude > 0.0001f)
+                {
+                    float inputAngle = Vector2.Angle(lastRawMoveInput, normalizedInput.normalized);
+
+                    if (inputAngle >= inputDirectionRefreshAngle)
+                    {
+                        shouldRefreshCameraYaw = true;
+                    }
+                }
+
+                if (shouldRefreshCameraYaw)
+                {
+                    lockedMoveCameraYawRotation = GetCurrentCameraYawRotation();
+                    hasLockedMoveCameraYaw = true;
+                }
+
+                cameraYawRotation = lockedMoveCameraYawRotation;
+            }
+
+            Vector3 localInput = new Vector3(normalizedInput.x, 0f, normalizedInput.y);
+            Vector3 worldDirection = cameraYawRotation * localInput;
+            worldDirection.y = 0f;
+
+            if (worldDirection.sqrMagnitude > 1f)
+            {
+                worldDirection.Normalize();
+            }
+
+            return worldDirection;
+        }
+
+        private Quaternion GetCurrentCameraYawRotation()
+        {
+            Transform cameraForMove = _cameraTransform;
+
+            // SafePlayerCameraを最優先で取得
+            if (cameraForMove == null)
+            {
+                if (SafePlayerCamera.Instance != null && SafePlayerCamera.Instance.Camera != null)
+                {
+                    cameraForMove = SafePlayerCamera.Instance.Camera.transform;
+                    _cameraTransform = cameraForMove; // 次回のためにキャッシュ
+                }
+                else if (Camera.main != null)
+                {
+                    cameraForMove = Camera.main.transform;
+                    _cameraTransform = cameraForMove;
+                }
+            }
+
+            if (cameraForMove == null)
+            {
+                return Quaternion.identity;
+            }
+
+            // 前方ベクトルを計算するより、カメラのオイラー角のY(Yaw)を直接使うのが安全
+            return Quaternion.Euler(0f, cameraForMove.eulerAngles.y, 0f);
+        }
+
+        private void ApplyStablePlayerRotation(bool grounded)
+        {
+            Vector3 lookDirection = desiredLookDirection;
+            lookDirection.y = 0f;
+
+            if (lookDirection.sqrMagnitude < 0.0001f)
             {
                 return;
             }
 
-            Quaternion targetRotation = Quaternion.LookRotation(desiredMoveDirection.normalized, Vector3.up);
+            bool canTurnNow = !isAttacking || canMoveWhileAttacking;
+
+            if (!canTurnNow)
+            {
+                return;
+            }
+
+            Quaternion targetRotation = Quaternion.LookRotation(lookDirection.normalized, Vector3.up);
+            float angle = Quaternion.Angle(transform.rotation, targetRotation);
+
+            if (angle <= rotationSnapAngle)
+            {
+                transform.rotation = targetRotation;
+                return;
+            }
 
             float currentRotationSpeed = grounded ? rotationSpeed : airRotationSpeed;
 
@@ -750,17 +869,9 @@ namespace Retro.ThirdPersonCharacter
                 currentRotationSpeed *= attackTurnSpeedMultiplier;
             }
 
-            float angle = Quaternion.Angle(transform.rotation, targetRotation);
-
             if (angle >= backTurnBoostAngle)
             {
                 currentRotationSpeed *= backTurnSpeedMultiplier;
-            }
-
-            if (angle <= rotationSnapAngle)
-            {
-                transform.rotation = targetRotation;
-                return;
             }
 
             if (useStableRotateTowards)
@@ -768,7 +879,7 @@ namespace Retro.ThirdPersonCharacter
                 transform.rotation = Quaternion.RotateTowards(
                     transform.rotation,
                     targetRotation,
-                    currentRotationSpeed * 90f * Time.deltaTime
+                    currentRotationSpeed * 60f * Time.deltaTime
                 );
             }
             else
@@ -940,5 +1051,4 @@ namespace Retro.ThirdPersonCharacter
             _animator.SetFloat("InputY", lastMovementInput.y);
         }
     }
-
 }

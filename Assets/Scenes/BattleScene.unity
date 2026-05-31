@@ -1154,6 +1154,7 @@ GameObject:
   - component: {fileID: 67639264}
   - component: {fileID: 67639266}
   - component: {fileID: 67639267}
+  - component: {fileID: 67639268}
   m_Layer: 5
   m_Name: ClearPanel
   m_TagString: Untagged
@@ -1241,7 +1242,7 @@ MonoBehaviour:
   stampRect: {fileID: 1301633504}
   stampImage: {fileID: 1301633507}
   audioSource: {fileID: 1301633505}
-  stampSE: {fileID: 0}
+  stampSE: {fileID: 8300000, guid: 61f3a47eacad74c43aae24fc28e48c6e, type: 3}
   playOnPanelEnable: 1
   delayAfterPanelShown: 1
   dropFromY: 120
@@ -1277,6 +1278,103 @@ MonoBehaviour:
     clearPaperSprite: {fileID: 21300000, guid: 895cadd17b728e84dbca799b3de4e33b, type: 3}
     resultSheetSprite: {fileID: 21300000, guid: fc9952ab54a56d647b12c4c29cd2dda1, type: 3}
     resultSheetColor: {r: 0.9246073, g: 0, b: 1, a: 1}
+--- !u!82 &67639268
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 67639262}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &73500144
 GameObject:
   m_ObjectHideFlags: 0
@@ -32102,6 +32200,18 @@ MonoBehaviour:
   typeInterval: 0.03
   rankTypeInterval: 0.08
   countDuration: 0.8
+  resultAudioSource: {fileID: 67639268}
+  commonLineSfx: {fileID: 0}
+  finalScoreSfx: {fileID: 8300000, guid: 9828088ec2c308f4399d083affe4117d, type: 3}
+  rankSfx: {fileID: 8300000, guid: 5538d7eb3cfdfb2499947ecbc2c515cc, type: 3}
+  resultSfxVolume: 0.836
+  clearTimeSfxDelay: 0
+  startScoreSfxDelay: 0
+  timePenaltySfxDelay: 0
+  crystalBonusSfxDelay: 0
+  deathPenaltySfxDelay: 0
+  finalScoreSfxDelay: 0.72
+  rankSfxDelay: 1.8
   showDifficultyInConsole: 1
 --- !u!4 &1160423106
 Transform:
@@ -59431,7 +59541,7 @@ PrefabInstance:
       objectReference: {fileID: 1036172109}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: maxHP
-      value: 2200
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: isCrystalBroken

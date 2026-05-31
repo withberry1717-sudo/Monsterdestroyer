@@ -100,6 +100,45 @@ public class ScoreManager : MonoBehaviour
     [SerializeField] private float rankTypeInterval = 0.08f;
     [SerializeField] private float countDuration = 0.8f;
 
+    [Header("Result SE")]
+    [Tooltip("リザルト表示用AudioSource。空なら自分か子から自動取得します。")]
+    [SerializeField] private AudioSource resultAudioSource;
+
+    [Tooltip("Final ScoreとRank以外の項目が出る時に鳴らす共通SEです。")]
+    [SerializeField] private AudioClip commonLineSfx;
+
+    [Tooltip("Final Scoreが出る時に鳴らすSEです。空ならCommon Line Sfxを使います。")]
+    [SerializeField] private AudioClip finalScoreSfx;
+
+    [Tooltip("Rank Textが出る時に鳴らすSEです。空ならCommon Line Sfxを使います。")]
+    [SerializeField] private AudioClip rankSfx;
+
+    [Range(0f, 1f)]
+    [Tooltip("リザルトSEの音量です。")]
+    [SerializeField] private float resultSfxVolume = 1f;
+
+    [Header("Result SE Timing")]
+    [Tooltip("Clear Time表示開始からSEを鳴らすまでの遅延秒数です。")]
+    [SerializeField] private float clearTimeSfxDelay = 0f;
+
+    [Tooltip("Start Score表示開始からSEを鳴らすまでの遅延秒数です。")]
+    [SerializeField] private float startScoreSfxDelay = 0f;
+
+    [Tooltip("Time Penalty表示開始からSEを鳴らすまでの遅延秒数です。")]
+    [SerializeField] private float timePenaltySfxDelay = 0f;
+
+    [Tooltip("Crystal Bonus表示開始からSEを鳴らすまでの遅延秒数です。")]
+    [SerializeField] private float crystalBonusSfxDelay = 0f;
+
+    [Tooltip("Death Penalty表示開始からSEを鳴らすまでの遅延秒数です。")]
+    [SerializeField] private float deathPenaltySfxDelay = 0f;
+
+    [Tooltip("Final Score表示開始からSEを鳴らすまでの遅延秒数です。")]
+    [SerializeField] private float finalScoreSfxDelay = 0f;
+
+    [Tooltip("Rank Text表示開始からSEを鳴らすまでの遅延秒数です。")]
+    [SerializeField] private float rankSfxDelay = 0f;
+
     [Header("デバッグ")]
     [SerializeField] private bool showDifficultyInConsole = true;
 
@@ -116,6 +155,7 @@ public class ScoreManager : MonoBehaviour
         else Destroy(gameObject);
 
         ApplyDifficultyScoreSetting();
+        FindResultAudioSourceIfNeeded();
     }
 
     void Start()
@@ -240,7 +280,9 @@ public class ScoreManager : MonoBehaviour
         yield return StartCoroutine(TypeText(
             clearTimeText,
             "Clear Time      " + FormatTime(clearTime),
-            typeInterval
+            typeInterval,
+            commonLineSfx,
+            clearTimeSfxDelay
         ));
 
         yield return new WaitForSeconds(showDelay);
@@ -248,7 +290,9 @@ public class ScoreManager : MonoBehaviour
         yield return StartCoroutine(TypeText(
             startScoreText,
             "Start Score     " + GetStartScore(),
-            typeInterval
+            typeInterval,
+            commonLineSfx,
+            startScoreSfxDelay
         ));
 
         yield return new WaitForSeconds(showDelay);
@@ -256,7 +300,9 @@ public class ScoreManager : MonoBehaviour
         yield return StartCoroutine(TypeText(
             timePenaltyText,
             "Time Penalty    -" + timePenalty,
-            typeInterval
+            typeInterval,
+            commonLineSfx,
+            timePenaltySfxDelay
         ));
 
         yield return new WaitForSeconds(showDelay);
@@ -264,7 +310,9 @@ public class ScoreManager : MonoBehaviour
         yield return StartCoroutine(TypeText(
             crystalBonusText,
             "Crystal Bonus   +" + partBonus,
-            typeInterval
+            typeInterval,
+            commonLineSfx,
+            crystalBonusSfxDelay
         ));
 
         yield return new WaitForSeconds(showDelay);
@@ -272,7 +320,9 @@ public class ScoreManager : MonoBehaviour
         yield return StartCoroutine(TypeText(
             deathPenaltyText,
             "Death Penalty   -" + deathTotalPenalty,
-            typeInterval
+            typeInterval,
+            commonLineSfx,
+            deathPenaltySfxDelay
         ));
 
         yield return new WaitForSeconds(showDelay);
@@ -280,6 +330,7 @@ public class ScoreManager : MonoBehaviour
         if (finalScoreText != null)
         {
             finalScoreText.gameObject.SetActive(true);
+            PlayResultSfx(finalScoreSfx != null ? finalScoreSfx : commonLineSfx, finalScoreSfxDelay);
             yield return StartCoroutine(CountFinalScore(finalScore));
         }
 
@@ -288,16 +339,26 @@ public class ScoreManager : MonoBehaviour
         yield return StartCoroutine(TypeText(
             rankText,
             "Rank                   " + rank,
-            rankTypeInterval
+            rankTypeInterval,
+            rankSfx != null ? rankSfx : commonLineSfx,
+            rankSfxDelay
         ));
     }
 
-    private IEnumerator TypeText(TextMeshProUGUI targetText, string message, float interval)
+    private IEnumerator TypeText(
+        TextMeshProUGUI targetText,
+        string message,
+        float interval,
+        AudioClip appearSfx,
+        float appearSfxDelay
+    )
     {
         if (targetText == null) yield break;
 
         targetText.gameObject.SetActive(true);
         targetText.text = "";
+
+        PlayResultSfx(appearSfx, appearSfxDelay);
 
         for (int i = 0; i < message.Length; i++)
         {
@@ -328,6 +389,49 @@ public class ScoreManager : MonoBehaviour
         if (finalScoreText != null)
         {
             finalScoreText.text = "Final Score     " + finalScore;
+        }
+    }
+
+    private void FindResultAudioSourceIfNeeded()
+    {
+        if (resultAudioSource != null) return;
+
+        resultAudioSource = GetComponent<AudioSource>();
+
+        if (resultAudioSource == null)
+        {
+            resultAudioSource = GetComponentInChildren<AudioSource>();
+        }
+    }
+
+    private void PlayResultSfx(AudioClip clip, float delay)
+    {
+        if (clip == null) return;
+
+        if (delay > 0f)
+        {
+            StartCoroutine(PlayResultSfxDelayed(clip, delay));
+            return;
+        }
+
+        PlayResultSfxNow(clip);
+    }
+
+    private IEnumerator PlayResultSfxDelayed(AudioClip clip, float delay)
+    {
+        yield return new WaitForSeconds(Mathf.Max(0f, delay));
+        PlayResultSfxNow(clip);
+    }
+
+    private void PlayResultSfxNow(AudioClip clip)
+    {
+        if (clip == null) return;
+
+        FindResultAudioSourceIfNeeded();
+
+        if (resultAudioSource != null)
+        {
+            resultAudioSource.PlayOneShot(clip, resultSfxVolume);
         }
     }
 

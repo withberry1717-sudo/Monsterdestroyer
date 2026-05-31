@@ -9435,16 +9435,16 @@ MonoBehaviour:
   effectPlayer: {fileID: 356980425}
   player: {fileID: 426628364}
   enableApproachAction: 1
-  enableSwipeCounterAction: 0
+  enableSwipeCounterAction: 1
   enableTailSlamAction: 1
   enableTailSwipeAction: 1
-  enableBackStepTailAction: 0
+  enableBackStepTailAction: 1
   enableBackStepBreathAction: 0
   enableWideBreathAction: 0
   enableBeamBreathAction: 0
-  enableChargeAction: 0
-  enableDoubleChargeAction: 0
-  introIdleBeforeRoarTime: 100
+  enableChargeAction: 1
+  enableDoubleChargeAction: 1
+  introIdleBeforeRoarTime: 0
   closeRange: 6
   middleRange: 15
   farRange: 25
@@ -22482,7 +22482,7 @@ MonoBehaviour:
   easyHalfHPDownDuration: 8
   easyTailBreakBigHitDuration: 1
   normalDragonHpMultiplier: 1
-  normalCrystalHpMultiplier: 1.3
+  normalCrystalHpMultiplier: 1.2
   normalActionIntervalMultiplier: 1
   normalMoveSpeedMultiplier: 1
   normalAnimationSpeedMultiplier: 1
@@ -22491,12 +22491,12 @@ MonoBehaviour:
   normalHalfHPDownDuration: 8
   normalTailBreakBigHitDuration: 1.2
   hardDragonHpMultiplier: 1.1
-  hardCrystalHpMultiplier: 1.8
-  hardActionIntervalMultiplier: 0.7
-  hardMoveSpeedMultiplier: 1.3
-  hardAnimationSpeedMultiplier: 1.3
+  hardCrystalHpMultiplier: 1.4
+  hardActionIntervalMultiplier: 0.5
+  hardMoveSpeedMultiplier: 1.7
+  hardAnimationSpeedMultiplier: 1.7
   hardDragonDamageMultiplier: 1.25
-  hardDragonScaleMultiplier: 1.1
+  hardDragonScaleMultiplier: 1.2
   hardHalfHPDownDuration: 5
   hardTailBreakBigHitDuration: 1
   logAppliedDamageMultiplier: 1
@@ -33046,11 +33046,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: blinkRecoverTime
-      value: 2
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: blinkRecoverDelay
-      value: 1
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: lockCameraYawWhileMoveInputHeld
@@ -33366,11 +33366,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargeMoveMultiplier
-      value: 0.005
+      value: 0.032
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargeTurnMultiplier
-      value: 0.023
+      value: 0.008
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedHeavyEndDelay
@@ -60048,7 +60048,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: maxTailCrystalHP
-      value: 700
+      value: 600
       objectReference: {fileID: 0}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: tailSeverController

@@ -95,6 +95,9 @@ public class PlayerHP : MonoBehaviour
 
     private Vector3 lastKnockbackDirection = Vector3.zero;
 
+    private Coroutine recoverySafetyCoroutine;
+    private bool actionScriptsLockedByDamage = false;
+
     private void Start()
     {
         currentHp = maxHp;
@@ -551,7 +554,7 @@ public class PlayerHP : MonoBehaviour
         if (isGameOver) return;
         if (isGameClear) return;
 
-        SetActionScriptsEnabled(true);
+        ForceRecoverActionState();
     }
 
     private void ForceUnlockControl()
@@ -561,14 +564,21 @@ public class PlayerHP : MonoBehaviour
         if (isGameOver) return;
         if (isGameClear) return;
 
-        SetActionScriptsEnabled(true);
+        ForceRecoverActionState();
     }
 
     private void SetActionScriptsEnabled(bool enabled)
     {
         if (!enabled)
         {
+            actionScriptsLockedByDamage = true;
             CancelCombatChargeAndEffects();
+            ResetMovementActionState();
+        }
+
+        if (_playerInput != null)
+        {
+            _playerInput.ClearActionInputs();
         }
 
         if (_movement != null)
@@ -586,19 +596,27 @@ public class PlayerHP : MonoBehaviour
             _movement.enabled = enabled;
         }
 
+        if (_combat != null)
+        {
+            _combat.enabled = enabled;
+        }
+
         if (_playerInput != null)
         {
-            _playerInput.ClearActionInputs();
             _playerInput.enabled = enabled;
         }
 
-        if (_combat != null) _combat.enabled = enabled;
         if (_aiming != null) _aiming.enabled = enabled;
         if (_aimingController != null) _aimingController.enabled = enabled;
 
         if (!enabled)
         {
             DisablePlayerAttackHitboxes();
+        }
+        else
+        {
+            actionScriptsLockedByDamage = false;
+            ForceRecoverActionState();
         }
     }
 
@@ -610,6 +628,110 @@ public class PlayerHP : MonoBehaviour
             "CancelCurrentActionByExternalInterrupt",
             SendMessageOptions.DontRequireReceiver
         );
+    }
+
+    private void ResetMovementActionState()
+    {
+        if (_movement == null) return;
+
+        _movement.gameObject.SendMessage(
+            "ResetActionStateAfterDamage",
+            SendMessageOptions.DontRequireReceiver
+        );
+    }
+
+    private void ResetCombatActionState()
+    {
+        if (_combat == null) return;
+
+        _combat.gameObject.SendMessage(
+            "ResetActionStateAfterDamage",
+            SendMessageOptions.DontRequireReceiver
+        );
+    }
+
+    private void ForceRecoverActionState()
+    {
+        if (isGameOver || isGameClear) return;
+
+        controlLockCount = 0;
+
+        if (_movement != null)
+        {
+            _movement.enabled = true;
+            ResetMovementActionState();
+        }
+
+        if (_combat != null)
+        {
+            _combat.enabled = true;
+            ResetCombatActionState();
+        }
+
+        if (_playerInput != null)
+        {
+            _playerInput.ClearAllInputs();
+            _playerInput.enabled = true;
+        }
+
+        if (_aiming != null) _aiming.enabled = true;
+        if (_aimingController != null) _aimingController.enabled = true;
+
+        DisablePlayerAttackHitboxes();
+
+        if (recoverySafetyCoroutine != null)
+        {
+            StopCoroutine(recoverySafetyCoroutine);
+        }
+
+        recoverySafetyCoroutine = StartCoroutine(RecoverySafetyCheckRoutine());
+    }
+
+    private IEnumerator RecoverySafetyCheckRoutine()
+    {
+        yield return null;
+        yield return null;
+
+        if (isGameOver || isGameClear || actionScriptsLockedByDamage)
+        {
+            recoverySafetyCoroutine = null;
+            yield break;
+        }
+
+        if (controlLockCount != 0)
+        {
+            controlLockCount = 0;
+        }
+
+        if (_movement != null && !_movement.enabled)
+        {
+            _movement.enabled = true;
+            ResetMovementActionState();
+        }
+
+        if (_combat != null && !_combat.enabled)
+        {
+            _combat.enabled = true;
+            ResetCombatActionState();
+        }
+
+        if (_playerInput != null && !_playerInput.enabled)
+        {
+            _playerInput.ClearAllInputs();
+            _playerInput.enabled = true;
+        }
+
+        if (_aiming != null && !_aiming.enabled)
+        {
+            _aiming.enabled = true;
+        }
+
+        if (_aimingController != null && !_aimingController.enabled)
+        {
+            _aimingController.enabled = true;
+        }
+
+        recoverySafetyCoroutine = null;
     }
 
     private void DisablePlayerAttackHitboxes()
@@ -709,6 +831,7 @@ public class PlayerHP : MonoBehaviour
 
         SetRenderersVisible(true);
         SetGameOverScriptsEnabled(true);
+        ForceRecoverActionState();
 
         if (_movement != null)
         {
@@ -752,12 +875,15 @@ public class PlayerHP : MonoBehaviour
         if (damageRoutineCoroutine != null) StopCoroutine(damageRoutineCoroutine);
         if (externalKnockbackCoroutine != null) StopCoroutine(externalKnockbackCoroutine);
         if (staggerCoroutine != null) StopCoroutine(staggerCoroutine);
+        if (recoverySafetyCoroutine != null) StopCoroutine(recoverySafetyCoroutine);
 
         hpDelayCoroutine = null;
         damageFlashCoroutine = null;
         damageRoutineCoroutine = null;
         externalKnockbackCoroutine = null;
         staggerCoroutine = null;
+        recoverySafetyCoroutine = null;
+        actionScriptsLockedByDamage = false;
 
         if (damageFlashCanvasGroup != null)
         {
@@ -822,6 +948,7 @@ public class PlayerHP : MonoBehaviour
         if (damageRoutineCoroutine != null) StopCoroutine(damageRoutineCoroutine);
         if (externalKnockbackCoroutine != null) StopCoroutine(externalKnockbackCoroutine);
         if (staggerCoroutine != null) StopCoroutine(staggerCoroutine);
+        if (recoverySafetyCoroutine != null) StopCoroutine(recoverySafetyCoroutine);
 
         damageRoutineCoroutine = null;
         externalKnockbackCoroutine = null;

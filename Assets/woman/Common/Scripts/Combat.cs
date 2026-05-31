@@ -563,11 +563,41 @@ namespace Retro.ThirdPersonCharacter
 
         public void CancelCurrentActionByExternalInterrupt()
         {
+            ResetCombatStateForExternalInterrupt(true);
+        }
+
+        public void ResetActionStateAfterDamage()
+        {
+            ResetCombatStateForExternalInterrupt(false);
+        }
+
+        private void ResetCombatStateForExternalInterrupt(bool stopRunningCoroutines)
+        {
             isChargingHeavy = false;
             isWaitingHeavyDecision = false;
             AttackInProgress = false;
 
-            StopAllCoroutines();
+            bufferedLight = false;
+            bufferedHeavy = false;
+            bufferTimer = 0f;
+
+            comboStage = ComboStage.None;
+            comboTimer = 0f;
+            consecutiveLightCount = 0;
+            consecutiveHeavyCount = 0;
+
+            isComboCooldown = false;
+            isNeutralHeavyCooldown = false;
+
+            chargeHeldTimer = 0f;
+            chargePowerTimer = 0f;
+            heavyDecisionTimer = 0f;
+
+            if (stopRunningCoroutines)
+            {
+                StopAllCoroutines();
+            }
+
             comboCooldownRoutine = null;
             neutralHeavyCooldownRoutine = null;
             chargeLoopSfxRoutine = null;
@@ -578,6 +608,8 @@ namespace Retro.ThirdPersonCharacter
             if (_animator != null)
             {
                 _animator.speed = 1f;
+                _animator.ResetTrigger("Attack");
+                _animator.ResetTrigger("Ability");
             }
 
             if (_movement != null)
@@ -585,6 +617,8 @@ namespace Retro.ThirdPersonCharacter
                 _movement.EndChargeAttackMove();
                 _movement.SetAllowBlinkWhileAttacking(false);
                 _movement.StopAttackForwardMove();
+                _movement.isAttacking = false;
+                _movement.canMoveWhileAttacking = false;
             }
 
             if (daggerHitbox != null)
@@ -2031,6 +2065,7 @@ namespace Retro.ThirdPersonCharacter
             yield return new WaitForSeconds(comboFinishCooldown);
 
             isComboCooldown = false;
+            comboCooldownRoutine = null;
         }
 
         private void StartNeutralHeavyCooldown()
@@ -2050,6 +2085,7 @@ namespace Retro.ThirdPersonCharacter
             yield return new WaitForSeconds(neutralHeavyCooldown);
 
             isNeutralHeavyCooldown = false;
+            neutralHeavyCooldownRoutine = null;
         }
 
         private void TryConsumeBuffer()

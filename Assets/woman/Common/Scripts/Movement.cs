@@ -219,6 +219,11 @@ namespace Retro.ThirdPersonCharacter
 
         private void OnDisable()
         {
+            ResetActionStateAfterDamage();
+        }
+
+        public void ResetActionStateAfterDamage()
+        {
             ForceStopTrail();
             StopAttackForwardMove();
             EndChargeAttackMove();
@@ -230,7 +235,42 @@ namespace Retro.ThirdPersonCharacter
                 dragonStaggerRoutine = null;
             }
 
+            if (attackForwardMoveRoutine != null)
+            {
+                StopCoroutine(attackForwardMoveRoutine);
+                attackForwardMoveRoutine = null;
+            }
+
             isDragonStaggered = false;
+            isDashing = false;
+            dashAttackWindowTimer = 0f;
+
+            isAttacking = false;
+            canMoveWhileAttacking = false;
+            chargeAttackMoveOverrideActive = false;
+            attackMoveSpeedMultiplier = defaultAttackMoveSpeedMultiplier;
+            attackTurnSpeedMultiplier = defaultAttackTurnSpeedMultiplier;
+            allowBlinkWhileAttacking = false;
+            attackBlinkDistanceMultiplier = 0.5f;
+
+            moveDirection = Vector3.zero;
+            desiredLookDirection = Vector3.zero;
+            lastRawMoveInput = Vector2.zero;
+            lastMovementInput = Vector2.zero;
+            hasLockedMoveCameraYaw = false;
+            noMoveInputTimer = 0f;
+
+            if (_animator != null)
+            {
+                _animator.SetFloat("InputX", 0f);
+                _animator.SetFloat("InputY", 0f);
+                _animator.SetBool("IsInAir", false);
+
+                if (forceAnimatorRootMotionOff)
+                {
+                    _animator.applyRootMotion = false;
+                }
+            }
         }
 
         public void BeginChargeAttackMove(

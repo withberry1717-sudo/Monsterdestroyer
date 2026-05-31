@@ -24,6 +24,20 @@ namespace Retro.ThirdPersonCharacter
             ChargedHeavyLight
         }
 
+        private enum AttackEffectType
+        {
+            None,
+            Light,
+            Heavy,
+            ChargedHeavy,
+            ComboFinisher,
+            WeakWeakHeavyFinisher,
+            HeavyWeakHeavyFinisher,
+            ChargedWeakWeakHeavyFinisher,
+            ChargedHeavyWeakHeavyFinisher,
+            Dash
+        }
+
         [Header("Animator State Names")]
         [SerializeField] private string attackStateName = "RFA_Attack";
         [SerializeField] private string abilityStateName = "RFA_Ability";
@@ -46,21 +60,162 @@ namespace Retro.ThirdPersonCharacter
         private bool chargeReadyEffectPlayed = false;
         private bool maxChargeEffectPlayed = false;
 
-        [Header("Combo Finisher Particle")]
+        [Header("Attack Audio")]
+        [Tooltip("攻撃SE用AudioSource。空なら自分/子/親から自動取得します。")]
+        [SerializeField] private AudioSource attackAudioSource;
+
+        [Range(0f, 1f)]
+        [SerializeField] private float attackSfxVolume = 1f;
+
+        [Header("Light Attack Particle / SFX")]
+        [Tooltip("弱攻撃の判定が出る瞬間に出すパーティクルPrefab")]
+        [SerializeField] private ParticleSystem lightAttackParticlePrefab;
+
+        [Tooltip("弱攻撃の判定が出る瞬間に鳴らすSE")]
+        [SerializeField] private AudioClip lightAttackSfx;
+
+        [Tooltip("弱攻撃パーティクルの位置補正。x=左右, y=高さ, z=正面距離")]
+        [SerializeField] private Vector3 lightAttackParticleOffset = new Vector3(0f, 1.0f, 1.0f);
+
+        [Tooltip("弱攻撃パーティクルの角度補正。正面がズレる時にYなどを調整")]
+        [SerializeField] private Vector3 lightAttackParticleEulerOffset = Vector3.zero;
+
+        [Header("Heavy Attack Particle / SFX")]
+        [Tooltip("通常強攻撃の判定が出る瞬間に出すパーティクルPrefab")]
+        [SerializeField] private ParticleSystem heavyAttackParticlePrefab;
+
+        [Tooltip("通常強攻撃の判定が出る瞬間に鳴らすSE")]
+        [SerializeField] private AudioClip heavyAttackSfx;
+
+        [Tooltip("通常強攻撃パーティクルの位置補正。x=左右, y=高さ, z=正面距離")]
+        [SerializeField] private Vector3 heavyAttackParticleOffset = new Vector3(0f, 1.05f, 1.15f);
+
+        [Tooltip("通常強攻撃パーティクルの角度補正。正面がズレる時にYなどを調整")]
+        [SerializeField] private Vector3 heavyAttackParticleEulerOffset = Vector3.zero;
+
+        [Header("Charged Heavy Particle / SFX")]
+        [Tooltip("溜め強攻撃の判定が出る瞬間に出すパーティクルPrefab")]
+        [SerializeField] private ParticleSystem chargedHeavyParticlePrefab;
+
+        [Tooltip("溜め強攻撃の判定が出る瞬間に鳴らすSE")]
+        [SerializeField] private AudioClip chargedHeavySfx;
+
+        [Tooltip("溜め強攻撃パーティクルの位置補正。x=左右, y=高さ, z=正面距離")]
+        [SerializeField] private Vector3 chargedHeavyParticleOffset = new Vector3(0f, 1.1f, 1.25f);
+
+        [Tooltip("溜め強攻撃パーティクルの角度補正。正面がズレる時にYなどを調整")]
+        [SerializeField] private Vector3 chargedHeavyParticleEulerOffset = Vector3.zero;
+
+        [Header("Dash Attack Particle / SFX")]
+        [Tooltip("ダッシュ攻撃の判定が出る瞬間に出すパーティクルPrefab。空なら弱攻撃のものを使います。")]
+        [SerializeField] private ParticleSystem dashAttackParticlePrefab;
+
+        [Tooltip("ダッシュ攻撃の判定が出る瞬間に鳴らすSE。空なら弱攻撃SEを使います。")]
+        [SerializeField] private AudioClip dashAttackSfx;
+
+        [Tooltip("ダッシュ攻撃パーティクルの位置補正。x=左右, y=高さ, z=正面距離")]
+        [SerializeField] private Vector3 dashAttackParticleOffset = new Vector3(0f, 1.0f, 1.05f);
+
+        [Tooltip("ダッシュ攻撃パーティクルの角度補正。正面がズレる時にYなどを調整")]
+        [SerializeField] private Vector3 dashAttackParticleEulerOffset = Vector3.zero;
+
+        [Header("Combo Finisher Particle / SFX")]
         [Tooltip("弱弱強 / 強弱強 / 溜め強弱弱強 / 溜め強強弱強 の最後の強で出すパーティクル")]
         [SerializeField] private ParticleSystem comboFinisherParticlePrefab;
 
-        [Tooltip("パーティクルを出す位置。空ならプレイヤーの前に出す")]
+        [Tooltip("コンボ締めの判定が出る瞬間に鳴らすSE。空なら強攻撃SEを使います。")]
+        [SerializeField] private AudioClip comboFinisherSfx;
+
+        [Tooltip("パーティクルを出す位置。空ならプレイヤーの前に出す。設定しても回転はプレイヤー正面基準になります。")]
         [SerializeField] private Transform comboFinisherParticlePoint;
 
-        [Tooltip("パーティクル生成位置の補正")]
+        [Tooltip("パーティクル生成位置の補正。x=左右, y=高さ, z=正面距離")]
         [SerializeField] private Vector3 comboFinisherParticleOffset = new Vector3(0f, 1.0f, 1.0f);
+
+        [Tooltip("コンボ締めパーティクルの角度補正。正面がズレる時にYなどを調整")]
+        [SerializeField] private Vector3 comboFinisherParticleEulerOffset = Vector3.zero;
+
+        [Header("Individual Combo Finisher VFX / SFX")]
+        [Tooltip("弱弱強の最後の強で出すVFX。空なら共通Combo Finisher、さらに空なら通常強攻撃VFXを使います。")]
+        [SerializeField] private ParticleSystem weakWeakHeavyFinisherParticlePrefab;
+
+        [Tooltip("弱弱強の最後の強で鳴らすSE。空なら通常強攻撃SEを使います。")]
+        [SerializeField] private AudioClip weakWeakHeavyFinisherSfx;
+
+        [Tooltip("弱弱強フィニッシャーVFXの位置補正。x=左右, y=高さ, z=正面距離")]
+        [SerializeField] private Vector3 weakWeakHeavyFinisherParticleOffset = new Vector3(0f, 1.0f, 1.0f);
+
+        [Tooltip("弱弱強フィニッシャーVFXの角度補正。正面がズレる時にYなどを調整")]
+        [SerializeField] private Vector3 weakWeakHeavyFinisherParticleEulerOffset = Vector3.zero;
+
+        [Tooltip("強弱強の最後の強で出すVFX。空なら共通Combo Finisher、さらに空なら通常強攻撃VFXを使います。")]
+        [SerializeField] private ParticleSystem heavyWeakHeavyFinisherParticlePrefab;
+
+        [Tooltip("強弱強の最後の強で鳴らすSE。空なら通常強攻撃SEを使います。")]
+        [SerializeField] private AudioClip heavyWeakHeavyFinisherSfx;
+
+        [Tooltip("強弱強フィニッシャーVFXの位置補正。x=左右, y=高さ, z=正面距離")]
+        [SerializeField] private Vector3 heavyWeakHeavyFinisherParticleOffset = new Vector3(0f, 1.0f, 1.0f);
+
+        [Tooltip("強弱強フィニッシャーVFXの角度補正。正面がズレる時にYなどを調整")]
+        [SerializeField] private Vector3 heavyWeakHeavyFinisherParticleEulerOffset = Vector3.zero;
+
+        [Tooltip("溜め強→弱弱強の最後の強で出すVFX。空なら共通Combo Finisher、さらに空なら通常強攻撃VFXを使います。")]
+        [SerializeField] private ParticleSystem chargedWeakWeakHeavyFinisherParticlePrefab;
+
+        [Tooltip("溜め強→弱弱強の最後の強で鳴らすSE。空なら通常強攻撃SEを使います。")]
+        [SerializeField] private AudioClip chargedWeakWeakHeavyFinisherSfx;
+
+        [Tooltip("溜め強→弱弱強フィニッシャーVFXの位置補正。x=左右, y=高さ, z=正面距離")]
+        [SerializeField] private Vector3 chargedWeakWeakHeavyFinisherParticleOffset = new Vector3(0f, 1.0f, 1.0f);
+
+        [Tooltip("溜め強→弱弱強フィニッシャーVFXの角度補正。正面がズレる時にYなどを調整")]
+        [SerializeField] private Vector3 chargedWeakWeakHeavyFinisherParticleEulerOffset = Vector3.zero;
+
+        [Tooltip("溜め強→強弱強の最後の強で出すVFX。空なら共通Combo Finisher、さらに空なら通常強攻撃VFXを使います。")]
+        [SerializeField] private ParticleSystem chargedHeavyWeakHeavyFinisherParticlePrefab;
+
+        [Tooltip("溜め強→強弱強の最後の強で鳴らすSE。空なら通常強攻撃SEを使います。")]
+        [SerializeField] private AudioClip chargedHeavyWeakHeavyFinisherSfx;
+
+        [Tooltip("溜め強→強弱強フィニッシャーVFXの位置補正。x=左右, y=高さ, z=正面距離")]
+        [SerializeField] private Vector3 chargedHeavyWeakHeavyFinisherParticleOffset = new Vector3(0f, 1.0f, 1.0f);
+
+        [Tooltip("溜め強→強弱強フィニッシャーVFXの角度補正。正面がズレる時にYなどを調整")]
+        [SerializeField] private Vector3 chargedHeavyWeakHeavyFinisherParticleEulerOffset = Vector3.zero;
+
+        [Header("Individual Combo Finisher Hitbox Size")]
+        [Tooltip("弱弱強フィニッシャー中だけ、剣の当たり判定Transformを何倍にするか。1なら通常サイズ。")]
+        [SerializeField] private float weakWeakHeavyFinisherHitboxScale = 1.25f;
+
+        [Tooltip("強弱強フィニッシャー中だけ、剣の当たり判定Transformを何倍にするか。1なら通常サイズ。")]
+        [SerializeField] private float heavyWeakHeavyFinisherHitboxScale = 1.25f;
+
+        [Tooltip("溜め強→弱弱強フィニッシャー中だけ、剣の当たり判定Transformを何倍にするか。1なら通常サイズ。")]
+        [SerializeField] private float chargedWeakWeakHeavyFinisherHitboxScale = 1.35f;
+
+        [Tooltip("溜め強→強弱強フィニッシャー中だけ、剣の当たり判定Transformを何倍にするか。1なら通常サイズ。")]
+        [SerializeField] private float chargedHeavyWeakHeavyFinisherHitboxScale = 1.35f;
+
+        [Tooltip("ON推奨。フィニッシャー判定終了後、HitboxのScaleを元に戻します。")]
+        [SerializeField] private bool restoreFinisherHitboxScaleAfterHit = true;
 
         [Tooltip("生成したパーティクルを何秒後に消すか")]
         [SerializeField] private float comboFinisherParticleDestroyTime = 2.0f;
 
         [Tooltip("ONならフィニッシャーの判定が出る瞬間にパーティクルを出す")]
         [SerializeField] private bool playFinisherParticleOnHitStart = true;
+
+
+        [Header("Attack Particle Safety")]
+        [Tooltip("ON推奨。一回の攻撃につきパーティクル/SEを一回だけ再生します。多重発生防止用です。")]
+        [SerializeField] private bool playAttackEffectOnlyOncePerAttack = true;
+
+        [Tooltip("ON推奨。Prefab側がLoopになっていても、生成した攻撃パーティクルは単発化します。めっちゃ出続ける時の対策です。")]
+        [SerializeField] private bool forceAttackParticleLoopOff = true;
+
+        [Tooltip("通常攻撃系パーティクルを何秒後に消すか。長いと重なって多く見えます。0.8〜1.5推奨。")]
+        [SerializeField] private float normalAttackParticleDestroyTime = 1.2f;
 
         [Header("Attack Forward Movement")]
         [SerializeField] private bool useAttackForwardMove = true;
@@ -212,6 +367,21 @@ namespace Retro.ThirdPersonCharacter
             _animator = GetComponent<Animator>();
             _playerInput = GetComponent<PlayerInput>();
             _movement = GetComponent<Movement>();
+
+            if (attackAudioSource == null)
+            {
+                attackAudioSource = GetComponent<AudioSource>();
+            }
+
+            if (attackAudioSource == null)
+            {
+                attackAudioSource = GetComponentInChildren<AudioSource>();
+            }
+
+            if (attackAudioSource == null)
+            {
+                attackAudioSource = GetComponentInParent<AudioSource>();
+            }
 
             CreateChargeEffectsIfNeeded();
             StopChargeEffects();
@@ -643,7 +813,8 @@ namespace Retro.ThirdPersonCharacter
                     false,
                     false,
                     999f,
-                    false
+                    false,
+                    AttackEffectType.Light
                 )
             );
         }
@@ -675,7 +846,8 @@ namespace Retro.ThirdPersonCharacter
                     false,
                     false,
                     999f,
-                    false
+                    false,
+                    AttackEffectType.Dash
                 )
             );
         }
@@ -709,7 +881,8 @@ namespace Retro.ThirdPersonCharacter
                     false,
                     true,
                     quickHeavyMoveUnlockTime,
-                    false
+                    false,
+                    AttackEffectType.Heavy
                 )
             );
         }
@@ -743,7 +916,8 @@ namespace Retro.ThirdPersonCharacter
                     true,
                     true,
                     quickHeavySecondMoveUnlockTime,
-                    false
+                    false,
+                    AttackEffectType.Heavy
                 )
             );
         }
@@ -753,7 +927,7 @@ namespace Retro.ThirdPersonCharacter
             switch (comboStage)
             {
                 case ComboStage.Light2:
-                    StartHeavyFinisher("弱弱強", weakWeakHeavyFinisherMultiplier);
+                    StartHeavyFinisher("弱弱強", weakWeakHeavyFinisherMultiplier, AttackEffectType.WeakWeakHeavyFinisher);
                     break;
 
                 case ComboStage.Heavy1:
@@ -761,7 +935,7 @@ namespace Retro.ThirdPersonCharacter
                     break;
 
                 case ComboStage.HeavyLight:
-                    StartHeavyFinisher("強弱強", heavyWeakHeavyFinisherMultiplier);
+                    StartHeavyFinisher("強弱強", heavyWeakHeavyFinisherMultiplier, AttackEffectType.HeavyWeakHeavyFinisher);
                     break;
 
                 case ComboStage.ChargedHeavyDone:
@@ -769,11 +943,11 @@ namespace Retro.ThirdPersonCharacter
                     break;
 
                 case ComboStage.ChargedLight2:
-                    StartHeavyFinisher("溜め強→弱弱強", chargedWeakWeakHeavyFinisherMultiplier);
+                    StartHeavyFinisher("溜め強→弱弱強", chargedWeakWeakHeavyFinisherMultiplier, AttackEffectType.ChargedWeakWeakHeavyFinisher);
                     break;
 
                 case ComboStage.ChargedHeavyLight:
-                    StartHeavyFinisher("溜め強→強弱強", chargedHeavyWeakHeavyFinisherMultiplier);
+                    StartHeavyFinisher("溜め強→強弱強", chargedHeavyWeakHeavyFinisherMultiplier, AttackEffectType.ChargedHeavyWeakHeavyFinisher);
                     break;
             }
         }
@@ -807,12 +981,13 @@ namespace Retro.ThirdPersonCharacter
                     false,
                     true,
                     quickHeavyMoveUnlockTime,
-                    false
+                    false,
+                    AttackEffectType.Heavy
                 )
             );
         }
 
-        private void StartHeavyFinisher(string comboName, float damageMultiplier)
+        private void StartHeavyFinisher(string comboName, float damageMultiplier, AttackEffectType finisherEffectType)
         {
             Debug.Log("コンボ締め: " + comboName);
 
@@ -840,7 +1015,8 @@ namespace Retro.ThirdPersonCharacter
                     true,
                     true,
                     heavyFinisherMoveUnlockTime,
-                    true
+                    true,
+                    finisherEffectType
                 )
             );
         }
@@ -877,7 +1053,8 @@ namespace Retro.ThirdPersonCharacter
                     false,
                     true,
                     chargedHeavyMoveUnlockTime,
-                    false
+                    false,
+                    AttackEffectType.ChargedHeavy
                 )
             );
         }
@@ -917,7 +1094,8 @@ namespace Retro.ThirdPersonCharacter
             bool startNeutralHeavyCooldownAfterEnd,
             bool allowLateMovement,
             float lateMovementUnlockTime,
-            bool playComboFinisherParticle
+            bool playComboFinisherParticle,
+            AttackEffectType attackEffectType
         )
         {
             AttackInProgress = true;
@@ -947,7 +1125,10 @@ namespace Retro.ThirdPersonCharacter
             float timer = 0f;
             bool hitboxEnabled = false;
             bool lateMoveEnabled = false;
-            bool finisherParticlePlayed = false;
+            bool attackEffectPlayed = false;
+            bool hitboxScaleChanged = false;
+            Vector3 originalHitboxScale = Vector3.one;
+            float hitboxScaleMultiplier = GetFinisherHitboxScaleMultiplier(attackEffectType);
 
             totalDuration = Mathf.Max(totalDuration, hitEnd + 0.05f);
 
@@ -958,13 +1139,22 @@ namespace Retro.ThirdPersonCharacter
                 if (!hitboxEnabled && timer >= hitStart)
                 {
                     hitboxEnabled = true;
+                    ApplyTemporaryHitboxScale(hitbox, hitboxScaleMultiplier, ref originalHitboxScale, ref hitboxScaleChanged);
                     hitbox.EnableHitbox(damageMultiplier);
-                    Debug.Log("判定ON / 倍率: " + damageMultiplier);
+                    Debug.Log("判定ON / 倍率: " + damageMultiplier + " / HitboxScale: " + hitboxScaleMultiplier);
 
-                    if (playComboFinisherParticle && playFinisherParticleOnHitStart && !finisherParticlePlayed)
+                    if (!playAttackEffectOnlyOncePerAttack || !attackEffectPlayed)
                     {
-                        finisherParticlePlayed = true;
-                        PlayComboFinisherParticle();
+                        attackEffectPlayed = true;
+
+                        if (playComboFinisherParticle && playFinisherParticleOnHitStart)
+                        {
+                            PlayAttackEffect(attackEffectType);
+                        }
+                        else
+                        {
+                            PlayAttackEffect(attackEffectType);
+                        }
                     }
                 }
 
@@ -972,6 +1162,7 @@ namespace Retro.ThirdPersonCharacter
                 {
                     hitboxEnabled = false;
                     hitbox.DisableHitbox();
+                    RestoreTemporaryHitboxScale(hitbox, originalHitboxScale, ref hitboxScaleChanged);
                     Debug.Log("判定OFF");
                 }
 
@@ -985,6 +1176,7 @@ namespace Retro.ThirdPersonCharacter
             }
 
             hitbox.DisableHitbox();
+            RestoreTemporaryHitboxScale(hitbox, originalHitboxScale, ref hitboxScaleChanged);
 
             EndAttack();
 
@@ -1007,38 +1199,355 @@ namespace Retro.ThirdPersonCharacter
 
         private void PlayComboFinisherParticle()
         {
-            if (comboFinisherParticlePrefab == null)
+            PlayAttackEffect(AttackEffectType.ComboFinisher);
+        }
+
+        private void PlayAttackEffect(AttackEffectType effectType)
+        {
+            ParticleSystem particlePrefab = GetAttackParticlePrefab(effectType);
+            AudioClip sfx = GetAttackSfx(effectType);
+            Vector3 offset = GetAttackParticleOffset(effectType);
+            Vector3 eulerOffset = GetAttackParticleEulerOffset(effectType);
+            float destroyTime = GetAttackParticleDestroyTime(effectType);
+
+            PlayAttackSfx(sfx);
+
+            if (particlePrefab == null)
             {
                 return;
             }
 
-            Vector3 spawnPosition;
-            Quaternion spawnRotation;
-
-            if (comboFinisherParticlePoint != null)
-            {
-                spawnPosition = comboFinisherParticlePoint.position;
-                spawnRotation = comboFinisherParticlePoint.rotation;
-            }
-            else
-            {
-                spawnPosition = transform.position
-                    + transform.forward * comboFinisherParticleOffset.z
-                    + transform.right * comboFinisherParticleOffset.x
-                    + transform.up * comboFinisherParticleOffset.y;
-
-                spawnRotation = transform.rotation;
-            }
+            Vector3 spawnPosition = GetPlayerFrontParticlePosition(offset, effectType);
+            Quaternion spawnRotation = GetPlayerFrontParticleRotation(eulerOffset);
 
             ParticleSystem particle = Instantiate(
-                comboFinisherParticlePrefab,
+                particlePrefab,
                 spawnPosition,
                 spawnRotation
             );
 
-            particle.Play();
+            particle.transform.localScale = particlePrefab.transform.localScale;
 
-            Destroy(particle.gameObject, comboFinisherParticleDestroyTime);
+            if (forceAttackParticleLoopOff)
+            {
+                ForceParticleLoopOff(particle);
+            }
+
+            particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            particle.Play(true);
+
+            Destroy(particle.gameObject, destroyTime);
+        }
+
+        private void ForceParticleLoopOff(ParticleSystem rootParticle)
+        {
+            if (rootParticle == null) return;
+
+            ParticleSystem[] particles = rootParticle.GetComponentsInChildren<ParticleSystem>(true);
+
+            foreach (ParticleSystem ps in particles)
+            {
+                var main = ps.main;
+                main.loop = false;
+                main.playOnAwake = false;
+            }
+        }
+
+        private void ApplyTemporaryHitboxScale(
+            WeaponHitbox hitbox,
+            float scaleMultiplier,
+            ref Vector3 originalScale,
+            ref bool scaleChanged
+        )
+        {
+            if (hitbox == null) return;
+            if (scaleChanged) return;
+            if (Mathf.Approximately(scaleMultiplier, 1f)) return;
+            if (scaleMultiplier <= 0f) return;
+
+            Transform hitboxTransform = hitbox.transform;
+            originalScale = hitboxTransform.localScale;
+            hitboxTransform.localScale = originalScale * scaleMultiplier;
+            scaleChanged = true;
+        }
+
+        private void RestoreTemporaryHitboxScale(
+            WeaponHitbox hitbox,
+            Vector3 originalScale,
+            ref bool scaleChanged
+        )
+        {
+            if (!restoreFinisherHitboxScaleAfterHit) return;
+            if (hitbox == null) return;
+            if (!scaleChanged) return;
+
+            hitbox.transform.localScale = originalScale;
+            scaleChanged = false;
+        }
+
+        private float GetFinisherHitboxScaleMultiplier(AttackEffectType effectType)
+        {
+            switch (effectType)
+            {
+                case AttackEffectType.WeakWeakHeavyFinisher:
+                    return Mathf.Max(0.01f, weakWeakHeavyFinisherHitboxScale);
+
+                case AttackEffectType.HeavyWeakHeavyFinisher:
+                    return Mathf.Max(0.01f, heavyWeakHeavyFinisherHitboxScale);
+
+                case AttackEffectType.ChargedWeakWeakHeavyFinisher:
+                    return Mathf.Max(0.01f, chargedWeakWeakHeavyFinisherHitboxScale);
+
+                case AttackEffectType.ChargedHeavyWeakHeavyFinisher:
+                    return Mathf.Max(0.01f, chargedHeavyWeakHeavyFinisherHitboxScale);
+
+                default:
+                    return 1f;
+            }
+        }
+
+        private ParticleSystem GetAttackParticlePrefab(AttackEffectType effectType)
+        {
+            switch (effectType)
+            {
+                case AttackEffectType.Light:
+                    return lightAttackParticlePrefab;
+
+                case AttackEffectType.Dash:
+                    return dashAttackParticlePrefab != null ? dashAttackParticlePrefab : lightAttackParticlePrefab;
+
+                case AttackEffectType.Heavy:
+                    return heavyAttackParticlePrefab;
+
+                case AttackEffectType.ChargedHeavy:
+                    return chargedHeavyParticlePrefab != null ? chargedHeavyParticlePrefab : heavyAttackParticlePrefab;
+
+                case AttackEffectType.ComboFinisher:
+                    return comboFinisherParticlePrefab != null ? comboFinisherParticlePrefab : heavyAttackParticlePrefab;
+
+                case AttackEffectType.WeakWeakHeavyFinisher:
+                    return weakWeakHeavyFinisherParticlePrefab != null
+                        ? weakWeakHeavyFinisherParticlePrefab
+                        : (comboFinisherParticlePrefab != null ? comboFinisherParticlePrefab : heavyAttackParticlePrefab);
+
+                case AttackEffectType.HeavyWeakHeavyFinisher:
+                    return heavyWeakHeavyFinisherParticlePrefab != null
+                        ? heavyWeakHeavyFinisherParticlePrefab
+                        : (comboFinisherParticlePrefab != null ? comboFinisherParticlePrefab : heavyAttackParticlePrefab);
+
+                case AttackEffectType.ChargedWeakWeakHeavyFinisher:
+                    return chargedWeakWeakHeavyFinisherParticlePrefab != null
+                        ? chargedWeakWeakHeavyFinisherParticlePrefab
+                        : (comboFinisherParticlePrefab != null ? comboFinisherParticlePrefab : heavyAttackParticlePrefab);
+
+                case AttackEffectType.ChargedHeavyWeakHeavyFinisher:
+                    return chargedHeavyWeakHeavyFinisherParticlePrefab != null
+                        ? chargedHeavyWeakHeavyFinisherParticlePrefab
+                        : (comboFinisherParticlePrefab != null ? comboFinisherParticlePrefab : heavyAttackParticlePrefab);
+
+                default:
+                    return null;
+            }
+        }
+
+        private AudioClip GetAttackSfx(AttackEffectType effectType)
+        {
+            switch (effectType)
+            {
+                case AttackEffectType.Light:
+                    return lightAttackSfx;
+
+                case AttackEffectType.Dash:
+                    return dashAttackSfx != null ? dashAttackSfx : lightAttackSfx;
+
+                case AttackEffectType.Heavy:
+                    return heavyAttackSfx;
+
+                case AttackEffectType.ChargedHeavy:
+                    return chargedHeavySfx != null ? chargedHeavySfx : heavyAttackSfx;
+
+                case AttackEffectType.ComboFinisher:
+                    return comboFinisherSfx != null ? comboFinisherSfx : heavyAttackSfx;
+
+                case AttackEffectType.WeakWeakHeavyFinisher:
+                    return weakWeakHeavyFinisherSfx != null ? weakWeakHeavyFinisherSfx : heavyAttackSfx;
+
+                case AttackEffectType.HeavyWeakHeavyFinisher:
+                    return heavyWeakHeavyFinisherSfx != null ? heavyWeakHeavyFinisherSfx : heavyAttackSfx;
+
+                case AttackEffectType.ChargedWeakWeakHeavyFinisher:
+                    return chargedWeakWeakHeavyFinisherSfx != null ? chargedWeakWeakHeavyFinisherSfx : heavyAttackSfx;
+
+                case AttackEffectType.ChargedHeavyWeakHeavyFinisher:
+                    return chargedHeavyWeakHeavyFinisherSfx != null ? chargedHeavyWeakHeavyFinisherSfx : heavyAttackSfx;
+
+                default:
+                    return null;
+            }
+        }
+
+        private Vector3 GetAttackParticleOffset(AttackEffectType effectType)
+        {
+            switch (effectType)
+            {
+                case AttackEffectType.Light:
+                    return lightAttackParticleOffset;
+
+                case AttackEffectType.Dash:
+                    return dashAttackParticleOffset;
+
+                case AttackEffectType.Heavy:
+                    return heavyAttackParticleOffset;
+
+                case AttackEffectType.ChargedHeavy:
+                    return chargedHeavyParticleOffset;
+
+                case AttackEffectType.ComboFinisher:
+                    return comboFinisherParticleOffset;
+
+                case AttackEffectType.WeakWeakHeavyFinisher:
+                    return weakWeakHeavyFinisherParticleOffset;
+
+                case AttackEffectType.HeavyWeakHeavyFinisher:
+                    return heavyWeakHeavyFinisherParticleOffset;
+
+                case AttackEffectType.ChargedWeakWeakHeavyFinisher:
+                    return chargedWeakWeakHeavyFinisherParticleOffset;
+
+                case AttackEffectType.ChargedHeavyWeakHeavyFinisher:
+                    return chargedHeavyWeakHeavyFinisherParticleOffset;
+
+                default:
+                    return Vector3.zero;
+            }
+        }
+
+        private Vector3 GetAttackParticleEulerOffset(AttackEffectType effectType)
+        {
+            switch (effectType)
+            {
+                case AttackEffectType.Light:
+                    return lightAttackParticleEulerOffset;
+
+                case AttackEffectType.Dash:
+                    return dashAttackParticleEulerOffset;
+
+                case AttackEffectType.Heavy:
+                    return heavyAttackParticleEulerOffset;
+
+                case AttackEffectType.ChargedHeavy:
+                    return chargedHeavyParticleEulerOffset;
+
+                case AttackEffectType.ComboFinisher:
+                    return comboFinisherParticleEulerOffset;
+
+                case AttackEffectType.WeakWeakHeavyFinisher:
+                    return weakWeakHeavyFinisherParticleEulerOffset;
+
+                case AttackEffectType.HeavyWeakHeavyFinisher:
+                    return heavyWeakHeavyFinisherParticleEulerOffset;
+
+                case AttackEffectType.ChargedWeakWeakHeavyFinisher:
+                    return chargedWeakWeakHeavyFinisherParticleEulerOffset;
+
+                case AttackEffectType.ChargedHeavyWeakHeavyFinisher:
+                    return chargedHeavyWeakHeavyFinisherParticleEulerOffset;
+
+                default:
+                    return Vector3.zero;
+            }
+        }
+
+        private float GetAttackParticleDestroyTime(AttackEffectType effectType)
+        {
+            if (effectType == AttackEffectType.ComboFinisher
+                || effectType == AttackEffectType.WeakWeakHeavyFinisher
+                || effectType == AttackEffectType.HeavyWeakHeavyFinisher
+                || effectType == AttackEffectType.ChargedWeakWeakHeavyFinisher
+                || effectType == AttackEffectType.ChargedHeavyWeakHeavyFinisher)
+            {
+                return comboFinisherParticleDestroyTime;
+            }
+
+            return normalAttackParticleDestroyTime;
+        }
+
+        private Vector3 GetPlayerFrontParticlePosition(Vector3 offset, AttackEffectType effectType)
+        {
+            if (effectType == AttackEffectType.ComboFinisher && comboFinisherParticlePoint != null)
+            {
+                return comboFinisherParticlePoint.position
+                    + GetFlatRight() * offset.x
+                    + Vector3.up * offset.y
+                    + GetFlatForward() * offset.z;
+            }
+
+            return transform.position
+                + GetFlatRight() * offset.x
+                + Vector3.up * offset.y
+                + GetFlatForward() * offset.z;
+        }
+
+        private Quaternion GetPlayerFrontParticleRotation(Vector3 eulerOffset)
+        {
+            return Quaternion.LookRotation(GetFlatForward(), Vector3.up) * Quaternion.Euler(eulerOffset);
+        }
+
+        private Vector3 GetFlatForward()
+        {
+            Vector3 forward = transform.forward;
+            forward.y = 0f;
+
+            if (forward.sqrMagnitude < 0.0001f)
+            {
+                forward = Vector3.forward;
+            }
+
+            return forward.normalized;
+        }
+
+        private Vector3 GetFlatRight()
+        {
+            Vector3 right = transform.right;
+            right.y = 0f;
+
+            if (right.sqrMagnitude < 0.0001f)
+            {
+                right = Vector3.right;
+            }
+
+            return right.normalized;
+        }
+
+        private void PlayAttackSfx(AudioClip clip)
+        {
+            if (clip == null)
+            {
+                return;
+            }
+
+            if (attackAudioSource == null)
+            {
+                attackAudioSource = GetComponent<AudioSource>();
+            }
+
+            if (attackAudioSource == null)
+            {
+                attackAudioSource = GetComponentInChildren<AudioSource>();
+            }
+
+            if (attackAudioSource == null)
+            {
+                attackAudioSource = GetComponentInParent<AudioSource>();
+            }
+
+            if (attackAudioSource == null)
+            {
+                Debug.LogWarning("[Combat] Attack AudioSourceが見つからないため、攻撃SEを再生できません。", this);
+                return;
+            }
+
+            attackAudioSource.PlayOneShot(clip, attackSfxVolume);
         }
 
         private void EnableLateAttackMovement()

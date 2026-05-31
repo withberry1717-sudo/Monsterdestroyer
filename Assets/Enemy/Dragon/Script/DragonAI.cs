@@ -33,6 +33,22 @@ public class DragonAI : MonoBehaviour
         DoubleCharge
     }
 
+    private enum DragonEffectKind
+    {
+        Roar,
+        Down,
+        Death,
+        Step,
+        Swipe,
+        TailSlam,
+        TailSwipe,
+        BreathCharge,
+        BreathFire,
+        ChargeStart,
+        ChargeRun,
+        ChargeEnd
+    }
+
     [Header("参照設定")]
     [Tooltip("Dragon_AllObjectsに付いているDragonDragonMotionを入れてください。移動、回転、アニメーション再生を担当します。")]
     public DragonDragonMotion motion;
@@ -822,15 +838,17 @@ public class DragonAI : MonoBehaviour
             effectPlayer = GetComponent<DragonAnimationEffectPlayer>();
         }
 
-        if (audioSource == null)
+        if (effectPlayer == null)
         {
-            audioSource = GetComponent<AudioSource>();
+            effectPlayer = GetComponentInChildren<DragonAnimationEffectPlayer>();
         }
 
-        if (audioSource == null)
+        if (effectPlayer == null)
         {
-            audioSource = GetComponentInParent<AudioSource>();
+            effectPlayer = GetComponentInParent<DragonAnimationEffectPlayer>();
         }
+
+        FindAudioSourceIfNeeded();
 
         if (beamBreathAimer == null && beamBreathPivot != null)
         {
@@ -1654,12 +1672,7 @@ public class DragonAI : MonoBehaviour
             targetAttackDuration = rawAttackDuration;
         }
 
-        if (swipeAnticipationParticle != null)
-        {
-            swipeAnticipationParticle.Play();
-        }
-
-        PlaySfx(swipeAnticipationSfx);
+        PlayEffect(DragonEffectKind.Swipe, swipeAnticipationSfx, swipeAnticipationParticle);
 
         if (shouldStretchAnticipation)
         {
@@ -1685,12 +1698,7 @@ public class DragonAI : MonoBehaviour
             swipeAnticipationParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
-        if (swipeParticle != null)
-        {
-            swipeParticle.Play();
-        }
-
-        PlaySfx(swipeSfx);
+        PlayEffect(DragonEffectKind.Swipe, swipeSfx, swipeParticle);
 
         if (shouldStretchAttack)
         {
@@ -1797,8 +1805,7 @@ public class DragonAI : MonoBehaviour
         SetAnimatorSpeedScaled(breathAnimatorSpeed);
         motion.PlayAnim(motion.breathAnim, true);
 
-        if (wideBreathChargeParticle != null) wideBreathChargeParticle.Play();
-        PlaySfx(wideBreathChargeSfx);
+        PlayEffect(DragonEffectKind.BreathCharge, wideBreathChargeSfx, wideBreathChargeParticle);
 
         float start = motion.FrameToSeconds(wideBreathStartFrame);
         float end = motion.FrameToSeconds(wideBreathEndFrame);
@@ -1817,8 +1824,7 @@ public class DragonAI : MonoBehaviour
             wideBreathChargeParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
-        if (wideBreathFireParticle != null) wideBreathFireParticle.Play();
-        PlaySfx(wideBreathFireSfx);
+        PlayEffect(DragonEffectKind.BreathFire, wideBreathFireSfx, wideBreathFireParticle);
 
         if (wideBreathHitbox != null) wideBreathHitbox.EnableHitbox();
 
@@ -1860,8 +1866,7 @@ public class DragonAI : MonoBehaviour
             beamBreathAimer.AimInstant();
         }
 
-        if (beamBreathChargeParticle != null) beamBreathChargeParticle.Play();
-        PlaySfx(beamBreathChargeSfx);
+        PlayEffect(DragonEffectKind.BreathCharge, beamBreathChargeSfx, beamBreathChargeParticle);
 
         float start = motion.FrameToSeconds(beamBreathStartFrame);
         float end = motion.FrameToSeconds(beamBreathEndFrame);
@@ -1898,8 +1903,7 @@ public class DragonAI : MonoBehaviour
                     beamBreathChargeParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
                 }
 
-                if (beamBreathFireParticle != null) beamBreathFireParticle.Play();
-                PlaySfx(beamBreathFireSfx);
+                PlayEffect(DragonEffectKind.BreathFire, beamBreathFireSfx, beamBreathFireParticle);
             }
 
             if (!hitboxEnabled && timer >= start)
@@ -1953,8 +1957,7 @@ public class DragonAI : MonoBehaviour
         motion.PlayAnim(motion.runAnim, true);
         SetAnimatorSpeedScaled(chargeTellAnimationSpeed);
 
-        if (chargeHoldParticle != null) chargeHoldParticle.Play();
-        PlaySfx(chargeHoldSfx);
+        PlayEffect(DragonEffectKind.ChargeStart, chargeHoldSfx, chargeHoldParticle);
 
         float tellTimer = 0f;
         float checkTimer = 0f;
@@ -1976,8 +1979,7 @@ public class DragonAI : MonoBehaviour
             chargeHoldParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
-        if (chargeReadyParticle != null) chargeReadyParticle.Play();
-        PlaySfx(chargeReadySfx);
+        PlayEffect(DragonEffectKind.ChargeStart, chargeReadySfx, chargeReadyParticle);
 
         ResetAnimatorSpeedHard();
         PlayMoveAnimSafe(motion.runAnim);
@@ -2000,8 +2002,7 @@ public class DragonAI : MonoBehaviour
         float previousDistance = 0f;
         float runCheckTimer = 0f;
 
-        if (chargeRunParticle != null) chargeRunParticle.Play();
-        PlaySfx(chargeRunSfx);
+        PlayEffect(DragonEffectKind.ChargeRun, chargeRunSfx, chargeRunParticle);
 
         if (chargeHitbox != null) chargeHitbox.EnableHitbox();
 
@@ -2034,7 +2035,7 @@ public class DragonAI : MonoBehaviour
 
         StopAllChargeParticles();
         ResetAnimatorSpeedHard();
-        PlaySfx(chargeEndSfx);
+        PlayEffect(DragonEffectKind.ChargeEnd, chargeEndSfx, null);
 
         yield return new WaitForSeconds(chargeRecoveryTime);
 
@@ -2127,8 +2128,7 @@ public class DragonAI : MonoBehaviour
 
         motion.PlayAnim(motion.tailSlamAnim, true);
 
-        if (tailSlamParticle != null) tailSlamParticle.Play();
-        PlaySfx(tailSlamSfx);
+        PlayEffect(DragonEffectKind.TailSlam, tailSlamSfx, tailSlamParticle);
 
         float timer = 0f;
 
@@ -2241,8 +2241,7 @@ public class DragonAI : MonoBehaviour
         ResetAnimatorSpeedHard();
         motion.PlayAnim(motion.tailSwipeAnim, true);
 
-        if (tailSwipeParticle != null) tailSwipeParticle.Play();
-        PlaySfx(tailSwipeSfx);
+        PlayEffect(DragonEffectKind.TailSwipe, tailSwipeSfx, tailSwipeParticle);
 
         float timer = 0f;
 
@@ -2412,7 +2411,7 @@ public class DragonAI : MonoBehaviour
             tailSwipeSecondTellParticle.Play();
         }
 
-        PlaySfx(tailSwipeSecondTellSfx);
+        PlayEffect(DragonEffectKind.TailSwipe, tailSwipeSecondTellSfx, null);
 
         float rawTellDuration = Mathf.Max(0.01f, tellEndTime - tellStartTime);
         float targetTellDuration = Mathf.Max(rawTellDuration, tailSwipeSecondTellDuration);
@@ -2522,7 +2521,7 @@ public class DragonAI : MonoBehaviour
             tailSwipeSpinDashParticle.Play();
         }
 
-        PlaySfx(tailSwipeSpinDashSfx);
+        PlayEffect(DragonEffectKind.TailSwipe, tailSwipeSpinDashSfx, null);
 
         float rawLoopDuration = Mathf.Max(0.01f, loopEndTime - loopStartTime);
         float loopDuration = Mathf.Max(0.05f, tailSwipeSpinLoopDuration);
@@ -2630,7 +2629,7 @@ public class DragonAI : MonoBehaviour
             tailSwipeSpinDashParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
-        PlaySfx(tailSwipeSpinDashEndSfx);
+        PlayEffect(DragonEffectKind.TailSwipe, tailSwipeSpinDashEndSfx, null);
         ResetAnimatorSpeedHard();
 
         if (dragonAnimator != null)
@@ -2746,7 +2745,7 @@ public class DragonAI : MonoBehaviour
             downParticle.Play();
         }
 
-        PlaySfx(downSfx);
+        PlayEffect(DragonEffectKind.Down, downSfx, null);
 
         yield return new WaitForSeconds(GetHalfHPDownDuration());
 
@@ -2799,7 +2798,7 @@ public class DragonAI : MonoBehaviour
             downParticle.Play();
         }
 
-        PlaySfx(downSfx);
+        PlayEffect(DragonEffectKind.Down, downSfx, null);
 
         yield return new WaitForSeconds(Mathf.Max(0.05f, tailBreakBigHitDuration));
 
@@ -2828,7 +2827,7 @@ public class DragonAI : MonoBehaviour
             downParticle.Play();
         }
 
-        PlaySfx(downSfx);
+        PlayEffect(DragonEffectKind.Down, downSfx, null);
 
         yield return new WaitForSeconds(GetHalfHPDownDuration());
 
@@ -2883,8 +2882,7 @@ public class DragonAI : MonoBehaviour
             motion.PlayAnim(motion.deathAnim, true);
         }
 
-        if (deathParticle != null) deathParticle.Play();
-        PlaySfx(deathSfx);
+        PlayEffect(DragonEffectKind.Death, deathSfx, deathParticle);
     }
 
     private bool IsTailBroken()
@@ -3317,8 +3315,7 @@ public class DragonAI : MonoBehaviour
 
     private void DoRoarEffect()
     {
-        if (roarParticle != null) roarParticle.Play();
-        PlaySfx(roarSfx);
+        PlayEffect(DragonEffectKind.Roar, roarSfx, roarParticle);
 
         Collider[] hits = Physics.OverlapSphere(transform.position, roarStaggerRadius, playerLayer);
 
@@ -3328,19 +3325,97 @@ public class DragonAI : MonoBehaviour
         }
     }
 
+    private void PlayEffect(DragonEffectKind kind, AudioClip overrideClip, ParticleSystem overrideParticle)
+    {
+        ParticleSystem particle = overrideParticle != null ? overrideParticle : GetCommonParticle(kind);
+        if (particle != null)
+        {
+            particle.Play();
+        }
+
+        AudioClip clip = overrideClip != null ? overrideClip : GetCommonClip(kind);
+        PlaySfx(clip);
+    }
+
+    private AudioClip GetCommonClip(DragonEffectKind kind)
+    {
+        if (effectPlayer == null) return null;
+
+        switch (kind)
+        {
+            case DragonEffectKind.Roar: return effectPlayer.roarSfx;
+            case DragonEffectKind.Down: return effectPlayer.downSfx;
+            case DragonEffectKind.Death: return effectPlayer.deathSfx;
+            case DragonEffectKind.Step: return effectPlayer.stepSfx;
+            case DragonEffectKind.Swipe: return effectPlayer.swipeSfx;
+            case DragonEffectKind.TailSlam: return effectPlayer.tailSlamSfx;
+            case DragonEffectKind.TailSwipe: return effectPlayer.tailSwipeSfx;
+            case DragonEffectKind.BreathCharge: return effectPlayer.breathChargeSfx;
+            case DragonEffectKind.BreathFire: return effectPlayer.breathFireSfx;
+            case DragonEffectKind.ChargeStart: return effectPlayer.chargeStartSfx;
+            case DragonEffectKind.ChargeRun: return effectPlayer.chargeRunSfx;
+            case DragonEffectKind.ChargeEnd: return effectPlayer.chargeEndSfx;
+            default: return null;
+        }
+    }
+
+    private ParticleSystem GetCommonParticle(DragonEffectKind kind)
+    {
+        if (effectPlayer == null) return null;
+
+        switch (kind)
+        {
+            case DragonEffectKind.Roar: return effectPlayer.roarParticle;
+            case DragonEffectKind.Down: return effectPlayer.downParticle;
+            case DragonEffectKind.Death: return effectPlayer.deathParticle;
+            case DragonEffectKind.Step: return effectPlayer.stepParticle;
+            case DragonEffectKind.Swipe: return effectPlayer.swipeParticle;
+            case DragonEffectKind.TailSlam: return effectPlayer.tailSlamParticle;
+            case DragonEffectKind.TailSwipe: return effectPlayer.tailSwipeParticle;
+            case DragonEffectKind.BreathCharge: return effectPlayer.breathChargeParticle;
+            case DragonEffectKind.BreathFire: return effectPlayer.breathFireParticle;
+            case DragonEffectKind.ChargeStart: return effectPlayer.chargeStartParticle;
+            case DragonEffectKind.ChargeRun: return effectPlayer.chargeRunParticle;
+            case DragonEffectKind.ChargeEnd: return effectPlayer.chargeEndParticle;
+            default: return null;
+        }
+    }
+
     private void PlaySfx(AudioClip clip)
     {
         if (clip == null) return;
 
-        if (effectPlayer != null)
+        if (effectPlayer != null && effectPlayer.TryPlayCustomSfx(clip))
         {
-            effectPlayer.PlayCustomSfx(clip);
             return;
         }
+
+        FindAudioSourceIfNeeded();
 
         if (audioSource != null)
         {
             audioSource.PlayOneShot(clip, sfxVolume);
+        }
+        else
+        {
+            Debug.LogWarning("[DragonAI] AudioSourceが見つからないのでSEを再生できません。", this);
+        }
+    }
+
+    private void FindAudioSourceIfNeeded()
+    {
+        if (audioSource != null) return;
+
+        audioSource = GetComponent<AudioSource>();
+
+        if (audioSource == null)
+        {
+            audioSource = GetComponentInChildren<AudioSource>();
+        }
+
+        if (audioSource == null)
+        {
+            audioSource = GetComponentInParent<AudioSource>();
         }
     }
 

@@ -3,7 +3,6 @@ using UnityEngine;
 public class DragonAnimationEffectPlayer : MonoBehaviour
 {
     [Header("Audio")]
-    [Tooltip("ÉhÉâÉSÉìópAudioSource")]
     public AudioSource audioSource;
 
     [Range(0f, 1f)]
@@ -37,115 +36,84 @@ public class DragonAnimationEffectPlayer : MonoBehaviour
     public ParticleSystem chargeRunParticle;
     public ParticleSystem chargeEndParticle;
 
+    public bool HasAudioSource => audioSource != null;
+
     private void Awake()
     {
-        if (audioSource == null)
-        {
-            audioSource = GetComponent<AudioSource>();
-        }
+        FindAudioSourceIfNeeded();
+    }
+
+    private void FindAudioSourceIfNeeded()
+    {
+        if (audioSource != null) return;
+
+        audioSource = GetComponent<AudioSource>();
 
         if (audioSource == null)
-        {
+            audioSource = GetComponentInChildren<AudioSource>();
+
+        if (audioSource == null)
             audioSource = GetComponentInParent<AudioSource>();
-        }
     }
 
-    public void PlayRoar()
-    {
-        Play(roarSfx, roarParticle);
-    }
-
-    public void PlayDown()
-    {
-        Play(downSfx, downParticle);
-    }
-
-    public void PlayDeath()
-    {
-        Play(deathSfx, deathParticle);
-    }
-
-    public void PlayStep()
-    {
-        Play(stepSfx, stepParticle);
-    }
-
-    public void PlaySwipe()
-    {
-        Play(swipeSfx, swipeParticle);
-    }
-
-    public void PlayTailSlam()
-    {
-        Play(tailSlamSfx, tailSlamParticle);
-    }
-
-    public void PlayTailSwipe()
-    {
-        Play(tailSwipeSfx, tailSwipeParticle);
-    }
-
-    public void PlayBreathCharge()
-    {
-        Play(breathChargeSfx, breathChargeParticle);
-    }
-
-    public void PlayBreathFire()
-    {
-        Play(breathFireSfx, breathFireParticle);
-    }
-
-    public void PlayChargeStart()
-    {
-        Play(chargeStartSfx, chargeStartParticle);
-    }
-
-    public void PlayChargeRun()
-    {
-        Play(chargeRunSfx, chargeRunParticle);
-    }
-
-    public void PlayChargeEnd()
-    {
-        Play(chargeEndSfx, chargeEndParticle);
-    }
+    public void PlayRoar() => Play(roarSfx, roarParticle);
+    public void PlayDown() => Play(downSfx, downParticle);
+    public void PlayDeath() => Play(deathSfx, deathParticle);
+    public void PlayStep() => Play(stepSfx, stepParticle);
+    public void PlaySwipe() => Play(swipeSfx, swipeParticle);
+    public void PlayTailSlam() => Play(tailSlamSfx, tailSlamParticle);
+    public void PlayTailSwipe() => Play(tailSwipeSfx, tailSwipeParticle);
+    public void PlayBreathCharge() => Play(breathChargeSfx, breathChargeParticle);
+    public void PlayBreathFire() => Play(breathFireSfx, breathFireParticle);
+    public void PlayChargeStart() => Play(chargeStartSfx, chargeStartParticle);
+    public void PlayChargeRun() => Play(chargeRunSfx, chargeRunParticle);
+    public void PlayChargeEnd() => Play(chargeEndSfx, chargeEndParticle);
 
     public void StopChargeRunParticle()
     {
         if (chargeRunParticle != null)
-        {
             chargeRunParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+    }
+
+    public bool TryPlayCustomSfx(AudioClip clip)
+    {
+        if (clip == null) return false;
+
+        FindAudioSourceIfNeeded();
+
+        if (audioSource == null)
+        {
+            Debug.LogWarning("[DragonAnimationEffectPlayer] AudioSourceÇ™Ç†ÇËÇ‹ÇπÇÒÅB", this);
+            return false;
         }
+
+        audioSource.PlayOneShot(clip, defaultVolume);
+        return true;
+    }
+
+    public bool TryPlayCustomParticle(ParticleSystem particle)
+    {
+        if (particle == null) return false;
+
+        particle.Play();
+        return true;
     }
 
     public void PlayCustomSfx(AudioClip clip)
     {
-        PlayOneShot(clip);
+        TryPlayCustomSfx(clip);
     }
 
     public void PlayCustomParticle(ParticleSystem particle)
     {
-        if (particle != null)
-        {
-            particle.Play();
-        }
+        TryPlayCustomParticle(particle);
     }
 
     private void Play(AudioClip clip, ParticleSystem particle)
     {
-        PlayOneShot(clip);
+        TryPlayCustomSfx(clip);
 
         if (particle != null)
-        {
             particle.Play();
-        }
-    }
-
-    private void PlayOneShot(AudioClip clip)
-    {
-        if (clip == null) return;
-        if (audioSource == null) return;
-
-        audioSource.PlayOneShot(clip, defaultVolume);
     }
 }

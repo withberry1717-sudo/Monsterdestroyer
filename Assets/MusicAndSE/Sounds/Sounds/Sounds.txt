@@ -1,0 +1,32 @@
+・プレイヤー系
+Dagger　弱攻撃
+Sword　強攻撃
+ChargeAttack　タメ強攻撃
+Charge　タメ
+Blink　ブリンク
+Hit　軽い被弾
+BigHit　被弾ふっとび
+Player_Move　足音
+MissingShot　空振り
+Death　死亡
+Death_FakeDayo　死亡おふざけ
+Revive　生き返る
+Defeat　とどめの一撃
+Defeat_ShortBGM　とどめ～スコア画面移行前まで
+
+・ドラゴン系
+ArmSwipe　腕攻撃
+TailSlam　しっぽ叩きつけ
+TailSwipe　しっぽ薙ぎ払い
+Roar　咆哮小　ただの鳴き声
+Roar_Long　普通の咆哮
+DragonMove　足音（単音のみ）
+Wing_Step　ジャンプ、ステップ
+
+・スコア、クリック系
+Click　ポーズ画面などでのクリック音
+DispayingNumbers　数字表示中
+ShowScore　数字表示
+ShowRank　ランク表示
+QuestSheet　難易度変更時のクエストシートの音
+ClearStamp　クリアのスタンプ

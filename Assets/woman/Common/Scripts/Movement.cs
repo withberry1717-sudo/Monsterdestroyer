@@ -12,11 +12,7 @@ namespace Retro.ThirdPersonCharacter
     [RequireComponent(typeof(CharacterController))]
     public class Movement : MonoBehaviour
     {
-        private Animator _animator;
-        private PlayerInput _playerInput;
-        private Combat _combat;
-        private CharacterController _characterController;
-        private TrailRenderer _trailRenderer;
+        private Animator _animator; private PlayerInput _playerInput; private Combat _combat; private CharacterController _characterController; private TrailRenderer _trailRenderer;
 
         [Header("Dash Effect")]
         [Tooltip("回避専用のParticleがある場合だけ入れる。chargeEffect / chargeReadyEffect は絶対に入れない")]
@@ -748,4 +744,5 @@ namespace Retro.ThirdPersonCharacter
             _animator.SetFloat("InputY", lastMovementInput.y);
         }
     }
+
 }

@@ -32210,7 +32210,7 @@ MonoBehaviour:
   timePenaltySfxDelay: 0
   crystalBonusSfxDelay: 0
   deathPenaltySfxDelay: 0
-  finalScoreSfxDelay: 0.72
+  finalScoreSfxDelay: 0.65
   rankSfxDelay: 1.8
   showDifficultyInConsole: 1
 --- !u!4 &1160423106
@@ -33277,7 +33277,7 @@ PrefabInstance:
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: dashAttackEffect.sfx
       value: 
-      objectReference: {fileID: 8300000, guid: 82f18668e10866247a8a40576dd64c03, type: 3}
+      objectReference: {fileID: 8300000, guid: 58941789cb0075e4e870308954121421, type: 3}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: attackForwardDuration
       value: 0.4
@@ -33297,7 +33297,7 @@ PrefabInstance:
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: lightAttackEffect.sfx
       value: 
-      objectReference: {fileID: 8300000, guid: 82f18668e10866247a8a40576dd64c03, type: 3}
+      objectReference: {fileID: 8300000, guid: 58941789cb0075e4e870308954121421, type: 3}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedHeavyEffect.sfx
       value: 
@@ -59541,7 +59541,7 @@ PrefabInstance:
       objectReference: {fileID: 1036172109}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: maxHP
-      value: 1
+      value: 2200
       objectReference: {fileID: 0}
     - target: {fileID: 7459381940616211415, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
       propertyPath: isCrystalBroken

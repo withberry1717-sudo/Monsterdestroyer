@@ -83,6 +83,7 @@ public class PlayerHP : MonoBehaviour
 
     private Animator _animator;
     private Retro.ThirdPersonCharacter.Movement _movement;
+    private Retro.ThirdPersonCharacter.PlayerInput _playerInput;
     private CharacterController _characterController;
     private Rigidbody _rigidbody;
     private Renderer[] _renderers;
@@ -100,6 +101,7 @@ public class PlayerHP : MonoBehaviour
 
         _animator = GetComponent<Animator>();
         _movement = GetComponent<Retro.ThirdPersonCharacter.Movement>();
+        _playerInput = GetComponent<Retro.ThirdPersonCharacter.PlayerInput>();
         _characterController = GetComponent<CharacterController>();
         _rigidbody = GetComponent<Rigidbody>();
         _renderers = GetComponentsInChildren<Renderer>();
@@ -538,12 +540,7 @@ public class PlayerHP : MonoBehaviour
     private void LockControl()
     {
         controlLockCount++;
-
-        if (_movement != null)
-        {
-            _movement.ForceStopTrail();
-            _movement.enabled = false;
-        }
+        SetActionScriptsEnabled(false);
     }
 
     private void UnlockControl()
@@ -552,12 +549,9 @@ public class PlayerHP : MonoBehaviour
 
         if (controlLockCount > 0) return;
         if (isGameOver) return;
+        if (isGameClear) return;
 
-        if (_movement != null)
-        {
-            _movement.ForceStopTrail();
-            _movement.enabled = true;
-        }
+        SetActionScriptsEnabled(true);
     }
 
     private void ForceUnlockControl()
@@ -565,11 +559,58 @@ public class PlayerHP : MonoBehaviour
         controlLockCount = 0;
 
         if (isGameOver) return;
+        if (isGameClear) return;
 
+        SetActionScriptsEnabled(true);
+    }
+
+    private void SetActionScriptsEnabled(bool enabled)
+    {
         if (_movement != null)
         {
-            _movement.ForceStopTrail();
-            _movement.enabled = true;
+            if (!enabled)
+            {
+                _movement.ForceStopTrail();
+                _movement.StopAttackForwardMove();
+                _movement.EndChargeAttackMove();
+                _movement.SetAllowBlinkWhileAttacking(false);
+                _movement.isAttacking = false;
+                _movement.canMoveWhileAttacking = false;
+            }
+
+            _movement.enabled = enabled;
+        }
+
+        if (_playerInput != null)
+        {
+            _playerInput.ClearActionInputs();
+            _playerInput.enabled = enabled;
+        }
+
+        if (_combat != null) _combat.enabled = enabled;
+        if (_aiming != null) _aiming.enabled = enabled;
+        if (_aimingController != null) _aimingController.enabled = enabled;
+
+        if (!enabled)
+        {
+            DisablePlayerAttackHitboxes();
+        }
+    }
+
+    private void DisablePlayerAttackHitboxes()
+    {
+        MonoBehaviour[] scripts = GetComponentsInChildren<MonoBehaviour>(true);
+
+        foreach (MonoBehaviour script in scripts)
+        {
+            if (script == null) continue;
+
+            string scriptName = script.GetType().Name;
+
+            if (scriptName == "WeaponHitbox")
+            {
+                script.gameObject.SendMessage("DisableHitbox", SendMessageOptions.DontRequireReceiver);
+            }
         }
     }
 
@@ -732,6 +773,8 @@ public class PlayerHP : MonoBehaviour
             _movement.ForceStopTrail();
         }
 
+        DisablePlayerAttackHitboxes();
+
         if (damageFlashCanvasGroup != null)
         {
             damageFlashCanvasGroup.alpha = 0f;
@@ -790,6 +833,10 @@ public class PlayerHP : MonoBehaviour
             {
                 _combat = script;
             }
+            else if (scriptName == "PlayerInput")
+            {
+                _playerInput = script as Retro.ThirdPersonCharacter.PlayerInput;
+            }
             else if (scriptName == "Aiming")
             {
                 _aiming = script;
@@ -827,6 +874,7 @@ public class PlayerHP : MonoBehaviour
         }
 
         if (_combat != null) _combat.enabled = enabled;
+        if (_playerInput != null) _playerInput.enabled = enabled;
         if (_aiming != null) _aiming.enabled = enabled;
         if (_aimingController != null) _aimingController.enabled = enabled;
         if (_safePlayerCamera != null) _safePlayerCamera.enabled = enabled;

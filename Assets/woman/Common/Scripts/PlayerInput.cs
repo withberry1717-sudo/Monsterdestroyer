@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.EventSystems; // ★追加：UI判定を使うための合言葉
+using UnityEngine.EventSystems;
 
 namespace Retro.ThirdPersonCharacter
 {
@@ -23,23 +23,42 @@ namespace Retro.ThirdPersonCharacter
         public bool JumpInput => _jumpInput;
         public bool ChangeCameraModeInput => _changeCameraModeInput;
 
+        private void OnDisable()
+        {
+            ClearAllInputs();
+        }
+
+        public void ClearActionInputs()
+        {
+            _attackInput = false;
+            _specialAttackInput = false;
+            _specialAttackHeld = false;
+            _specialAttackReleased = false;
+            _jumpInput = false;
+        }
+
+        public void ClearAllInputs()
+        {
+            ClearActionInputs();
+            _movementInput = Vector2.zero;
+            _changeCameraModeInput = false;
+        }
+
         private void Update()
         {
-            // まずは普通にクリック入力を取得する
             _attackInput = Input.GetMouseButtonDown(0);
             _specialAttackInput = Input.GetMouseButtonDown(1);
             _specialAttackHeld = Input.GetMouseButton(1);
             _specialAttackReleased = Input.GetMouseButtonUp(1);
 
-            // ★追加：もしマウスがUI（クリアパネルやボタン）の上にある場合は、強制的にクリックを無かったことにする
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             {
                 _attackInput = false;
                 _specialAttackInput = false;
-                // 必要であれば Held や Released も false にできます
+                _specialAttackHeld = false;
+                _specialAttackReleased = false;
             }
 
-            // 移動などのキーボード入力はそのまま
             _movementInput.Set(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
             _jumpInput = Input.GetButton("Jump");
             _changeCameraModeInput = Input.GetKeyDown(KeyCode.F);

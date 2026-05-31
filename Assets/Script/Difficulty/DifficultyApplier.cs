@@ -64,6 +64,22 @@ public class DifficultyApplier : MonoBehaviour
     [Tooltip("尻尾切断BigHitの硬直時間")]
     [SerializeField] private float hardTailBreakBigHitDuration = 1.0f;
 
+    [Header("Hard Special Tuning")]
+    [Tooltip("Hard限定。ドラゴンが攻撃行動を選んだあと、実際に攻撃を始める前に入れる追加ディレイです。0なら追加なし。")]
+    [SerializeField] private float hardAttackStartDelay = 0.18f;
+
+    [Tooltip("Hard限定。ONなら突進前の溜め時間をHard専用値で上書きします。")]
+    [SerializeField] private bool hardOverrideChargeTellTime = true;
+
+    [Tooltip("Hard限定の突進溜め時間です。短くすると突進の予兆が短くなります。")]
+    [SerializeField] private float hardChargeTellTime = 0.35f;
+
+    [Tooltip("Hard限定。ONなら突進直前の停止時間をHard専用値で上書きします。")]
+    [SerializeField] private bool hardOverrideChargeReadyPause = true;
+
+    [Tooltip("Hard限定の突進直前停止時間です。短くすると溜め後すぐ突進します。")]
+    [SerializeField] private float hardChargeReadyPause = 0.05f;
+
     [Header("Debug")]
     [SerializeField] private bool logAppliedDamageMultiplier = true;
 
@@ -95,7 +111,12 @@ public class DifficultyApplier : MonoBehaviour
                     easyMoveSpeedMultiplier,
                     easyAnimationSpeedMultiplier,
                     easyHalfHPDownDuration,
-                    easyTailBreakBigHitDuration
+                    easyTailBreakBigHitDuration,
+                    0f,
+                    false,
+                    0f,
+                    false,
+                    0f
                 );
                 ApplyDragonDamage(easyDragonDamageMultiplier);
                 ApplyDragonScale(easyDragonScaleMultiplier);
@@ -108,7 +129,12 @@ public class DifficultyApplier : MonoBehaviour
                     normalMoveSpeedMultiplier,
                     normalAnimationSpeedMultiplier,
                     normalHalfHPDownDuration,
-                    normalTailBreakBigHitDuration
+                    normalTailBreakBigHitDuration,
+                    0f,
+                    false,
+                    0f,
+                    false,
+                    0f
                 );
                 ApplyDragonDamage(normalDragonDamageMultiplier);
                 ApplyDragonScale(normalDragonScaleMultiplier);
@@ -121,7 +147,12 @@ public class DifficultyApplier : MonoBehaviour
                     hardMoveSpeedMultiplier,
                     hardAnimationSpeedMultiplier,
                     hardHalfHPDownDuration,
-                    hardTailBreakBigHitDuration
+                    hardTailBreakBigHitDuration,
+                    hardAttackStartDelay,
+                    hardOverrideChargeTellTime,
+                    hardChargeTellTime,
+                    hardOverrideChargeReadyPause,
+                    hardChargeReadyPause
                 );
                 ApplyDragonDamage(hardDragonDamageMultiplier);
                 ApplyDragonScale(hardDragonScaleMultiplier);
@@ -149,7 +180,12 @@ public class DifficultyApplier : MonoBehaviour
         float moveSpeedMultiplier,
         float animationSpeedMultiplier,
         float halfHPDownDuration,
-        float tailBreakBigHitDuration
+        float tailBreakBigHitDuration,
+        float attackStartDelay,
+        bool overrideChargeTellTime,
+        float chargeTellTime,
+        bool overrideChargeReadyPause,
+        float chargeReadyPause
     )
     {
         if (dragonAI == null)
@@ -170,6 +206,14 @@ public class DifficultyApplier : MonoBehaviour
             useBigHitOnTailBreak,
             tailBreakBigHitAnimName,
             tailBreakBigHitDuration
+        );
+
+        dragonAI.SetDifficultySpecialAttackTiming(
+            attackStartDelay,
+            overrideChargeTellTime,
+            chargeTellTime,
+            overrideChargeReadyPause,
+            chargeReadyPause
         );
     }
 

@@ -64,6 +64,25 @@ public class PlayerHP : MonoBehaviour
     [Header("Game Over Buttons")]
     [SerializeField] private Button[] gameOverButtons;
 
+    [Header("Hard Mode Death Limit")]
+    [Tooltip("ONならHardだけ死亡回数制限を使います。1回目は通常GameOver、2回目はYouDiedだけ表示してタイトルへ戻します。")]
+    [SerializeField] private bool hardModeOneDeathRetry = true;
+
+    [Tooltip("Hardで許可する死亡回数です。1なら、1回目は復帰可能、2回目で強制タイトルです。")]
+    [SerializeField] private int hardModeAllowedDeaths = 1;
+
+    [Tooltip("Hardで死亡制限を超えた時、タイトルへ戻るまでの秒数です。")]
+    [SerializeField] private float hardModeReturnToTitleDelay = 5f;
+
+    [Tooltip("戻るタイトルシーン名です。")]
+    [SerializeField] private string titleSceneName = "TitleScene";
+
+    [Tooltip("Hard最終死亡時に表示するYouDiedテキストです。空ならGameOverPanel配下から名前にYouDiedを含むオブジェクトを探します。")]
+    [SerializeField] private GameObject hardModeYouDiedText;
+
+    [Tooltip("ONならHard最終死亡時、GameOverPanel配下のYouDied以外を非表示にします。")]
+    [SerializeField] private bool hideOtherGameOverChildrenOnHardFinalDeath = true;
+
     [Header("Game Over時に止めるスクリプト 手動追加用")]
     [SerializeField] private MonoBehaviour[] disableOnGameOver;
 
@@ -71,6 +90,9 @@ public class PlayerHP : MonoBehaviour
     private bool isGameOver;
     private bool isGameClear;
     private bool isInvincible;
+
+    private int hardModeDeathCount = 0;
+    private Coroutine hardModeFinalDeathCoroutine;
 
     private int controlLockCount;
     private float lastDamageTime = -999f;
@@ -94,9 +116,6 @@ public class PlayerHP : MonoBehaviour
     private MonoBehaviour _safePlayerCamera;
 
     private Vector3 lastKnockbackDirection = Vector3.zero;
-
-    private Coroutine recoverySafetyCoroutine;
-    private bool actionScriptsLockedByDamage = false;
 
     private void Start()
     {
@@ -554,7 +573,7 @@ public class PlayerHP : MonoBehaviour
         if (isGameOver) return;
         if (isGameClear) return;
 
-        ForceRecoverActionState();
+        SetActionScriptsEnabled(true);
     }
 
     private void ForceUnlockControl()
@@ -564,21 +583,14 @@ public class PlayerHP : MonoBehaviour
         if (isGameOver) return;
         if (isGameClear) return;
 
-        ForceRecoverActionState();
+        SetActionScriptsEnabled(true);
     }
 
     private void SetActionScriptsEnabled(bool enabled)
     {
         if (!enabled)
         {
-            actionScriptsLockedByDamage = true;
             CancelCombatChargeAndEffects();
-            ResetMovementActionState();
-        }
-
-        if (_playerInput != null)
-        {
-            _playerInput.ClearActionInputs();
         }
 
         if (_movement != null)
@@ -596,27 +608,19 @@ public class PlayerHP : MonoBehaviour
             _movement.enabled = enabled;
         }
 
-        if (_combat != null)
-        {
-            _combat.enabled = enabled;
-        }
-
         if (_playerInput != null)
         {
+            _playerInput.ClearActionInputs();
             _playerInput.enabled = enabled;
         }
 
+        if (_combat != null) _combat.enabled = enabled;
         if (_aiming != null) _aiming.enabled = enabled;
         if (_aimingController != null) _aimingController.enabled = enabled;
 
         if (!enabled)
         {
             DisablePlayerAttackHitboxes();
-        }
-        else
-        {
-            actionScriptsLockedByDamage = false;
-            ForceRecoverActionState();
         }
     }
 
@@ -628,110 +632,6 @@ public class PlayerHP : MonoBehaviour
             "CancelCurrentActionByExternalInterrupt",
             SendMessageOptions.DontRequireReceiver
         );
-    }
-
-    private void ResetMovementActionState()
-    {
-        if (_movement == null) return;
-
-        _movement.gameObject.SendMessage(
-            "ResetActionStateAfterDamage",
-            SendMessageOptions.DontRequireReceiver
-        );
-    }
-
-    private void ResetCombatActionState()
-    {
-        if (_combat == null) return;
-
-        _combat.gameObject.SendMessage(
-            "ResetActionStateAfterDamage",
-            SendMessageOptions.DontRequireReceiver
-        );
-    }
-
-    private void ForceRecoverActionState()
-    {
-        if (isGameOver || isGameClear) return;
-
-        controlLockCount = 0;
-
-        if (_movement != null)
-        {
-            _movement.enabled = true;
-            ResetMovementActionState();
-        }
-
-        if (_combat != null)
-        {
-            _combat.enabled = true;
-            ResetCombatActionState();
-        }
-
-        if (_playerInput != null)
-        {
-            _playerInput.ClearAllInputs();
-            _playerInput.enabled = true;
-        }
-
-        if (_aiming != null) _aiming.enabled = true;
-        if (_aimingController != null) _aimingController.enabled = true;
-
-        DisablePlayerAttackHitboxes();
-
-        if (recoverySafetyCoroutine != null)
-        {
-            StopCoroutine(recoverySafetyCoroutine);
-        }
-
-        recoverySafetyCoroutine = StartCoroutine(RecoverySafetyCheckRoutine());
-    }
-
-    private IEnumerator RecoverySafetyCheckRoutine()
-    {
-        yield return null;
-        yield return null;
-
-        if (isGameOver || isGameClear || actionScriptsLockedByDamage)
-        {
-            recoverySafetyCoroutine = null;
-            yield break;
-        }
-
-        if (controlLockCount != 0)
-        {
-            controlLockCount = 0;
-        }
-
-        if (_movement != null && !_movement.enabled)
-        {
-            _movement.enabled = true;
-            ResetMovementActionState();
-        }
-
-        if (_combat != null && !_combat.enabled)
-        {
-            _combat.enabled = true;
-            ResetCombatActionState();
-        }
-
-        if (_playerInput != null && !_playerInput.enabled)
-        {
-            _playerInput.ClearAllInputs();
-            _playerInput.enabled = true;
-        }
-
-        if (_aiming != null && !_aiming.enabled)
-        {
-            _aiming.enabled = true;
-        }
-
-        if (_aimingController != null && !_aimingController.enabled)
-        {
-            _aimingController.enabled = true;
-        }
-
-        recoverySafetyCoroutine = null;
     }
 
     private void DisablePlayerAttackHitboxes()
@@ -812,6 +712,12 @@ public class PlayerHP : MonoBehaviour
 
     public void Revive()
     {
+        if (hardModeFinalDeathCoroutine != null)
+        {
+            StopCoroutine(hardModeFinalDeathCoroutine);
+            hardModeFinalDeathCoroutine = null;
+        }
+
         ResetGameOverButtons();
 
         isGameOver = false;
@@ -831,7 +737,6 @@ public class PlayerHP : MonoBehaviour
 
         SetRenderersVisible(true);
         SetGameOverScriptsEnabled(true);
-        ForceRecoverActionState();
 
         if (_movement != null)
         {
@@ -875,15 +780,12 @@ public class PlayerHP : MonoBehaviour
         if (damageRoutineCoroutine != null) StopCoroutine(damageRoutineCoroutine);
         if (externalKnockbackCoroutine != null) StopCoroutine(externalKnockbackCoroutine);
         if (staggerCoroutine != null) StopCoroutine(staggerCoroutine);
-        if (recoverySafetyCoroutine != null) StopCoroutine(recoverySafetyCoroutine);
 
         hpDelayCoroutine = null;
         damageFlashCoroutine = null;
         damageRoutineCoroutine = null;
         externalKnockbackCoroutine = null;
         staggerCoroutine = null;
-        recoverySafetyCoroutine = null;
-        actionScriptsLockedByDamage = false;
 
         if (damageFlashCanvasGroup != null)
         {
@@ -896,12 +798,18 @@ public class PlayerHP : MonoBehaviour
         Time.timeScale = 1f;
         SetGameOverScriptsEnabled(true);
         BattleCursorManager.UnlockCursor();
-        SceneManager.LoadScene("TitleScene");
+        SceneManager.LoadScene(titleSceneName);
     }
 
     private void GameOver()
     {
         if (isGameOver) return;
+
+        if (ShouldUseHardModeFinalDeath())
+        {
+            StartHardModeFinalDeath();
+            return;
+        }
 
         isGameOver = true;
         isInvincible = true;
@@ -943,12 +851,163 @@ public class PlayerHP : MonoBehaviour
         Debug.Log("GAME OVER.");
     }
 
+    private bool ShouldUseHardModeFinalDeath()
+    {
+        if (!hardModeOneDeathRetry) return false;
+        if (!IsHardMode()) return false;
+
+        hardModeDeathCount++;
+        return hardModeDeathCount > Mathf.Max(0, hardModeAllowedDeaths);
+    }
+
+    private bool IsHardMode()
+    {
+        return QuestDifficultyImageSelector.LoadSavedDifficulty() == QuestDifficultyImageSelector.Difficulty.Hard;
+    }
+
+    private void StartHardModeFinalDeath()
+    {
+        isGameOver = true;
+        isInvincible = true;
+        controlLockCount = 999;
+
+        StopPlayerCoroutinesOnGameOver();
+
+        if (_movement != null)
+        {
+            _movement.ForceStopTrail();
+        }
+
+        CancelCombatChargeAndEffects();
+        DisablePlayerAttackHitboxes();
+
+        if (damageFlashCanvasGroup != null)
+        {
+            damageFlashCanvasGroup.alpha = 0f;
+        }
+
+        if (hpText != null)
+        {
+            hpText.text = "HP: 0";
+        }
+
+        SetRenderersVisible(true);
+        SetGameOverScriptsEnabled(false);
+        BattleCursorManager.UnlockCursor();
+
+        if (_animator != null)
+        {
+            _animator.ResetTrigger("TakingDamage");
+            _animator.ResetTrigger("KnockDown");
+            _animator.SetTrigger("Die");
+        }
+
+        if (hardModeFinalDeathCoroutine != null)
+        {
+            StopCoroutine(hardModeFinalDeathCoroutine);
+        }
+
+        hardModeFinalDeathCoroutine = StartCoroutine(HardModeFinalDeathRoutine());
+
+        Debug.Log("HARD FINAL DEATH. Return to title.");
+    }
+
+    private IEnumerator HardModeFinalDeathRoutine()
+    {
+        ShowOnlyHardModeYouDiedText();
+
+        yield return new WaitForSeconds(hardModeReturnToTitleDelay);
+
+        Time.timeScale = 1f;
+        BattleCursorManager.UnlockCursor();
+        SceneManager.LoadScene(titleSceneName);
+    }
+
+    private void ShowOnlyHardModeYouDiedText()
+    {
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(true);
+        }
+
+        if (gameOverCanvasGroup == null && gameOverPanel != null)
+        {
+            gameOverCanvasGroup = gameOverPanel.GetComponent<CanvasGroup>();
+        }
+
+        if (gameOverCanvasGroup != null)
+        {
+            gameOverCanvasGroup.alpha = 1f;
+            gameOverCanvasGroup.interactable = false;
+            gameOverCanvasGroup.blocksRaycasts = false;
+        }
+
+        GameObject youDied = hardModeYouDiedText;
+
+        if (youDied == null && gameOverPanel != null)
+        {
+            youDied = FindYouDiedObject(gameOverPanel.transform);
+        }
+
+        if (gameOverPanel != null && hideOtherGameOverChildrenOnHardFinalDeath)
+        {
+            for (int i = 0; i < gameOverPanel.transform.childCount; i++)
+            {
+                Transform child = gameOverPanel.transform.GetChild(i);
+                if (child == null) continue;
+
+                bool keep = youDied != null && (child.gameObject == youDied || child.IsChildOf(youDied.transform) || youDied.transform.IsChildOf(child));
+                child.gameObject.SetActive(keep);
+            }
+        }
+
+        if (youDied != null)
+        {
+            youDied.SetActive(true);
+        }
+        else
+        {
+            Debug.LogWarning("Hard最終死亡用のYouDiedテキストが見つかりません。PlayerHPのHard Mode You Died Textに入れてください。", this);
+        }
+    }
+
+    private GameObject FindYouDiedObject(Transform root)
+    {
+        if (root == null) return null;
+
+        Transform[] children = root.GetComponentsInChildren<Transform>(true);
+
+        foreach (Transform child in children)
+        {
+            if (child == null) continue;
+
+            string normalizedName = child.name.ToLower().Replace(" ", "").Replace("_", "").Replace("-", "");
+            if (normalizedName.Contains("youdied"))
+            {
+                return child.gameObject;
+            }
+        }
+
+        TMPro.TMP_Text[] texts = root.GetComponentsInChildren<TMPro.TMP_Text>(true);
+
+        foreach (TMPro.TMP_Text text in texts)
+        {
+            if (text == null) continue;
+            string normalizedText = text.text.ToLower().Replace(" ", "").Replace("_", "").Replace("-", "");
+            if (normalizedText.Contains("youdied"))
+            {
+                return text.gameObject;
+            }
+        }
+
+        return null;
+    }
+
     private void StopPlayerCoroutinesOnGameOver()
     {
         if (damageRoutineCoroutine != null) StopCoroutine(damageRoutineCoroutine);
         if (externalKnockbackCoroutine != null) StopCoroutine(externalKnockbackCoroutine);
         if (staggerCoroutine != null) StopCoroutine(staggerCoroutine);
-        if (recoverySafetyCoroutine != null) StopCoroutine(recoverySafetyCoroutine);
 
         damageRoutineCoroutine = null;
         externalKnockbackCoroutine = null;

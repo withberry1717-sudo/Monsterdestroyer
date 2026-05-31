@@ -9431,6 +9431,13 @@ MonoBehaviour:
   restartParticleBeforePlay: 1
   scaleChargeTellTimeWithAnimationSpeed: 0
   scaleChargeReadyPauseWithAnimationSpeed: 0
+  difficultyAttackStartDelay: 0
+  applyDifficultyAttackStartDelayOnlyToAttackActions: 1
+  facePlayerDuringDifficultyAttackStartDelay: 1
+  useDifficultyChargeTellTimeOverride: 0
+  difficultyChargeTellTimeOverride: 0.35
+  useDifficultyChargeReadyPauseOverride: 0
+  difficultyChargeReadyPauseOverride: 0.05
   dragonHP: {fileID: 78498549}
   effectPlayer: {fileID: 356980425}
   player: {fileID: 426628364}
@@ -9827,8 +9834,8 @@ MonoBehaviour:
   roarSfx: {fileID: 8300000, guid: ca2142d7f5680c0429dce61f29561019, type: 3}
   downSfx: {fileID: 0}
   deathSfx: {fileID: 0}
-  stepSfx: {fileID: 8300000, guid: fa4a5bfa03af43749bbf8fab47d1bf22, type: 3}
-  swipeSfx: {fileID: 8300000, guid: 43896d5a6a7b500479d3ca7fcee35614, type: 3}
+  stepSfx: {fileID: 0}
+  swipeSfx: {fileID: 0}
   tailSlamSfx: {fileID: 8300000, guid: dd4637fa24522a24e894ade5489c62f9, type: 3}
   tailSwipeSfx: {fileID: 8300000, guid: ab65211796daf5049abdd1b7aa4e9a7f, type: 3}
   breathChargeSfx: {fileID: 0}
@@ -11579,7 +11586,7 @@ RectTransform:
   m_LocalScale: {x: 1.0165888, y: 1.0165888, z: 1.0165888}
   m_ConstrainProportionsScale: 1
   m_Children:
-  - {fileID: 1697357963}
+  - {fileID: 932411087}
   - {fileID: 1419521492}
   - {fileID: 1160931301}
   m_Father: {fileID: 709078156}
@@ -22482,7 +22489,7 @@ MonoBehaviour:
   easyHalfHPDownDuration: 8
   easyTailBreakBigHitDuration: 1
   normalDragonHpMultiplier: 1
-  normalCrystalHpMultiplier: 1.2
+  normalCrystalHpMultiplier: 1
   normalActionIntervalMultiplier: 1
   normalMoveSpeedMultiplier: 1
   normalAnimationSpeedMultiplier: 1
@@ -22491,7 +22498,7 @@ MonoBehaviour:
   normalHalfHPDownDuration: 8
   normalTailBreakBigHitDuration: 1.2
   hardDragonHpMultiplier: 1.1
-  hardCrystalHpMultiplier: 1.4
+  hardCrystalHpMultiplier: 1.2
   hardActionIntervalMultiplier: 0.5
   hardMoveSpeedMultiplier: 1.7
   hardAnimationSpeedMultiplier: 1.7
@@ -22499,6 +22506,11 @@ MonoBehaviour:
   hardDragonScaleMultiplier: 1.2
   hardHalfHPDownDuration: 5
   hardTailBreakBigHitDuration: 1
+  hardAttackStartDelay: 0
+  hardOverrideChargeTellTime: 0
+  hardChargeTellTime: 0.7
+  hardOverrideChargeReadyPause: 1
+  hardChargeReadyPause: 0.15
   logAppliedDamageMultiplier: 1
 --- !u!4 &658696243
 Transform:
@@ -24771,6 +24783,42 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &932411086
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 932411087}
+  m_Layer: 5
+  m_Name: GameOver
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &932411087
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 932411086}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1697357963}
+  m_Father: {fileID: 559545623}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &932695833 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2179310279690187168, guid: 6e9e492d1bc4bc14dbe6561f9d347fa3, type: 3}
@@ -35080,7 +35128,7 @@ MonoBehaviour:
   lockOnCenterHeightOffset: 1
   lockOnCenterSmoothTime: 0.18
   lockOnCenterDeadZone: 0.25
-  allowPitchInputWhileLockOn: 0
+  allowPitchInputWhileLockOn: 1
   lockOnPitchInputSensitivity: 0.25
   minHorizontalDistanceForYaw: 0.5
   lockOnMarkerPrefab: {fileID: 2490275035408926215, guid: 1a363874805cf8b4bb5b6b119f22560e, type: 3}
@@ -39033,6 +39081,12 @@ MonoBehaviour:
   gameOverButtons:
   - {fileID: 1419521493}
   - {fileID: 1160931302}
+  hardModeOneDeathRetry: 1
+  hardModeAllowedDeaths: 1
+  hardModeReturnToTitleDelay: 5
+  titleSceneName: TitleScene
+  hardModeYouDiedText: {fileID: 1697357962}
+  hideOtherGameOverChildrenOnHardFinalDeath: 1
   disableOnGameOver:
   - {fileID: 1254087228}
   - {fileID: 1254087228}
@@ -39987,12 +40041,12 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1697357962}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2.794025, y: 3.1929455, z: 3.0623143}
+  m_LocalScale: {x: 2.7940247, y: 3.1929452, z: 3.062314}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 559545623}
+  m_Father: {fileID: 932411087}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}

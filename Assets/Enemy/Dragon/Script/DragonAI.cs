@@ -85,6 +85,28 @@ public class DragonAI : MonoBehaviour
     [Tooltip("ONにすると、突進直前のReady Pauseも難易度のAnimator速度に合わせて短縮/延長します。OFFなら実時間のままです。")]
     public bool scaleChargeReadyPauseWithAnimationSpeed = false;
 
+    [Header("難易度別 攻撃ディレイ / 突進短縮")]
+    [Tooltip("DifficultyApplierから入る追加ディレイです。攻撃行動の開始前にこの秒数だけ待ちます。Hardだけ遅らせたい時に使います。")]
+    public float difficultyAttackStartDelay = 0f;
+
+    [Tooltip("ONなら、追加ディレイは攻撃行動だけに適用します。ApproachやOpeningにはかけません。")]
+    public bool applyDifficultyAttackStartDelayOnlyToAttackActions = true;
+
+    [Tooltip("ONなら、追加ディレイ中もプレイヤーの方を向きます。")]
+    public bool facePlayerDuringDifficultyAttackStartDelay = true;
+
+    [Tooltip("ONなら、Charge Tell Timeを難易度専用値で上書きします。Hardの突進溜めを大幅短縮したい時にON。")]
+    public bool useDifficultyChargeTellTimeOverride = false;
+
+    [Tooltip("難易度専用の突進溜め時間です。Use Difficulty Charge Tell Time OverrideがONの時だけ使います。")]
+    public float difficultyChargeTellTimeOverride = 0.35f;
+
+    [Tooltip("ONなら、Charge Ready Pause Timeを難易度専用値で上書きします。")]
+    public bool useDifficultyChargeReadyPauseOverride = false;
+
+    [Tooltip("難易度専用の突進直前停止時間です。")]
+    public float difficultyChargeReadyPauseOverride = 0.05f;
+
     [Tooltip("DragonCoreに付いているDragonHPを入れてください。本体HP、尻尾クリスタル破壊、死亡イベントを受け取ります。")]
     public DragonHP dragonHP;
 
@@ -1284,6 +1306,8 @@ public class DragonAI : MonoBehaviour
     {
         RegisterAction(action);
 
+        yield return WaitDifficultyAttackStartDelayIfNeeded(action);
+
         switch (action)
         {
             case DragonAction.Opening:
@@ -1345,6 +1369,71 @@ public class DragonAI : MonoBehaviour
             default:
                 yield return OpeningIdle();
                 break;
+        }
+    }
+
+    private IEnumerator WaitDifficultyAttackStartDelayIfNeeded(DragonAction action)
+    {
+        float delay = Mathf.Max(0f, difficultyAttackStartDelay);
+
+        if (delay <= 0f)
+        {
+            yield break;
+        }
+
+        if (applyDifficultyAttackStartDelayOnlyToAttackActions && !IsAttackActionForDifficultyDelay(action))
+        {
+            yield break;
+        }
+
+        DisableAllHitboxes();
+        StopAllSpecialParticles();
+        ResetAnimatorSpeedHard();
+
+        if (motion != null)
+        {
+            motion.PlayAnim(motion.idleAnim, true);
+        }
+
+        float timer = 0f;
+
+        while (timer < delay)
+        {
+            if (state == DragonState.Dead || state == DragonState.Down)
+            {
+                yield break;
+            }
+
+            timer += Time.deltaTime;
+
+            if (facePlayerDuringDifficultyAttackStartDelay && motion != null && player != null)
+            {
+                motion.FacePlayerSmooth(motion.idleTurnSpeed);
+            }
+
+            yield return null;
+        }
+    }
+
+    private bool IsAttackActionForDifficultyDelay(DragonAction action)
+    {
+        switch (action)
+        {
+            case DragonAction.SwipeCounter:
+            case DragonAction.TailSlam:
+            case DragonAction.TailSwipe:
+            case DragonAction.BackStepTailSlam:
+            case DragonAction.BackStepTailSwipe:
+            case DragonAction.BackStepWideBreath:
+            case DragonAction.BackStepBeamBreath:
+            case DragonAction.WideBreath:
+            case DragonAction.BeamBreath:
+            case DragonAction.Charge:
+            case DragonAction.DoubleCharge:
+                return true;
+
+            default:
+                return false;
         }
     }
 
@@ -3083,6 +3172,21 @@ public class DragonAI : MonoBehaviour
     }
 
 
+    public void SetDifficultySpecialAttackTiming(
+        float attackStartDelay,
+        bool overrideChargeTellTime,
+        float chargeTellTimeOverride,
+        bool overrideChargeReadyPause,
+        float chargeReadyPauseOverride
+    )
+    {
+        difficultyAttackStartDelay = Mathf.Max(0f, attackStartDelay);
+        useDifficultyChargeTellTimeOverride = overrideChargeTellTime;
+        difficultyChargeTellTimeOverride = Mathf.Max(0f, chargeTellTimeOverride);
+        useDifficultyChargeReadyPauseOverride = overrideChargeReadyPause;
+        difficultyChargeReadyPauseOverride = Mathf.Max(0f, chargeReadyPauseOverride);
+    }
+
     public void SetDifficultyMultipliers(float actionIntervalMultiplier, float moveSpeedMultiplier, float animationSpeedMultiplier)
     {
         if (!useExternalDifficultyMultipliers)
@@ -3127,7 +3231,8 @@ public class DragonAI : MonoBehaviour
 
     private float GetChargeTellDuration()
     {
-        float safeTime = Mathf.Max(0f, chargeTellTime);
+        float baseTellTime = useDifficultyChargeTellTimeOverride ? difficultyChargeTellTimeOverride : chargeTellTime;
+        float safeTime = Mathf.Max(0f, baseTellTime);
 
         if (!scaleChargeTellTimeWithAnimationSpeed)
         {
@@ -3143,7 +3248,8 @@ public class DragonAI : MonoBehaviour
 
     private WaitForSeconds WaitForChargeReadyPause()
     {
-        float safeTime = Mathf.Max(0f, chargeReadyPauseTime);
+        float baseReadyPause = useDifficultyChargeReadyPauseOverride ? difficultyChargeReadyPauseOverride : chargeReadyPauseTime;
+        float safeTime = Mathf.Max(0f, baseReadyPause);
 
         if (scaleChargeReadyPauseWithAnimationSpeed)
         {

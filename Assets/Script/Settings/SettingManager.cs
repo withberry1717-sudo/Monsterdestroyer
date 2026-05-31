@@ -43,8 +43,6 @@ public class SettingManager : MonoBehaviour
 
         LoadSettings();
 
-        // イベントをコード側で自動登録する
-        // InspectorのOnValueChangedを設定し忘れても動く
         if (qualityDropdown != null)
         {
             qualityDropdown.onValueChanged.RemoveAllListeners();
@@ -143,58 +141,40 @@ public class SettingManager : MonoBehaviour
 
         if (qualityIndex == 0)
         {
-            // Laptop
             QualitySettings.SetQualityLevel(0, true);
-
             QualitySettings.shadows = ShadowQuality.Disable;
             QualitySettings.shadowDistance = 0f;
             QualitySettings.shadowResolution = ShadowResolution.Low;
-
             QualitySettings.antiAliasing = 0;
-
             QualitySettings.lodBias = 0.5f;
             QualitySettings.maximumLODLevel = 1;
-
             QualitySettings.globalTextureMipmapLimit = 1;
-
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 60;
         }
         else if (qualityIndex == 1)
         {
-            // Normal
             QualitySettings.SetQualityLevel(0, true);
-
             QualitySettings.shadows = ShadowQuality.HardOnly;
             QualitySettings.shadowDistance = 45f;
             QualitySettings.shadowResolution = ShadowResolution.Medium;
-
             QualitySettings.antiAliasing = 2;
-
             QualitySettings.lodBias = 1.0f;
             QualitySettings.maximumLODLevel = 0;
-
             QualitySettings.globalTextureMipmapLimit = 0;
-
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 60;
         }
-        else if (qualityIndex == 2)
+        else
         {
-            // High
             QualitySettings.SetQualityLevel(0, true);
-
             QualitySettings.shadows = ShadowQuality.All;
             QualitySettings.shadowDistance = 100f;
             QualitySettings.shadowResolution = ShadowResolution.High;
-
             QualitySettings.antiAliasing = 4;
-
             QualitySettings.lodBias = 1.5f;
             QualitySettings.maximumLODLevel = 0;
-
             QualitySettings.globalTextureMipmapLimit = 0;
-
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 60;
         }
@@ -225,12 +205,22 @@ public class SettingManager : MonoBehaviour
 
     public void ChangeVolume(float volume)
     {
+        ApplyMasterVolume(volume, true);
+    }
+
+    private void ApplyMasterVolume(float volume, bool save)
+    {
         volume = Mathf.Clamp01(volume);
 
+        // ゲーム全体の音量はここで一括管理する。
+        // BGM側で ignoreListenerVolume = true にしていると、この値が効かなくなる。
         AudioListener.volume = volume;
 
-        PlayerPrefs.SetFloat(VolumeKey, volume);
-        PlayerPrefs.Save();
+        if (save)
+        {
+            PlayerPrefs.SetFloat(VolumeKey, volume);
+            PlayerPrefs.Save();
+        }
 
         Debug.Log("音量変更: " + volume);
     }
@@ -305,7 +295,7 @@ public class SettingManager : MonoBehaviour
         float volume = PlayerPrefs.GetFloat(VolumeKey, 1f);
         volume = Mathf.Clamp01(volume);
 
-        AudioListener.volume = volume;
+        ApplyMasterVolume(volume, false);
 
         if (volumeSlider != null)
         {

@@ -18,6 +18,37 @@ namespace Retro.ThirdPersonCharacter
         [Tooltip("回避専用のParticleがある場合だけ入れる。chargeEffect / chargeReadyEffect は絶対に入れない")]
         [SerializeField] private ParticleSystem dashParticleSystem;
 
+        [Header("Blink Audio")]
+        [Tooltip("ブリンク音を再生するAudioSource。空ならPlayer自身か子から自動取得します。")]
+        [SerializeField] private AudioSource blinkAudioSource;
+
+        [Range(0f, 1f)]
+        [Tooltip("ブリンク関連SEの音量です。")]
+        [SerializeField] private float blinkSfxVolume = 1f;
+
+        [Tooltip("ブリンク開始時に鳴らすSEです。")]
+        [SerializeField] private AudioClip blinkStartSfx;
+
+        [Tooltip("ブリンク終了時に鳴らすSEです。空なら鳴りません。")]
+        [SerializeField] private AudioClip blinkEndSfx;
+
+        [Tooltip("ブリンクゲージが1つ回復した時に鳴らすSEです。空なら鳴りません。")]
+        [SerializeField] private AudioClip blinkRecoverSfx;
+
+        [Header("Blink Audio Timing")]
+        [Tooltip("ブリンク開始SEを何秒遅らせて鳴らすか。")]
+        [SerializeField] private float blinkStartSfxDelay = 0f;
+
+        [Tooltip("ブリンク終了SEを何秒遅らせて鳴らすか。")]
+        [SerializeField] private float blinkEndSfxDelay = 0f;
+
+        [Tooltip("ブリンク回復SEを何秒遅らせて鳴らすか。")]
+        [SerializeField] private float blinkRecoverSfxDelay = 0f;
+
+        [Header("Blink Particle Timing")]
+        [Tooltip("ブリンクParticleを何秒遅らせて再生するか。0ならブリンク開始と同時です。")]
+        [SerializeField] private float blinkParticleDelay = 0f;
+
         [SerializeField] private Transform _cameraTransform;
 
         private Vector2 lastMovementInput;
@@ -102,6 +133,7 @@ namespace Retro.ThirdPersonCharacter
             InputSystem.settings.maxEventBytesPerUpdate = 0;
 
             _trailRenderer = GetComponentInChildren<TrailRenderer>();
+            FindBlinkAudioSourceIfNeeded();
 
             ForceStopTrail();
 
@@ -432,6 +464,7 @@ namespace Retro.ThirdPersonCharacter
             if (blinkRecoverTimer <= 0f)
             {
                 currentBlinkCharges++;
+                PlayBlinkRecoverSfx();
 
                 if (currentBlinkCharges < maxBlinkCharges)
                 {
@@ -507,16 +540,15 @@ namespace Retro.ThirdPersonCharacter
                 currentDashSpeed *= attackBlinkDistanceMultiplier;
             }
 
+            PlayBlinkStartSfx();
+
             if (_trailRenderer != null)
             {
                 _trailRenderer.Clear();
                 _trailRenderer.enabled = true;
             }
 
-            if (dashParticleSystem != null)
-            {
-                dashParticleSystem.Play();
-            }
+            PlayBlinkParticle();
 
             _animator.SetFloat("InputX", 0);
             _animator.SetFloat("InputY", 0);
@@ -541,6 +573,7 @@ namespace Retro.ThirdPersonCharacter
             }
 
             ForceStopTrail();
+            PlayBlinkEndSfx();
 
             _animator.SetBool("IsInAir", false);
 
@@ -679,6 +712,102 @@ namespace Retro.ThirdPersonCharacter
             }
 
             _animator.SetBool("IsInAir", !grounded);
+        }
+
+        private void FindBlinkAudioSourceIfNeeded()
+        {
+            if (blinkAudioSource != null) return;
+
+            blinkAudioSource = GetComponent<AudioSource>();
+
+            if (blinkAudioSource == null)
+            {
+                blinkAudioSource = GetComponentInChildren<AudioSource>();
+            }
+
+            if (blinkAudioSource == null)
+            {
+                blinkAudioSource = GetComponentInParent<AudioSource>();
+            }
+        }
+
+        private void PlayBlinkStartSfx()
+        {
+            PlayBlinkSfx(blinkStartSfx, blinkStartSfxDelay);
+        }
+
+        private void PlayBlinkEndSfx()
+        {
+            PlayBlinkSfx(blinkEndSfx, blinkEndSfxDelay);
+        }
+
+        private void PlayBlinkRecoverSfx()
+        {
+            PlayBlinkSfx(blinkRecoverSfx, blinkRecoverSfxDelay);
+        }
+
+        private void PlayBlinkSfx(AudioClip clip, float delay)
+        {
+            if (clip == null) return;
+
+            FindBlinkAudioSourceIfNeeded();
+
+            if (blinkAudioSource == null)
+            {
+                Debug.LogWarning("[Movement] Blink AudioSourceがありません。PlayerにAudioSourceを追加してください。", this);
+                return;
+            }
+
+            delay = Mathf.Max(0f, delay);
+
+            if (delay > 0f)
+            {
+                StartCoroutine(PlayBlinkSfxDelayed(clip, delay));
+            }
+            else
+            {
+                blinkAudioSource.PlayOneShot(clip, blinkSfxVolume);
+            }
+        }
+
+        private IEnumerator PlayBlinkSfxDelayed(AudioClip clip, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+
+            if (clip == null) yield break;
+
+            FindBlinkAudioSourceIfNeeded();
+
+            if (blinkAudioSource != null)
+            {
+                blinkAudioSource.PlayOneShot(clip, blinkSfxVolume);
+            }
+        }
+
+        private void PlayBlinkParticle()
+        {
+            if (dashParticleSystem == null) return;
+
+            float delay = Mathf.Max(0f, blinkParticleDelay);
+
+            if (delay > 0f)
+            {
+                StartCoroutine(PlayBlinkParticleDelayed(delay));
+            }
+            else
+            {
+                dashParticleSystem.Play(true);
+            }
+        }
+
+        private IEnumerator PlayBlinkParticleDelayed(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+
+            if (dashParticleSystem != null && isDashing)
+            {
+                dashParticleSystem.Play(true);
+            }
         }
 
         public void DragonStagger(float time)

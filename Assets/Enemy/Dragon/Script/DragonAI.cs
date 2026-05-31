@@ -565,6 +565,10 @@ public class DragonAI : MonoBehaviour
     [Tooltip("Tail Slam開始時に再生するSEです。未設定なら鳴りません。")]
     public AudioClip tailSlamSfx;
 
+    [Header("Tail Slam SE Timing")]
+    [Tooltip("TailSlamの叩きつけSEを、当たり判定ONより何秒早く鳴らすかです。0なら判定ONと同時。0.03〜0.08くらいがおすすめです。")]
+    public float tailSlamImpactSfxAdvanceTime = 0f;
+
     [Header("Tail Swipe")]
     [Tooltip("Tail Swipe全体の長さです。実際のアニメーション長に合わせてください。")]
     public float tailSwipeDuration = 4.6f;
@@ -602,8 +606,21 @@ public class DragonAI : MonoBehaviour
     [Tooltip("Tail Swipe開始時に再生するパーティクルです。未設定なら何も再生されません。")]
     public ParticleSystem tailSwipeParticle;
 
-    [Tooltip("Tail Swipe開始時に再生するSEです。未設定なら鳴りません。")]
+    [Tooltip("Tail Swipe開始時に再生するSEです。今回は開始時には基本鳴らさず、2段目回転音のフォールバックとして使います。未設定なら鳴りません。")]
     public AudioClip tailSwipeSfx;
+
+    [Header("Tail Swipe SE 個別設定")]
+    [Tooltip("ONならTail Swipe開始時にはSEを鳴らさず、1段目の叩きつけ判定が出た瞬間に専用SEを鳴らします。おすすめON。")]
+    public bool useSeparateTailSwipeFirstSlamSfx = true;
+
+    [Tooltip("ONならTail Swipeの1段目叩きつけはTailSlamと同じClipを使います。ただしDelay/VolumeはEffectPlayerの Tail Swipe First Slam 側を使えます。")]
+    public bool useTailSlamSfxForTailSwipeFirstHit = true;
+
+    [Tooltip("ONならTail Swipe開始時にTailSwipeSfxを鳴らします。1段目と2段目を別管理したいならOFF推奨。")]
+    public bool playTailSwipeStartSfx = false;
+
+    [Tooltip("TailSwipe一段目の叩きつけSEを、当たり判定ONより何秒早く鳴らすかです。0なら判定ONと同時。0.03〜0.08くらいがおすすめです。")]
+    public float tailSwipeFirstSlamSfxAdvanceTime = 0f;
 
     [Header("Tail Swipe 強化設定")]
     [Tooltip("オンにすると、Tail Swipeを強化版として使います。中距離まででだけ発動し、前半の位置合わせ、二段目前の予備動作、回転突進を行います。")]
@@ -709,8 +726,11 @@ public class DragonAI : MonoBehaviour
     [Tooltip("回転突進中に再生するパーティクルです。未設定なら何も再生されません。")]
     public ParticleSystem tailSwipeSpinDashParticle;
 
-    [Tooltip("回転突進開始時に再生するSEです。未設定なら鳴りません。")]
+    [Tooltip("回転突進開始時、または回転1ループごとに再生するSEです。未設定ならTailSwipeSfxを使います。")]
     public AudioClip tailSwipeSpinDashSfx;
+
+    [Tooltip("ONならTail Swipeの2段目回転攻撃で、1回転するたびにSEを鳴らします。")]
+    public bool playTailSwipeSpinSfxEveryLoop = true;
 
     [Tooltip("回転突進終了時に再生するSEです。未設定なら鳴りません。")]
     public AudioClip tailSwipeSpinDashEndSfx;
@@ -2152,7 +2172,9 @@ public class DragonAI : MonoBehaviour
 
         motion.PlayAnim(motion.tailSlamAnim, true);
 
-        PlayEffect(DragonEffectKind.TailSlam, tailSlamSfx, tailSlamParticle);
+        // TailSlamのSEは開始時ではなく、叩きつけ判定ONの瞬間に鳴らす。
+        // ここではDelayを使わない。Volume/ClipだけEffectPlayer設定を使う。
+        PlayTailSlamStartParticleOnly();
 
         float timer = 0f;
 
@@ -2165,6 +2187,7 @@ public class DragonAI : MonoBehaviour
         float tailSlamRealDuration = ScaleAnimDuration(tailSlamDuration);
 
         bool hitboxEnabled = false;
+        bool tailSlamSfxPlayed = false;
         bool returnStarted = false;
         Quaternion returnStartRotation = transform.rotation;
 
@@ -2212,11 +2235,20 @@ public class DragonAI : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, easedRotation, tailTrackingTurnSpeed * Time.deltaTime);
             }
 
+            float tailSlamSfxTime = Mathf.Max(0f, hitStartTime - Mathf.Max(0f, tailSlamImpactSfxAdvanceTime));
+
+            if (!tailSlamSfxPlayed && timer >= tailSlamSfxTime)
+            {
+                tailSlamSfxPlayed = true;
+                PlayTailSlamImpactSfx();
+            }
+
             bool shouldEnableHitbox = timer >= hitStartTime && timer <= hitEndTime;
 
             if (shouldEnableHitbox && !hitboxEnabled)
             {
                 hitboxEnabled = true;
+
                 if (tailHitbox != null) tailHitbox.EnableHitbox();
             }
             else if (!shouldEnableHitbox && hitboxEnabled)
@@ -2266,7 +2298,7 @@ public class DragonAI : MonoBehaviour
         ResetAnimatorSpeedHard();
         motion.PlayAnim(motion.tailSwipeAnim, true);
 
-        PlayEffect(DragonEffectKind.TailSwipe, tailSwipeSfx, tailSwipeParticle);
+        PlayTailSwipeStartEffect();
 
         float timer = 0f;
 
@@ -2286,6 +2318,7 @@ public class DragonAI : MonoBehaviour
         float spinLoopEndTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeSpinLoopEndFrame));
 
         bool hitboxEnabled = false;
+        bool firstSlamSfxPlayed = false;
         bool repositionStarted = false;
 
         Vector3 repositionStartPosition = transform.position;
@@ -2353,11 +2386,20 @@ public class DragonAI : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, tailSwipeRepositionTurnSpeed * Time.deltaTime);
             }
 
+            float tailSwipeFirstSlamSfxTime = Mathf.Max(0f, firstHitStartTime - Mathf.Max(0f, tailSwipeFirstSlamSfxAdvanceTime));
+
+            if (!firstSlamSfxPlayed && timer >= tailSwipeFirstSlamSfxTime)
+            {
+                firstSlamSfxPlayed = true;
+                PlayTailSwipeFirstSlamSfx();
+            }
+
             bool shouldEnableHitbox = timer >= firstHitStartTime && timer <= firstHitEndTime;
 
             if (shouldEnableHitbox && !hitboxEnabled)
             {
                 hitboxEnabled = true;
+
                 if (tailHitbox != null) tailHitbox.EnableHitbox();
             }
             else if (!shouldEnableHitbox && hitboxEnabled)
@@ -2392,6 +2434,95 @@ public class DragonAI : MonoBehaviour
         ResetAnimatorSpeedHard();
 
         ReturnToIdle();
+    }
+
+    private void PlayTailSwipeStartEffect()
+    {
+        if (tailSwipeParticle != null)
+        {
+            PrepareParticleForDifficultyPlay(tailSwipeParticle);
+
+            if (restartParticleBeforePlay)
+            {
+                tailSwipeParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+
+            tailSwipeParticle.Play(true);
+        }
+
+        if (playTailSwipeStartSfx && tailSwipeSfx != null)
+        {
+            PlaySfx(tailSwipeSfx);
+        }
+    }
+
+    private void PlayTailSlamStartParticleOnly()
+    {
+        ParticleSystem particle = tailSlamParticle != null ? tailSlamParticle : GetCommonParticle(DragonEffectKind.TailSlam);
+
+        if (particle == null) return;
+
+        PrepareParticleForDifficultyPlay(particle);
+
+        if (restartParticleBeforePlay)
+        {
+            particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
+        particle.Play(true);
+    }
+
+    private void PlayTailSlamImpactSfx()
+    {
+        // 当たり判定ONの瞬間に鳴らすため、EffectPlayer側のDelayは使わない。
+        // Volume/ClipだけEffectPlayer設定を使う。
+        if (effectPlayer != null && effectPlayer.TryPlayTailSlamSfxOnHitImmediate())
+        {
+            return;
+        }
+
+        AudioClip clip = tailSlamSfx != null ? tailSlamSfx : GetCommonClip(DragonEffectKind.TailSlam);
+        PlaySfxRawNoEffectPlayerDelay(clip);
+    }
+
+    private void PlayTailSwipeFirstSlamSfx()
+    {
+        if (!useSeparateTailSwipeFirstSlamSfx) return;
+
+        // TailSwipe一段目はEffectPlayerの Tail Swipe First Slam 設定を必ず使う。
+        // ClipだけTailSlamと同じにできるが、Delay/VolumeはTailSlamとは完全に別管理。
+        // 当たり判定ONの瞬間に鳴らすため、EffectPlayer側のDelayは使わない。
+        // ClipはTailSlamと同じにできるが、VolumeはTailSwipe First Slam側を使える。
+        if (effectPlayer != null && effectPlayer.TryPlayTailSwipeFirstSlamSfxOnHitImmediate())
+        {
+            return;
+        }
+
+        AudioClip clip = useTailSlamSfxForTailSwipeFirstHit ? tailSlamSfx : tailSwipeSfx;
+        PlaySfxRawNoEffectPlayerDelay(clip);
+    }
+
+    private void PlayTailSwipeSpinLoopSfx()
+    {
+        if (effectPlayer != null && effectPlayer.TryPlayTailSwipeSpinLoopSfxOnly())
+        {
+            return;
+        }
+
+        AudioClip clip = tailSwipeSpinDashSfx != null ? tailSwipeSpinDashSfx : tailSwipeSfx;
+        PlaySfxRawNoEffectPlayerDelay(clip);
+    }
+
+    private void PlaySfxRawNoEffectPlayerDelay(AudioClip clip)
+    {
+        if (clip == null) return;
+
+        FindAudioSourceIfNeeded();
+
+        if (audioSource != null)
+        {
+            audioSource.PlayOneShot(clip, sfxVolume);
+        }
     }
 
     private Vector3 CalculateTailSwipeRepositionTarget()
@@ -2557,7 +2688,10 @@ public class DragonAI : MonoBehaviour
             tailSwipeSpinDashParticle.Play(true);
         }
 
-        PlayEffect(DragonEffectKind.TailSwipe, tailSwipeSpinDashSfx, null);
+        if (!playTailSwipeSpinSfxEveryLoop)
+        {
+            PlayTailSwipeSpinLoopSfx();
+        }
 
         float rawLoopDuration = Mathf.Max(0.01f, loopEndTime - loopStartTime);
         float loopDuration = Mathf.Max(0.05f, ScaleAnimDuration(tailSwipeSpinLoopDuration));
@@ -2581,6 +2715,11 @@ public class DragonAI : MonoBehaviour
             Quaternion baseRotation = Quaternion.LookRotation(dashDirection, Vector3.up);
 
             UpdateTailSwipeSpinLoopAnimation(loopStartTime, loopEndTime, 0f, loopDuration, animatorSpeed);
+
+            if (playTailSwipeSpinSfxEveryLoop)
+            {
+                PlayTailSwipeSpinLoopSfx();
+            }
 
             while (timer < loopDuration)
             {

@@ -14,39 +14,83 @@ public class ButtonSE : MonoBehaviour
     [Header("フロムゲー風 調整")]
     public bool isHeavyDarkFantasyStyle = true;
 
+    [Header("設定音量を反映")]
+    [Tooltip("ONならSettingManagerのAudioListener.volumeに従います。基本ON推奨。")]
+    [SerializeField] private bool respectMasterVolume = true;
+
+    [Tooltip("ONならポーズ中でもUI音を鳴らします。")]
+    [SerializeField] private bool playWhilePaused = true;
+
     private static AudioSource _sharedAudioSource;
+    private static GameObject _sharedAudioObject;
 
-    void Start()
+    private Button button;
+
+    private void Awake()
     {
-        if (_sharedAudioSource == null)
-        {
-            GameObject sePlayer = new GameObject("UI_SE_Player");
-            _sharedAudioSource = sePlayer.AddComponent<AudioSource>();
+        PrepareSharedAudioSource();
 
-            _sharedAudioSource.ignoreListenerPause = true;
-            _sharedAudioSource.ignoreListenerVolume = true;
-
-            DontDestroyOnLoad(sePlayer);
-        }
-
-        Button btn = GetComponent<Button>();
-        btn.onClick.AddListener(PlaySound);
+        button = GetComponent<Button>();
+        button.onClick.RemoveListener(PlaySound);
+        button.onClick.AddListener(PlaySound);
     }
 
-    void PlaySound()
+    private void OnDestroy()
     {
-        if (clickSound != null && _sharedAudioSource != null)
+        if (button != null)
         {
-            if (isHeavyDarkFantasyStyle)
-            {
-                _sharedAudioSource.pitch = Random.Range(0.80f, 0.95f);
-            }
-            else
-            {
-                _sharedAudioSource.pitch = 1.0f;
-            }
-
-            _sharedAudioSource.PlayOneShot(clickSound, volume);
+            button.onClick.RemoveListener(PlaySound);
         }
+    }
+
+    private void PrepareSharedAudioSource()
+    {
+        if (_sharedAudioSource != null) return;
+
+        _sharedAudioObject = GameObject.Find("UI_SE_Player");
+
+        if (_sharedAudioObject == null)
+        {
+            _sharedAudioObject = new GameObject("UI_SE_Player");
+            DontDestroyOnLoad(_sharedAudioObject);
+        }
+
+        _sharedAudioSource = _sharedAudioObject.GetComponent<AudioSource>();
+
+        if (_sharedAudioSource == null)
+        {
+            _sharedAudioSource = _sharedAudioObject.AddComponent<AudioSource>();
+        }
+
+        _sharedAudioSource.playOnAwake = false;
+
+        // ポーズ中に鳴らすかどうかだけ制御
+        _sharedAudioSource.ignoreListenerPause = playWhilePaused;
+
+        // ここが重要：音量バーを反映する
+        _sharedAudioSource.ignoreListenerVolume = !respectMasterVolume;
+    }
+
+    private void PlaySound()
+    {
+        if (clickSound == null) return;
+
+        PrepareSharedAudioSource();
+
+        if (_sharedAudioSource == null) return;
+
+        _sharedAudioSource.ignoreListenerPause = playWhilePaused;
+        _sharedAudioSource.ignoreListenerVolume = !respectMasterVolume;
+
+        if (isHeavyDarkFantasyStyle)
+        {
+            _sharedAudioSource.pitch = Random.Range(0.80f, 0.95f);
+        }
+        else
+        {
+            _sharedAudioSource.pitch = 1.0f;
+        }
+
+        _sharedAudioSource.PlayOneShot(clickSound, volume);
     }
 }

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Collections;
@@ -22,34 +22,41 @@ public class PlayerHP : MonoBehaviour
     [SerializeField] private Image hpHighlightFill;
     [SerializeField] private Image hpDelayFill;
 
-    [Header("HP�x���o�[")]
+    [Header("HP遅延バー")]
     [SerializeField] private float hpDelayWait = 0.35f;
     [SerializeField] private float hpDelaySpeed = 1.5f;
 
-    [Header("��e�ݒ�")]
+    [Header("被弾設定")]
     [SerializeField] private float heavyDamageThreshold = 25f;
     [SerializeField] private float minimumDamageInterval = 0.05f;
 
-    [Header("���_���[�W")]
+    [Header("小ダメージ")]
     [SerializeField] private float lightInvincibleTime = 0.5f;
     [SerializeField] private float lightControlLockTime = 0.25f;
 
-    [Header("��_���[�W")]
+    [Header("大ダメージ")]
     [SerializeField] private float heavyInvincibleTime = 1.2f;
     [SerializeField] private float heavyControlLockTime = 0.5f;
     [SerializeField] private float knockbackPower = 4f;
     [SerializeField] private float knockbackUpPower = 1.2f;
     [SerializeField] private float knockbackDuration = 0.25f;
 
-    [Header("�h���S���U������̐������")]
+    [Header("ドラゴン攻撃からの吹っ飛び")]
     [SerializeField] private float externalKnockbackMultiplier = 1.0f;
     [SerializeField] private bool applyGravityDuringKnockback = true;
     [SerializeField] private float gravityDuringKnockback = -20f;
 
-    [Header("�_��")]
+    [Header("ノックバック暴発防止")]
+    [Tooltip("ON推奨。DragonKnockbackでは方向だけ保存し、実際の吹っ飛びはTakeDamage後の被弾処理で1回だけ行います。ブリンク中の二重ノックバック防止用です。")]
+    [SerializeField] private bool useDamageRoutineOnlyForKnockback = true;
+
+    [Tooltip("1フレームで移動できるノックバック量の上限です。異常な値が来てもスポーン位置まで飛ばないようにする保険です。通常は0.8〜1.2でOK。")]
+    [SerializeField] private float maxKnockbackMovePerFrame = 1.0f;
+
+    [Header("点滅")]
     [SerializeField] private float blinkInterval = 0.08f;
 
-    [Header("��e��ʃt���b�V��")]
+    [Header("被弾画面フラッシュ")]
     [SerializeField] private CanvasGroup damageFlashCanvasGroup;
     [SerializeField] private float damageFlashMaxAlpha = 0.7f;
     [SerializeField] private float heavyDamageFlashMaxAlpha = 0.9f;
@@ -57,12 +64,12 @@ public class PlayerHP : MonoBehaviour
     [SerializeField] private float damageFlashHoldTime = 0.04f;
     [SerializeField] private float damageFlashFadeOutTime = 0.35f;
 
-    [Header("�Ԃӂ���������")]
+    [Header("赤ふち自動生成")]
     [SerializeField] private bool autoCreateDamageFlashEdges = true;
     [SerializeField] private float damageEdgeThickness = 120f;
     [SerializeField] private Color damageEdgeColor = new Color(1f, 0f, 0f, 0.8f);
 
-    [Header("Game Over ���o")]
+    [Header("Game Over 演出")]
     [SerializeField] private CanvasGroup gameOverCanvasGroup;
     [SerializeField] private float gameOverFadeDelay = 0.8f;
     [SerializeField] private float gameOverFadeDuration = 2.0f;
@@ -71,26 +78,42 @@ public class PlayerHP : MonoBehaviour
     [SerializeField] private Button[] gameOverButtons;
 
     [Header("Hard Mode Death Limit")]
-    [Tooltip("ON�Ȃ�Hard�������S�񐔐������g���܂��B1��ڂ͒ʏ�GameOver�A2��ڂ�YouDied�����\�����ă^�C�g���֖߂��܂��B")]
+    [Tooltip("ONならHardだけ死亡回数制限を使います。1回目は通常GameOver、2回目はYouDiedだけ表示してタイトルへ戻します。")]
     [SerializeField] private bool hardModeOneDeathRetry = true;
 
-    [Tooltip("Hard�ŋ����鎀�S�񐔂ł��B1�Ȃ�A1��ڂ͕��A�\�A2��ڂŋ����^�C�g���ł��B")]
+    [Tooltip("Hardで許可する死亡回数です。1なら、1回目は復帰可能、2回目で強制タイトルです。")]
     [SerializeField] private int hardModeAllowedDeaths = 1;
 
-    [Tooltip("Hard�Ŏ��S�����𒴂������A�^�C�g���֖߂�܂ł̕b���ł��B")]
+    [Tooltip("Hardで死亡制限を超えた時、タイトルへ戻るまでの秒数です。")]
     [SerializeField] private float hardModeReturnToTitleDelay = 5f;
 
-    [Tooltip("�߂�^�C�g���V�[�����ł��B")]
+    [Tooltip("戻るタイトルシーン名です。")]
     [SerializeField] private string titleSceneName = "TitleScene";
 
-    [Tooltip("Hard�ŏI���S���ɕ\������YouDied�e�L�X�g�ł��B��Ȃ�GameOverPanel�z�����疼�O��YouDied���܂ރI�u�W�F�N�g��T���܂��B")]
+    [Tooltip("Hard最終死亡時に表示するYouDiedテキストです。空ならGameOverPanel配下から名前にYouDiedを含むオブジェクトを探します。")]
     [SerializeField] private GameObject hardModeYouDiedText;
 
-    [Tooltip("ON�Ȃ�Hard�ŏI���S���AGameOverPanel�z����YouDied�ȊO���\���ɂ��܂��B")]
+    [Tooltip("ONならHard最終死亡時、GameOverPanel配下のYouDied以外を非表示にします。")]
     [SerializeField] private bool hideOtherGameOverChildrenOnHardFinalDeath = true;
 
-    [Header("Game Over���Ɏ~�߂�X�N���v�g �蓮�ǉ��p")]
+    [Header("Game Over時に止めるスクリプト 手動追加用")]
     [SerializeField] private MonoBehaviour[] disableOnGameOver;
+
+    [Header("World Safety / 裏世界落下・押し出し対策")]
+    [Tooltip("ON推奨。壁際やドラゴンに押しつぶされた時、床下や異常位置へ飛んだら最後の安全位置へ戻します。")]
+    [SerializeField] private bool useWorldSafety = true;
+
+    [Tooltip("このY座標より下へ行ったら裏世界判定で復帰します。ステージ床より十分下にしてください。")]
+    [SerializeField] private float worldMinY = -8f;
+
+    [Tooltip("1フレームでこの距離以上動いたら異常移動として復帰します。ブリンク距離より少し大きめ推奨。")]
+    [SerializeField] private float maxUnexpectedMovePerFrame = 6f;
+
+    [Tooltip("最後の安全位置へ戻す時に少し上へ浮かせる量です。")]
+    [SerializeField] private float safeReturnUpOffset = 0.35f;
+
+    [Tooltip("安全位置を記録する間隔です。")]
+    [SerializeField] private float safePositionRecordInterval = 0.08f;
 
     private float currentHp;
     private bool isGameOver;
@@ -122,6 +145,12 @@ public class PlayerHP : MonoBehaviour
     private MonoBehaviour _safePlayerCamera;
 
     private Vector3 lastKnockbackDirection = Vector3.zero;
+
+    private Vector3 lastSafePosition;
+    private Vector3 lastFramePosition;
+    private float safePositionRecordTimer;
+    private bool hasSafePosition;
+    private bool safetyRecovering;
 
     private void Start()
     {
@@ -169,14 +198,21 @@ public class PlayerHP : MonoBehaviour
             hpDelayFill.fillAmount = currentHp / maxHp;
         }
 
+        InitializeWorldSafety();
+
         Debug.Log("Game Start! Player HP: " + currentHp);
+    }
+
+    private void Update()
+    {
+        UpdateWorldSafety();
     }
 
     private void SetupDamageFlash()
     {
         if (damageFlashCanvasGroup == null)
         {
-            Debug.LogWarning("Damage Flash Canvas Group �����ݒ�ł��BPlayerHP��Inspector��DamageFlashPanel�����Ă��������B");
+            Debug.LogWarning("Damage Flash Canvas Group が未設定です。PlayerHPのInspectorにDamageFlashPanelを入れてください。");
             return;
         }
 
@@ -291,6 +327,13 @@ public class PlayerHP : MonoBehaviour
 
         CancelBlinkBeforeDamageKnockback();
 
+        if (!IsFiniteVector(knockbackDirection) || knockbackDirection.sqrMagnitude < 0.001f)
+        {
+            knockbackDirection = -transform.forward;
+        }
+
+        knockbackDirection.y = 0f;
+
         if (knockbackDirection.sqrMagnitude < 0.001f)
         {
             knockbackDirection = -transform.forward;
@@ -298,9 +341,18 @@ public class PlayerHP : MonoBehaviour
 
         lastKnockbackDirection = knockbackDirection.normalized;
 
+        // 重要：DragonAttackHitbox側が DragonKnockback → TakeDamage の順で呼ぶ場合、
+        // ここで外部ノックバックを開始すると、TakeDamage後のHeavyDamageRoutineの
+        // 内部ノックバックと二重に走る。ブリンク中はこれが特に大きな吹っ飛びになる。
         if (externalKnockbackCoroutine != null)
         {
             StopCoroutine(externalKnockbackCoroutine);
+            externalKnockbackCoroutine = null;
+        }
+
+        if (useDamageRoutineOnlyForKnockback)
+        {
+            return;
         }
 
         externalKnockbackCoroutine = StartCoroutine(
@@ -349,6 +401,14 @@ public class PlayerHP : MonoBehaviour
 
     private void StartDamageReaction(float damage)
     {
+        CancelBlinkBeforeDamageKnockback();
+
+        if (externalKnockbackCoroutine != null)
+        {
+            StopCoroutine(externalKnockbackCoroutine);
+            externalKnockbackCoroutine = null;
+        }
+
         if (damageRoutineCoroutine != null)
         {
             StopCoroutine(damageRoutineCoroutine);
@@ -377,7 +437,7 @@ public class PlayerHP : MonoBehaviour
     {
         if (damageFlashCanvasGroup == null)
         {
-            Debug.LogWarning("Damage Flash Canvas Group �����ݒ�Ȃ̂ŐԂӂ���\���ł��܂���B");
+            Debug.LogWarning("Damage Flash Canvas Group が未設定なので赤ふちを表示できません。");
             return;
         }
 
@@ -499,6 +559,11 @@ public class PlayerHP : MonoBehaviour
     {
         float timer = 0f;
 
+        if (!IsFiniteVector(direction))
+        {
+            direction = -transform.forward;
+        }
+
         direction.y = 0f;
 
         if (direction.sqrMagnitude < 0.001f)
@@ -522,6 +587,11 @@ public class PlayerHP : MonoBehaviour
     private IEnumerator ExternalKnockbackRoutine(Vector3 direction, float power, float duration)
     {
         float timer = 0f;
+
+        if (!IsFiniteVector(direction))
+        {
+            direction = -transform.forward;
+        }
 
         direction.y = 0f;
 
@@ -547,6 +617,11 @@ public class PlayerHP : MonoBehaviour
 
     private void MovePlayerByKnockback(Vector3 velocity)
     {
+        if (!IsFiniteVector(velocity))
+        {
+            velocity = -transform.forward * knockbackPower;
+        }
+
         if (_characterController != null && _characterController.enabled)
         {
             Vector3 move = velocity * Time.deltaTime;
@@ -556,12 +631,158 @@ public class PlayerHP : MonoBehaviour
                 move.y += gravityDuringKnockback * Time.deltaTime * Time.deltaTime;
             }
 
-            _characterController.Move(move);
+            // 異常な方向・速度が来ても一瞬で初期スポーン付近まで飛ばないようにする保険。
+            float maxMove = Mathf.Max(0.05f, maxKnockbackMovePerFrame);
+            if (!IsFiniteVector(move))
+            {
+                move = Vector3.zero;
+            }
+            else if (move.magnitude > maxMove)
+            {
+                move = move.normalized * maxMove;
+            }
+
+            SafeCharacterMove(move);
         }
         else if (_rigidbody != null && !_rigidbody.isKinematic)
         {
             _rigidbody.AddForce(velocity, ForceMode.Impulse);
         }
+    }
+
+    private bool IsFiniteVector(Vector3 value)
+    {
+        return float.IsFinite(value.x)
+            && float.IsFinite(value.y)
+            && float.IsFinite(value.z);
+    }
+
+    private void InitializeWorldSafety()
+    {
+        lastSafePosition = transform.position;
+        lastFramePosition = transform.position;
+        safePositionRecordTimer = 0f;
+        hasSafePosition = true;
+        safetyRecovering = false;
+    }
+
+    private void SafeCharacterMove(Vector3 move)
+    {
+        if (_characterController == null || !_characterController.enabled)
+        {
+            transform.position += move;
+            return;
+        }
+
+        if (!IsFiniteVector(move))
+        {
+            RecoverToLastSafePosition("Move vector is invalid");
+            return;
+        }
+
+        _characterController.Move(move);
+
+        if (useWorldSafety && !IsPositionSafeEnough(transform.position))
+        {
+            RecoverToLastSafePosition("Unsafe position after knockback move");
+        }
+    }
+
+    private void UpdateWorldSafety()
+    {
+        if (!useWorldSafety) return;
+        if (!hasSafePosition)
+        {
+            InitializeWorldSafety();
+            return;
+        }
+
+        Vector3 currentPosition = transform.position;
+
+        if (!IsPositionSafeEnough(currentPosition))
+        {
+            RecoverToLastSafePosition("Fell under world or invalid position");
+            return;
+        }
+
+        float movedThisFrame = Vector3.Distance(currentPosition, lastFramePosition);
+        if (!safetyRecovering && movedThisFrame > Mathf.Max(1f, maxUnexpectedMovePerFrame))
+        {
+            RecoverToLastSafePosition("Unexpected large displacement");
+            return;
+        }
+
+        safetyRecovering = false;
+
+        safePositionRecordTimer -= Time.deltaTime;
+        if (safePositionRecordTimer <= 0f && CanRecordSafePosition())
+        {
+            lastSafePosition = currentPosition;
+            safePositionRecordTimer = Mathf.Max(0.02f, safePositionRecordInterval);
+        }
+
+        lastFramePosition = transform.position;
+    }
+
+    private bool CanRecordSafePosition()
+    {
+        if (!IsPositionSafeEnough(transform.position)) return false;
+        if (_characterController == null) return true;
+
+        // 操作不能中・被弾ノックバック中は、押し込まれた位置を安全位置として保存しない。
+        if (controlLockCount > 0) return false;
+        if (damageRoutineCoroutine != null) return false;
+        if (externalKnockbackCoroutine != null) return false;
+
+        return _characterController.isGrounded;
+    }
+
+    private bool IsPositionSafeEnough(Vector3 position)
+    {
+        if (!IsFiniteVector(position)) return false;
+        if (position.y < worldMinY) return false;
+        return true;
+    }
+
+    private void RecoverToLastSafePosition(string reason)
+    {
+        if (!useWorldSafety) return;
+
+        CancelBlinkBeforeDamageKnockback();
+
+        if (externalKnockbackCoroutine != null)
+        {
+            StopCoroutine(externalKnockbackCoroutine);
+            externalKnockbackCoroutine = null;
+        }
+
+        Vector3 recoverPosition = hasSafePosition ? lastSafePosition : transform.position;
+        if (!IsFiniteVector(recoverPosition))
+        {
+            recoverPosition = Vector3.zero;
+        }
+
+        recoverPosition.y = Mathf.Max(recoverPosition.y + safeReturnUpOffset, worldMinY + safeReturnUpOffset);
+
+        if (_characterController != null)
+        {
+            bool wasEnabled = _characterController.enabled;
+            _characterController.enabled = false;
+            transform.position = recoverPosition;
+            _characterController.enabled = wasEnabled;
+        }
+        else
+        {
+            transform.position = recoverPosition;
+        }
+
+        lastFramePosition = transform.position;
+        lastSafePosition = transform.position;
+        hasSafePosition = true;
+        safetyRecovering = true;
+        lastKnockbackDirection = Vector3.zero;
+
+        Debug.LogWarning("[PlayerHP] World safety recover: " + reason, this);
     }
 
     private IEnumerator StaggerRoutine(float duration)
@@ -955,32 +1176,85 @@ public class PlayerHP : MonoBehaviour
             gameOverCanvasGroup.blocksRaycasts = false;
         }
 
-        GameObject youDied = hardModeYouDiedText;
+        GameObject youDied = ResolveHardModeYouDiedObject();
 
-        if (youDied == null && gameOverPanel != null)
+        if (youDied == null)
         {
-            youDied = FindYouDiedObject(gameOverPanel.transform);
+            Debug.LogWarning("Hard最終死亡用のYouDiedテキストが見つかりません。PlayerHPのHard Mode You Died Textに入れてください。", this);
+            return;
         }
 
         if (gameOverPanel != null && hideOtherGameOverChildrenOnHardFinalDeath)
         {
-            for (int i = 0; i < gameOverPanel.transform.childCount; i++)
+            SetOnlyYouDiedVisible(gameOverPanel.transform, youDied.transform);
+        }
+
+        // 親をOFFにしたままだとTextだけONにしても表示されないので、
+        // GameOverPanelからYouDiedまでの親階層を必ずONに戻す。
+        ActivatePathToYouDied(youDied.transform);
+        youDied.SetActive(true);
+    }
+
+    private GameObject ResolveHardModeYouDiedObject()
+    {
+        if (hardModeYouDiedText != null)
+        {
+            // InspectorにGameOverPanelや親コンテナを間違って入れても、
+            // その中のYouDiedテキストを優先して探す。
+            GameObject foundInsideAssigned = FindYouDiedObject(hardModeYouDiedText.transform);
+            if (foundInsideAssigned != null)
             {
-                Transform child = gameOverPanel.transform.GetChild(i);
-                if (child == null) continue;
-
-                bool keep = youDied != null && (child.gameObject == youDied || child.IsChildOf(youDied.transform) || youDied.transform.IsChildOf(child));
-                child.gameObject.SetActive(keep);
+                return foundInsideAssigned;
             }
+
+            return hardModeYouDiedText;
         }
 
-        if (youDied != null)
+        if (gameOverPanel != null)
         {
-            youDied.SetActive(true);
+            return FindYouDiedObject(gameOverPanel.transform);
         }
-        else
+
+        return null;
+    }
+
+    private void SetOnlyYouDiedVisible(Transform root, Transform youDied)
+    {
+        if (root == null || youDied == null) return;
+
+        Transform[] all = root.GetComponentsInChildren<Transform>(true);
+
+        foreach (Transform t in all)
         {
-            Debug.LogWarning("Hard�ŏI���S�p��YouDied�e�L�X�g��������܂���BPlayerHP��Hard Mode You Died Text�ɓ���Ă��������B", this);
+            if (t == null) continue;
+            if (t == root) continue;
+
+            bool isYouDied = t == youDied;
+            bool isChildOfYouDied = t.IsChildOf(youDied);
+            bool isParentOfYouDied = youDied.IsChildOf(t);
+
+            // YouDied本体、YouDiedの子、YouDiedまでの親階層だけ残す。
+            // それ以外のボタン、背景、Score、Retryなどは全階層でOFF。
+            t.gameObject.SetActive(isYouDied || isChildOfYouDied || isParentOfYouDied);
+        }
+    }
+
+    private void ActivatePathToYouDied(Transform youDied)
+    {
+        if (youDied == null) return;
+
+        Transform current = youDied;
+
+        while (current != null)
+        {
+            current.gameObject.SetActive(true);
+
+            if (gameOverPanel != null && current == gameOverPanel.transform)
+            {
+                break;
+            }
+
+            current = current.parent;
         }
     }
 
@@ -1127,7 +1401,7 @@ public class PlayerHP : MonoBehaviour
 
         if (gameOverCanvasGroup == null)
         {
-            Debug.LogWarning("GameOverPanel��CanvasGroup������܂���B�t�F�[�h�Ȃ��ŕ\�����܂��B");
+            Debug.LogWarning("GameOverPanelにCanvasGroupがありません。フェードなしで表示します。");
             yield break;
         }
 

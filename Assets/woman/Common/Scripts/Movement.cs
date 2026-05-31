@@ -132,6 +132,29 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private string staggerAnimatorTrigger = "BigHit";
         [SerializeField] private bool stopAttackWhenStaggered = true;
 
+
+        [Header("World Collision Safety / 裏世界落下・押し出し対策")]
+        [Tooltip("ON推奨。壁際やドラゴンの体に押された時、異常な移動・落下を検知して最後の安全位置へ戻します。")]
+        [SerializeField] private bool useWorldCollisionSafety = true;
+
+        [Tooltip("このY座標より下に落ちたら裏世界判定として復帰します。ステージ床より十分下にしてください。")]
+        [SerializeField] private float worldMinY = -8f;
+
+        [Tooltip("1フレームでこの距離以上ワープしたら異常移動として復帰します。ブリンク距離より少し大きめ推奨。")]
+        [SerializeField] private float maxUnexpectedMovePerFrame = 6f;
+
+        [Tooltip("最後の安全位置を記録する間隔です。小さいほど復帰位置が新しくなります。")]
+        [SerializeField] private float safePositionRecordInterval = 0.08f;
+
+        [Tooltip("最後の安全位置へ戻す時、少し上に浮かせる量です。地面や壁へ埋まり直すのを防ぎます。")]
+        [SerializeField] private float safeReturnUpOffset = 0.35f;
+
+        [Tooltip("CharacterController.Moveに渡す1回あたりの最大移動量です。大きい移動を分割して壁抜けしにくくします。")]
+        [SerializeField] private float maxCharacterMoveStep = 0.45f;
+
+        [Tooltip("ONなら安全位置へ戻した時、移動・ブリンク・攻撃移動の慣性を全部消します。")]
+        [SerializeField] private bool clearMovementStateOnSafetyRecover = true;
+
         private int currentBlinkCharges;
         private float blinkRecoverTimer = 0f;
         private float blinkRecoverDelayTimer = 0f;
@@ -153,6 +176,12 @@ namespace Retro.ThirdPersonCharacter
         private Vector2 lastRawMoveInput = Vector2.zero;
         private Vector3 desiredLookDirection = Vector3.zero;
         private float noMoveInputTimer = 0f;
+
+        private Vector3 lastSafePosition;
+        private Vector3 lastFramePosition;
+        private float safePositionRecordTimer = 0f;
+        private bool hasSafePosition = false;
+        private bool safetyRecovering = false;
 
         public bool IsDashing => isDashing;
         public bool CanDashAttack => isDashing || dashAttackWindowTimer > 0f;
@@ -216,6 +245,7 @@ namespace Retro.ThirdPersonCharacter
             }
 
             UpdateBlinkUI();
+            InitializeWorldSafety();
         }
 
         private void OnDisable()
@@ -467,7 +497,7 @@ namespace Retro.ThirdPersonCharacter
 
                 Vector3 move = forwardDirection * moveAmount;
 
-                _characterController.Move(move);
+                SafeCharacterMove(move);
 
                 movedDistance += moveAmount;
 
@@ -517,6 +547,11 @@ namespace Retro.ThirdPersonCharacter
             }
         }
 
+        private void LateUpdate()
+        {
+            UpdateWorldSafety();
+        }
+
         private void StartDash(Vector3 dashDir)
         {
             if (activeDashRoutine != null)
@@ -530,6 +565,9 @@ namespace Retro.ThirdPersonCharacter
 
         public void CancelBlinkByDamage()
         {
+            // 被弾した瞬間にブリンク移動を完全停止する。
+            // Trailを止めるだけだとDashCoroutineのCharacterController.Moveが残り、
+            // ノックバックと合成されて大きく飛ぶことがある。
             if (activeDashRoutine != null)
             {
                 StopCoroutine(activeDashRoutine);
@@ -538,6 +576,12 @@ namespace Retro.ThirdPersonCharacter
 
             isDashing = false;
             dashAttackWindowTimer = 0f;
+
+            // ブリンク直前の慣性・移動方向も消す。
+            moveDirection = Vector3.zero;
+            desiredLookDirection = Vector3.zero;
+            hasLockedMoveCameraYaw = false;
+            lastRawMoveInput = Vector2.zero;
 
             if (_trailRenderer != null)
             {
@@ -552,6 +596,8 @@ namespace Retro.ThirdPersonCharacter
 
             if (_animator != null)
             {
+                _animator.SetFloat("InputX", 0f);
+                _animator.SetFloat("InputY", 0f);
                 _animator.SetBool("IsInAir", false);
             }
         }
@@ -705,14 +751,19 @@ namespace Retro.ThirdPersonCharacter
 
             float startTime = Time.time;
 
-            while (Time.time < startTime + dashTime)
+            while (isDashing && Time.time < startTime + dashTime)
             {
                 if (isDragonStaggered)
                 {
                     break;
                 }
 
-                _characterController.Move(dashDir * currentDashSpeed * Time.deltaTime);
+                if (_characterController == null || !_characterController.enabled)
+                {
+                    break;
+                }
+
+                SafeCharacterMove(dashDir * currentDashSpeed * Time.deltaTime);
                 yield return null;
             }
 
@@ -819,7 +870,7 @@ namespace Retro.ThirdPersonCharacter
             ApplyStablePlayerRotation(grounded);
 
             moveDirection.y -= gravity * Time.deltaTime;
-            _characterController.Move(moveDirection * Time.deltaTime);
+            SafeCharacterMove(moveDirection * Time.deltaTime);
 
             if (isAttacking && canMoveWhileAttacking)
             {
@@ -973,6 +1024,174 @@ namespace Retro.ThirdPersonCharacter
                     currentRotationSpeed * Time.deltaTime
                 );
             }
+        }
+
+        private void InitializeWorldSafety()
+        {
+            lastSafePosition = transform.position;
+            lastFramePosition = transform.position;
+            hasSafePosition = true;
+            safePositionRecordTimer = 0f;
+        }
+
+        private void SafeCharacterMove(Vector3 move)
+        {
+            if (_characterController == null || !_characterController.enabled)
+            {
+                transform.position += move;
+                return;
+            }
+
+            if (!IsFiniteVector(move))
+            {
+                RecoverToLastSafePosition("Move vector is NaN/Infinity");
+                return;
+            }
+
+            if (!useWorldCollisionSafety)
+            {
+                _characterController.Move(move);
+                return;
+            }
+
+            float maxStep = Mathf.Max(0.05f, maxCharacterMoveStep);
+            float distance = move.magnitude;
+
+            if (distance <= maxStep)
+            {
+                _characterController.Move(move);
+                return;
+            }
+
+            int stepCount = Mathf.CeilToInt(distance / maxStep);
+            Vector3 stepMove = move / stepCount;
+
+            for (int i = 0; i < stepCount; i++)
+            {
+                _characterController.Move(stepMove);
+
+                if (!IsPositionSafeEnough(transform.position))
+                {
+                    RecoverToLastSafePosition("Unsafe position during divided move");
+                    return;
+                }
+            }
+        }
+
+        private void UpdateWorldSafety()
+        {
+            if (!useWorldCollisionSafety) return;
+            if (_characterController == null) return;
+            if (!hasSafePosition)
+            {
+                InitializeWorldSafety();
+                return;
+            }
+
+            Vector3 currentPosition = transform.position;
+
+            if (!IsFiniteVector(currentPosition) || currentPosition.y < worldMinY)
+            {
+                RecoverToLastSafePosition("Fell under world or invalid position");
+                return;
+            }
+
+            float movedThisFrame = Vector3.Distance(currentPosition, lastFramePosition);
+            if (!safetyRecovering && movedThisFrame > Mathf.Max(1f, maxUnexpectedMovePerFrame))
+            {
+                RecoverToLastSafePosition("Unexpected large displacement");
+                return;
+            }
+
+            safetyRecovering = false;
+
+            safePositionRecordTimer -= Time.deltaTime;
+            if (safePositionRecordTimer <= 0f && CanRecordSafePosition())
+            {
+                lastSafePosition = currentPosition;
+                safePositionRecordTimer = Mathf.Max(0.02f, safePositionRecordInterval);
+            }
+
+            lastFramePosition = transform.position;
+        }
+
+        private bool CanRecordSafePosition()
+        {
+            if (!IsPositionSafeEnough(transform.position)) return false;
+            if (_characterController == null) return false;
+
+            // ダッシュ中・攻撃前進中・怯み中は壁やドラゴンに押されやすいので安全位置として記録しない。
+            if (isDashing) return false;
+            if (attackForwardMoveRoutine != null) return false;
+            if (isDragonStaggered) return false;
+
+            // 地面に立っている通常状態を優先して保存する。
+            return _characterController.isGrounded || moveDirection.y <= 0.05f;
+        }
+
+        private bool IsPositionSafeEnough(Vector3 position)
+        {
+            if (!IsFiniteVector(position)) return false;
+            if (position.y < worldMinY) return false;
+            return true;
+        }
+
+        private void RecoverToLastSafePosition(string reason)
+        {
+            if (!useWorldCollisionSafety) return;
+
+            Vector3 recoverPosition = hasSafePosition ? lastSafePosition : transform.position;
+            if (!IsFiniteVector(recoverPosition))
+            {
+                recoverPosition = Vector3.zero;
+            }
+
+            recoverPosition.y = Mathf.Max(recoverPosition.y + safeReturnUpOffset, worldMinY + safeReturnUpOffset);
+
+            if (clearMovementStateOnSafetyRecover)
+            {
+                CancelBlinkByDamage();
+                StopAttackForwardMove();
+                EndChargeAttackMove();
+                SetAllowBlinkWhileAttacking(false);
+                isAttacking = false;
+                canMoveWhileAttacking = false;
+                moveDirection = Vector3.zero;
+                desiredLookDirection = Vector3.zero;
+            }
+
+            if (_characterController != null)
+            {
+                bool wasEnabled = _characterController.enabled;
+                _characterController.enabled = false;
+                transform.position = recoverPosition;
+                _characterController.enabled = wasEnabled;
+            }
+            else
+            {
+                transform.position = recoverPosition;
+            }
+
+            lastFramePosition = transform.position;
+            lastSafePosition = transform.position;
+            hasSafePosition = true;
+            safetyRecovering = true;
+
+            if (_animator != null)
+            {
+                _animator.SetFloat("InputX", 0f);
+                _animator.SetFloat("InputY", 0f);
+                _animator.SetBool("IsInAir", false);
+            }
+
+            Debug.LogWarning("[Movement] Safety recover: " + reason, this);
+        }
+
+        private bool IsFiniteVector(Vector3 value)
+        {
+            return float.IsFinite(value.x)
+                && float.IsFinite(value.y)
+                && float.IsFinite(value.z);
         }
 
         private void FindBlinkAudioSourceIfNeeded()

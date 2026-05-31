@@ -1161,7 +1161,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &67639263
 RectTransform:
   m_ObjectHideFlags: 0
@@ -39127,6 +39127,8 @@ MonoBehaviour:
   externalKnockbackMultiplier: 1
   applyGravityDuringKnockback: 1
   gravityDuringKnockback: -20
+  useDamageRoutineOnlyForKnockback: 1
+  maxKnockbackMovePerFrame: 1
   blinkInterval: 0.08
   damageFlashCanvasGroup: {fileID: 437921560}
   damageFlashMaxAlpha: 0.7
@@ -39155,6 +39157,11 @@ MonoBehaviour:
   - {fileID: 1254087228}
   - {fileID: 1254087228}
   - {fileID: 1254087228}
+  useWorldSafety: 1
+  worldMinY: -8
+  maxUnexpectedMovePerFrame: 6
+  safeReturnUpOffset: 0.35
+  safePositionRecordInterval: 0.08
 --- !u!82 &1572162875
 AudioSource:
   m_ObjectHideFlags: 0

@@ -69,6 +69,25 @@ namespace Retro.ThirdPersonCharacter
         public float rotationSpeed = 15.0f;
         public float airRotationSpeed = 3.0f;
 
+        [Header("Rotation Fix / 通常移動の向き修正")]
+        [Tooltip("ON推奨。カメラのY角だけを使って移動方向を作ります。真後ろ入力時に斜めへブレる問題を防ぎます。")]
+        [SerializeField] private bool useCameraYawOnlyForMoveDirection = true;
+
+        [Tooltip("ON推奨。SlerpではなくRotateTowardsで一定角速度で回します。180度反転時のプルプルを防ぎます。")]
+        [SerializeField] private bool useStableRotateTowards = true;
+
+        [Tooltip("この角度以上の方向転換は旋回速度を上げます。真後ろ入力対策です。")]
+        [SerializeField] private float backTurnBoostAngle = 135f;
+
+        [Tooltip("真後ろなど大きく向きを変える時の旋回速度倍率です。大きいほどすぐ後ろを向きます。")]
+        [SerializeField] private float backTurnSpeedMultiplier = 2.2f;
+
+        [Tooltip("目標角度との差がこの角度以下ならピタッと合わせます。小刻みな揺れ防止です。")]
+        [SerializeField] private float rotationSnapAngle = 1.5f;
+
+        [Tooltip("この入力未満なら向き変更しません。スティックやAxisの微振動対策です。キーボードなら0.05〜0.15推奨。")]
+        [SerializeField] private float moveInputDeadZone = 0.08f;
+
         private float DecelerationOnStop = 0.00f;
 
         [Header("Input Settings")]
@@ -594,44 +613,63 @@ namespace Retro.ThirdPersonCharacter
                 return;
             }
 
-            var x = _playerInput.MovementInput.x;
-            var y = _playerInput.MovementInput.y;
+            float x = _playerInput.MovementInput.x;
+            float y = _playerInput.MovementInput.y;
 
             bool grounded = _characterController.isGrounded;
 
-            Vector3 inputDirection = Vector3.zero;
+            Vector2 rawInput = new Vector2(x, y);
+            float inputMagnitude = Mathf.Clamp01(rawInput.magnitude);
+            bool hasMoveInput = inputMagnitude > moveInputDeadZone;
 
-            if (_cameraTransform != null)
+            Vector3 desiredMoveDirection = Vector3.zero;
+
+            if (hasMoveInput)
             {
-                Vector3 camForward = _cameraTransform.forward;
-                Vector3 camRight = _cameraTransform.right;
+                Vector3 localInputDirection = new Vector3(x, 0f, y);
 
-                camForward.y = 0;
-                camRight.y = 0;
-
-                camForward.Normalize();
-                camRight.Normalize();
-
-                Vector3 targetDirection = camForward * y + camRight * x;
-
-                if (targetDirection.magnitude > 1.0f)
+                if (localInputDirection.sqrMagnitude > 1f)
                 {
-                    targetDirection.Normalize();
+                    localInputDirection.Normalize();
                 }
 
-                inputDirection = targetDirection * MaxSpeed;
-            }
-            else
-            {
-                Vector3 targetDirection = new Vector3(x, 0, y);
-
-                if (targetDirection.magnitude > 1.0f)
+                if (_cameraTransform != null)
                 {
-                    targetDirection.Normalize();
+                    if (useCameraYawOnlyForMoveDirection)
+                    {
+                        // カメラのforward/rightを毎回投影して使うと、真後ろ入力で微妙に斜めへブレることがある。
+                        // Yawだけを使うと、S入力は必ずカメラ基準の真後ろ方向になる。
+                        Quaternion cameraYaw = Quaternion.Euler(0f, _cameraTransform.eulerAngles.y, 0f);
+                        desiredMoveDirection = cameraYaw * localInputDirection;
+                    }
+                    else
+                    {
+                        Vector3 camForward = _cameraTransform.forward;
+                        Vector3 camRight = _cameraTransform.right;
+
+                        camForward.y = 0f;
+                        camRight.y = 0f;
+
+                        camForward.Normalize();
+                        camRight.Normalize();
+
+                        desiredMoveDirection = camForward * y + camRight * x;
+                    }
+                }
+                else
+                {
+                    desiredMoveDirection = localInputDirection;
                 }
 
-                inputDirection = targetDirection * MaxSpeed;
+                desiredMoveDirection.y = 0f;
+
+                if (desiredMoveDirection.sqrMagnitude > 1f)
+                {
+                    desiredMoveDirection.Normalize();
+                }
             }
+
+            Vector3 inputDirection = desiredMoveDirection * MaxSpeed;
 
             if (isAttacking)
             {
@@ -647,8 +685,8 @@ namespace Retro.ThirdPersonCharacter
                     inputDirection = Vector3.zero;
 
                     float deceleration = 10.0f;
-                    moveDirection.x = Mathf.Lerp(moveDirection.x, 0, deceleration * Time.deltaTime);
-                    moveDirection.z = Mathf.Lerp(moveDirection.z, 0, deceleration * Time.deltaTime);
+                    moveDirection.x = Mathf.Lerp(moveDirection.x, 0f, deceleration * Time.deltaTime);
+                    moveDirection.z = Mathf.Lerp(moveDirection.z, 0f, deceleration * Time.deltaTime);
                 }
             }
             else if (grounded)
@@ -663,42 +701,22 @@ namespace Retro.ThirdPersonCharacter
             }
             else
             {
-                if (inputDirection.magnitude > 0.1f)
+                if (hasMoveInput)
                 {
                     moveDirection.x = Mathf.Lerp(moveDirection.x, inputDirection.x, airControl * Time.deltaTime);
                     moveDirection.z = Mathf.Lerp(moveDirection.z, inputDirection.z, airControl * Time.deltaTime);
                 }
             }
 
-            Vector3 lookDirection = new Vector3(moveDirection.x, 0, moveDirection.z);
+            bool canTurnNow = !isAttacking || canMoveWhileAttacking;
 
-            if (lookDirection != Vector3.zero)
+            if (canTurnNow && hasMoveInput && desiredMoveDirection.sqrMagnitude > 0.0001f)
             {
-                bool canTurnNow = !isAttacking || canMoveWhileAttacking;
-
-                if (canTurnNow)
-                {
-                    Quaternion targetRotation = Quaternion.LookRotation(lookDirection);
-
-                    float currentRotationSpeed = grounded ? rotationSpeed : airRotationSpeed;
-
-                    if (isAttacking && canMoveWhileAttacking)
-                    {
-                        currentRotationSpeed *= attackTurnSpeedMultiplier;
-                    }
-
-                    transform.rotation = Quaternion.Slerp(
-                        transform.rotation,
-                        targetRotation,
-                        currentRotationSpeed * Time.deltaTime
-                    );
-                }
+                RotatePlayerToMoveDirection(desiredMoveDirection, grounded);
             }
 
             moveDirection.y -= gravity * Time.deltaTime;
             _characterController.Move(moveDirection * Time.deltaTime);
-
-            float inputMagnitude = new Vector2(x, y).magnitude;
 
             if (isAttacking && canMoveWhileAttacking)
             {
@@ -712,6 +730,55 @@ namespace Retro.ThirdPersonCharacter
             }
 
             _animator.SetBool("IsInAir", !grounded);
+        }
+
+        private void RotatePlayerToMoveDirection(Vector3 desiredMoveDirection, bool grounded)
+        {
+            desiredMoveDirection.y = 0f;
+
+            if (desiredMoveDirection.sqrMagnitude < 0.0001f)
+            {
+                return;
+            }
+
+            Quaternion targetRotation = Quaternion.LookRotation(desiredMoveDirection.normalized, Vector3.up);
+
+            float currentRotationSpeed = grounded ? rotationSpeed : airRotationSpeed;
+
+            if (isAttacking && canMoveWhileAttacking)
+            {
+                currentRotationSpeed *= attackTurnSpeedMultiplier;
+            }
+
+            float angle = Quaternion.Angle(transform.rotation, targetRotation);
+
+            if (angle >= backTurnBoostAngle)
+            {
+                currentRotationSpeed *= backTurnSpeedMultiplier;
+            }
+
+            if (angle <= rotationSnapAngle)
+            {
+                transform.rotation = targetRotation;
+                return;
+            }
+
+            if (useStableRotateTowards)
+            {
+                transform.rotation = Quaternion.RotateTowards(
+                    transform.rotation,
+                    targetRotation,
+                    currentRotationSpeed * 90f * Time.deltaTime
+                );
+            }
+            else
+            {
+                transform.rotation = Quaternion.Slerp(
+                    transform.rotation,
+                    targetRotation,
+                    currentRotationSpeed * Time.deltaTime
+                );
+            }
         }
 
         private void FindBlinkAudioSourceIfNeeded()

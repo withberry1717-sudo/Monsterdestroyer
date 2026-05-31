@@ -14,9 +14,11 @@ namespace Retro.ThirdPersonCharacter
             None,
             Light1,
             Light2,
+            LightLoop,
 
             Heavy1,
             Heavy2,
+            HeavyLoop,
             HeavyLight,
 
             ChargedHeavyDone,
@@ -343,6 +345,34 @@ namespace Retro.ThirdPersonCharacter
         [Tooltip("強弱強の弱部分。基本倍率は上げない")]
         [SerializeField] private float heavyComboLightDamageMultiplier = 1.0f;
 
+        [Header("Repeated Attack Decay / 3発目以降の連打減衰")]
+        [Tooltip("弱攻撃3発目以降の威力減衰率です。0.85なら3発目85%、4発目72%...のように下がります。")]
+        [Range(0.1f, 1f)]
+        [SerializeField] private float repeatedLightDecayPerHit = 0.85f;
+
+        [Tooltip("弱攻撃連打の最低威力倍率です。下がりすぎ防止用です。")]
+        [SerializeField] private float repeatedLightMinimumMultiplier = 0.45f;
+
+        [Tooltip("強攻撃3発目以降の威力減衰率です。")]
+        [Range(0.1f, 1f)]
+        [SerializeField] private float repeatedHeavyDecayPerHit = 0.82f;
+
+        [Tooltip("強攻撃連打の最低威力倍率です。下がりすぎ防止用です。")]
+        [SerializeField] private float repeatedHeavyMinimumMultiplier = 0.40f;
+
+        [Header("Heavy To Light Early Chain / 強弱強の早出し")]
+        [Tooltip("ONなら、強弱強ルートの最初の強攻撃中に、アニメーション終了を待たず弱攻撃へ派生できます。")]
+        [SerializeField] private bool allowQuickHeavyToLightEarlyChain = true;
+
+        [Tooltip("強攻撃開始から何秒後に弱攻撃への早出し派生を許可するかです。小さいほどすぐ弱へ行けます。")]
+        [SerializeField] private float quickHeavyToLightBranchTime = 0.20f;
+
+        [Tooltip("ONなら、強弱強へ早出しできる1段目の強攻撃だけ、下の専用倍率を使います。")]
+        [SerializeField] private bool useEarlyChainFirstHeavyDamageOverride = true;
+
+        [Tooltip("強弱強へ早出しできる1段目の強攻撃の威力倍率です。低め推奨。")]
+        [SerializeField] private float earlyChainFirstHeavyDamageMultiplier = 0.72f;
+
         [Header("Cooldown")]
         [SerializeField] private float comboFinishCooldown = 0.32f;
 
@@ -370,8 +400,8 @@ namespace Retro.ThirdPersonCharacter
         [SerializeField] private float quickHeavySecondStart = 0.07f;
         [SerializeField] private float quickHeavySecondEnd = 0.42f;
 
-        [Tooltip("単発強1発目。連打可能にする代わりに低め")]
-        [SerializeField] private float quickHeavyDamageMultiplier = 0.85f;
+        [Tooltip("単発強1発目。強弱強へ早く派生できる代わりに低め")]
+        [SerializeField] private float quickHeavyDamageMultiplier = 0.75f;
 
         [Tooltip("単発強2発目。少しだけ上げるが、コンボ締めより弱い")]
         [SerializeField] private float quickHeavySecondDamageMultiplier = 0.90f;
@@ -490,6 +520,9 @@ namespace Retro.ThirdPersonCharacter
 
         private float chargeHeldTimer = 0f;
         private float chargePowerTimer = 0f;
+
+        private int consecutiveLightCount = 0;
+        private int consecutiveHeavyCount = 0;
 
         private bool isComboCooldown = false;
         private bool isNeutralHeavyCooldown = false;
@@ -657,7 +690,9 @@ namespace Retro.ThirdPersonCharacter
 
             if (comboTimer <= 0f)
             {
-                if (comboStage == ComboStage.Heavy1)
+                if (comboStage == ComboStage.Heavy1
+                    || comboStage == ComboStage.Heavy2
+                    || comboStage == ComboStage.HeavyLoop)
                 {
                     StartNeutralHeavyCooldown();
                 }
@@ -677,6 +712,8 @@ namespace Retro.ThirdPersonCharacter
             comboTimer = 0f;
             bufferedLight = false;
             bufferedHeavy = false;
+            consecutiveLightCount = 0;
+            consecutiveHeavyCount = 0;
         }
 
         private void UpdateBufferTimer()
@@ -723,6 +760,8 @@ namespace Retro.ThirdPersonCharacter
             {
                 case ComboStage.None:
                 case ComboStage.Light1:
+                case ComboStage.Light2:
+                case ComboStage.LightLoop:
                 case ComboStage.Heavy1:
                 case ComboStage.ChargedHeavyDone:
                 case ComboStage.ChargedLight1:
@@ -741,7 +780,10 @@ namespace Retro.ThirdPersonCharacter
             switch (comboStage)
             {
                 case ComboStage.Light2:
+                case ComboStage.LightLoop:
                 case ComboStage.Heavy1:
+                case ComboStage.Heavy2:
+                case ComboStage.HeavyLoop:
                 case ComboStage.HeavyLight:
                 case ComboStage.ChargedHeavyDone:
                 case ComboStage.ChargedLight2:
@@ -930,35 +972,55 @@ namespace Retro.ThirdPersonCharacter
         {
             bool isSecondLight = false;
             bool isHeavyComboLight = false;
+            bool isRepeatedLight = false;
 
             switch (comboStage)
             {
                 case ComboStage.None:
                     comboStage = ComboStage.Light1;
+                    consecutiveLightCount = 1;
+                    consecutiveHeavyCount = 0;
                     break;
 
                 case ComboStage.Light1:
                     comboStage = ComboStage.Light2;
+                    consecutiveLightCount = 2;
+                    consecutiveHeavyCount = 0;
                     isSecondLight = true;
+                    break;
+
+                case ComboStage.Light2:
+                case ComboStage.LightLoop:
+                    comboStage = ComboStage.LightLoop;
+                    consecutiveLightCount = Mathf.Max(3, consecutiveLightCount + 1);
+                    consecutiveHeavyCount = 0;
+                    isRepeatedLight = true;
+                    isSecondLight = consecutiveLightCount % 2 == 0;
                     break;
 
                 case ComboStage.Heavy1:
                     comboStage = ComboStage.HeavyLight;
                     isHeavyComboLight = true;
+                    consecutiveLightCount = 0;
                     break;
 
                 case ComboStage.ChargedHeavyDone:
                     comboStage = ComboStage.ChargedLight1;
+                    consecutiveLightCount = 1;
+                    consecutiveHeavyCount = 0;
                     break;
 
                 case ComboStage.ChargedLight1:
                     comboStage = ComboStage.ChargedLight2;
+                    consecutiveLightCount = 2;
+                    consecutiveHeavyCount = 0;
                     isSecondLight = true;
                     break;
 
                 case ComboStage.ChargedHeavy1:
                     comboStage = ComboStage.ChargedHeavyLight;
                     isHeavyComboLight = true;
+                    consecutiveLightCount = 0;
                     break;
 
                 default:
@@ -973,6 +1035,16 @@ namespace Retro.ThirdPersonCharacter
             float multiplier = isSecondLight ? light2DamageMultiplier : light1DamageMultiplier;
             float forwardDistance = isSecondLight ? light2ForwardDistance : light1ForwardDistance;
 
+            if (isRepeatedLight)
+            {
+                multiplier = ApplyRepeatedDamageDecay(
+                    multiplier,
+                    consecutiveLightCount,
+                    repeatedLightDecayPerHit,
+                    repeatedLightMinimumMultiplier
+                );
+            }
+
             if (isHeavyComboLight)
             {
                 multiplier = heavyComboLightDamageMultiplier;
@@ -986,7 +1058,7 @@ namespace Retro.ThirdPersonCharacter
                 StartAttackForwardMove(forwardDistance);
             }
 
-            Debug.Log("弱攻撃派生: " + comboStage);
+            Debug.Log("弱攻撃派生: " + comboStage + " / 弱連打数: " + consecutiveLightCount + " / 倍率: " + multiplier);
 
             PlayAttackAnimation(attackStateName, 0f);
 
@@ -1008,6 +1080,7 @@ namespace Retro.ThirdPersonCharacter
                 )
             );
         }
+
 
         private void StartDashAttack()
         {
@@ -1046,6 +1119,8 @@ namespace Retro.ThirdPersonCharacter
         private void StartQuickHeavyAttackAsNeutral()
         {
             comboStage = ComboStage.Heavy1;
+            consecutiveHeavyCount = 1;
+            consecutiveLightCount = 0;
             RefreshComboTimer();
 
             Debug.Log("強攻撃 単押し1発目");
@@ -1065,7 +1140,7 @@ namespace Retro.ThirdPersonCharacter
                     swordHitbox,
                     quickHeavyStart,
                     quickHeavyEnd,
-                    quickHeavyDamageMultiplier,
+                    GetFirstHeavyDamageMultiplier(),
                     quickHeavyEndDelay,
                     quickHeavyAnimationSpeed,
                     false,
@@ -1074,7 +1149,8 @@ namespace Retro.ThirdPersonCharacter
                     quickHeavyMoveUnlockTime,
                     heavyAttackEffect,
                     FinisherType.None,
-                    1f
+                    1f,
+                    allowQuickHeavyToLightEarlyChain
                 )
             );
         }
@@ -1082,6 +1158,8 @@ namespace Retro.ThirdPersonCharacter
         private void StartSecondQuickHeavyAttack()
         {
             comboStage = ComboStage.Heavy2;
+            consecutiveHeavyCount = 2;
+            consecutiveLightCount = 0;
             RefreshComboTimer();
 
             Debug.Log("強攻撃 単押し2発目");
@@ -1104,8 +1182,8 @@ namespace Retro.ThirdPersonCharacter
                     quickHeavySecondDamageMultiplier,
                     quickHeavySecondEndDelay,
                     quickHeavySecondAnimationSpeed,
-                    true,
-                    true,
+                    false,
+                    false,
                     true,
                     quickHeavySecondMoveUnlockTime,
                     heavyAttackEffect,
@@ -1115,16 +1193,68 @@ namespace Retro.ThirdPersonCharacter
             );
         }
 
+        private void StartRepeatedQuickHeavyAttack()
+        {
+            comboStage = ComboStage.HeavyLoop;
+            consecutiveHeavyCount = Mathf.Max(3, consecutiveHeavyCount + 1);
+            consecutiveLightCount = 0;
+            RefreshComboTimer();
+
+            float multiplier = ApplyRepeatedDamageDecay(
+                quickHeavySecondDamageMultiplier,
+                consecutiveHeavyCount,
+                repeatedHeavyDecayPerHit,
+                repeatedHeavyMinimumMultiplier
+            );
+
+            Debug.Log("強攻撃 連打" + consecutiveHeavyCount + "発目 / 倍率: " + multiplier);
+
+            if (_movement != null)
+            {
+                _movement.isAttacking = true;
+                _movement.canMoveWhileAttacking = false;
+                _movement.SetAllowBlinkWhileAttacking(false);
+                StartAttackForwardMove(quickHeavySecondForwardDistance);
+            }
+
+            PlayAttackAnimation(abilityStateName, quickHeavySecondAnimationStartNormalized);
+
+            StartCoroutine(
+                AttackRoutine(
+                    swordHitbox,
+                    quickHeavySecondStart,
+                    quickHeavySecondEnd,
+                    multiplier,
+                    quickHeavySecondEndDelay,
+                    quickHeavySecondAnimationSpeed,
+                    false,
+                    false,
+                    true,
+                    quickHeavySecondMoveUnlockTime,
+                    heavyAttackEffect,
+                    FinisherType.None,
+                    1f
+                )
+            );
+        }
+
+
         private void StartHeavyFromComboInput()
         {
             switch (comboStage)
             {
                 case ComboStage.Light2:
-                    StartHeavyFinisher("弱弱強", weakWeakHeavyFinisherMultiplier, FinisherType.WeakWeakHeavy);
+                case ComboStage.LightLoop:
+                    StartHeavyFinisher("弱攻撃2回以上→強", weakWeakHeavyFinisherMultiplier, FinisherType.WeakWeakHeavy);
                     break;
 
                 case ComboStage.Heavy1:
                     StartSecondQuickHeavyAttack();
+                    break;
+
+                case ComboStage.Heavy2:
+                case ComboStage.HeavyLoop:
+                    StartRepeatedQuickHeavyAttack();
                     break;
 
                 case ComboStage.HeavyLight:
@@ -1148,6 +1278,8 @@ namespace Retro.ThirdPersonCharacter
         private void StartQuickHeavyAfterCharged()
         {
             comboStage = ComboStage.ChargedHeavy1;
+            consecutiveHeavyCount = 1;
+            consecutiveLightCount = 0;
             RefreshComboTimer();
 
             Debug.Log("溜め強→強 / 強弱強ルート開始");
@@ -1167,7 +1299,7 @@ namespace Retro.ThirdPersonCharacter
                     swordHitbox,
                     quickHeavyStart,
                     quickHeavyEnd,
-                    quickHeavyDamageMultiplier,
+                    GetFirstHeavyDamageMultiplier(),
                     quickHeavyEndDelay,
                     quickHeavyAnimationSpeed,
                     false,
@@ -1176,7 +1308,8 @@ namespace Retro.ThirdPersonCharacter
                     quickHeavyMoveUnlockTime,
                     heavyAttackEffect,
                     FinisherType.None,
-                    1f
+                    1f,
+                    allowQuickHeavyToLightEarlyChain
                 )
             );
         }
@@ -1228,6 +1361,8 @@ namespace Retro.ThirdPersonCharacter
                 comboTimer = 0f;
                 bufferedLight = false;
                 bufferedHeavy = false;
+                consecutiveLightCount = 0;
+                consecutiveHeavyCount = 0;
             }
             else
             {
@@ -1320,7 +1455,8 @@ namespace Retro.ThirdPersonCharacter
             float lateMovementUnlockTime,
             AttackEffectSettings attackEffect,
             FinisherType finisherType,
-            float hitboxSizeMultiplier
+            float hitboxSizeMultiplier,
+            bool allowEarlyLightBranch = false
         )
         {
             AttackInProgress = true;
@@ -1358,13 +1494,34 @@ namespace Retro.ThirdPersonCharacter
             {
                 timer += Time.deltaTime;
 
+                if (allowEarlyLightBranch
+                    && bufferedLight
+                    && timer >= quickHeavyToLightBranchTime
+                    && (comboStage == ComboStage.Heavy1 || comboStage == ComboStage.ChargedHeavy1))
+                {
+                    bufferedLight = false;
+                    bufferedHeavy = false;
+
+                    if (hitboxEnabled)
+                    {
+                        hitboxEnabled = false;
+                        hitbox.DisableHitbox();
+                        RestoreColliderScale(hitbox);
+                    }
+
+                    EndAttack();
+                    StartLightAttack();
+                    yield break;
+                }
+
                 if (!hitboxEnabled && timer >= hitStart)
                 {
                     hitboxEnabled = true;
 
                     bool shouldScaleThisAttack = hitboxSizeMultiplier > 1.0001f
                         && ((finisherType != FinisherType.None && scaleColliderForComboFinisher)
-                            || (finisherType == FinisherType.None && scaleColliderForMaxChargedHeavy));
+                            || (finisherType == FinisherType.None
+                                && (scaleColliderForMaxChargedHeavy || scaleColliderForSecondStageChargedHeavy)));
 
                     if (shouldScaleThisAttack)
                     {
@@ -1418,6 +1575,28 @@ namespace Retro.ThirdPersonCharacter
             }
 
             TryConsumeBuffer();
+        }
+
+        private float GetFirstHeavyDamageMultiplier()
+        {
+            if (allowQuickHeavyToLightEarlyChain && useEarlyChainFirstHeavyDamageOverride)
+            {
+                return Mathf.Max(0f, earlyChainFirstHeavyDamageMultiplier);
+            }
+
+            return quickHeavyDamageMultiplier;
+        }
+
+        private float ApplyRepeatedDamageDecay(float baseMultiplier, int attackCount, float decayPerHit, float minimumMultiplier)
+        {
+            if (attackCount <= 2)
+            {
+                return baseMultiplier;
+            }
+
+            float safeDecay = Mathf.Clamp(decayPerHit, 0.1f, 1f);
+            float decayedMultiplier = baseMultiplier * Mathf.Pow(safeDecay, attackCount - 2);
+            return Mathf.Max(Mathf.Max(0f, minimumMultiplier), decayedMultiplier);
         }
 
         private AttackEffectSettings GetFinisherEffect(FinisherType finisherType)

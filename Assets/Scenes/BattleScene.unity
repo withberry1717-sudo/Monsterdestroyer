@@ -38713,6 +38713,9 @@ MonoBehaviour:
   limitEffectsPerAttack: 1
   maxEffectsPerAttack: 1
   alsoLimitSoundPerAttack: 1
+  resetWhenColliderTurnsOn: 1
+  monitoredColliders: []
+  logReset: 0
 --- !u!1 &1210920964
 GameObject:
   m_ObjectHideFlags: 0
@@ -61964,7 +61967,7 @@ MonoBehaviour:
   enemyTag: Enemy
   dragonTag: Dragon
   coreTag: DragonCore
-  isDaggerAttack: 0
+  isDaggerAttack: 1
   hitSparkPrefab: {fileID: 609041368}
   effectLifeTime: 1.5
   effectScale: 1
@@ -61978,6 +61981,9 @@ MonoBehaviour:
   limitEffectsPerAttack: 1
   maxEffectsPerAttack: 1
   alsoLimitSoundPerAttack: 1
+  resetWhenColliderTurnsOn: 1
+  monitoredColliders: []
+  logReset: 0
 --- !u!1 &2124804365
 GameObject:
   m_ObjectHideFlags: 0

@@ -69,6 +69,16 @@ public class DragonAI : MonoBehaviour
     [Tooltip("攻撃・咆哮・ブレスなどAnimator再生速度の倍率です。Easyは0.9、Hardは1.1などがおすすめです。")]
     public float difficultyAnimationSpeedMultiplier = 1f;
 
+    [Header("難易度と判定・演出同期")]
+    [Tooltip("ON推奨。HardでAnimator速度を上げた時、攻撃判定・パーティクル・SEの発生タイミングも同じ倍率で前倒しします。")]
+    public bool scaleHitboxAndEffectTimingWithAnimationSpeed = true;
+
+    [Tooltip("ONにすると、AIから再生するParticleをLocal Simulationにしてドラゴンの子として動きに追従しやすくします。ブレスや煙が不自然にくっつく場合はOFFにしてください。")]
+    public bool forcePlayedParticlesToLocalSimulation = true;
+
+    [Tooltip("ONにすると、Particle再生前にStopしてからPlayします。連続攻撃時に古い再生状態が残る場合はON推奨です。")]
+    public bool restartParticleBeforePlay = true;
+
     [Tooltip("DragonCoreに付いているDragonHPを入れてください。本体HP、尻尾クリスタル破壊、死亡イベントを受け取ります。")]
     public DragonHP dragonHP;
 
@@ -966,7 +976,7 @@ public class DragonAI : MonoBehaviour
         motion.PlayAnim(motion.roarAnim, true);
         DoRoarEffect();
 
-        yield return new WaitForSeconds(roarDuration);
+        yield return WaitForAnimSeconds(roarDuration);
 
         ReturnToIdle();
         StartAILoopSafely();
@@ -1648,16 +1658,16 @@ public class DragonAI : MonoBehaviour
         effectiveAnticipationEndFrame = Mathf.Max(0, effectiveAnticipationEndFrame);
         effectiveAttackEndFrame = Mathf.Max(effectiveAnticipationEndFrame + 1, effectiveAttackEndFrame);
 
-        float anticipationEndAnimTime = motion.FrameToSeconds(effectiveAnticipationEndFrame);
-        float attackEndAnimTime = motion.FrameToSeconds(effectiveAttackEndFrame);
-        float lungeStart = motion.FrameToSeconds(swipeLungeStartFrame);
-        float lungeEnd = motion.FrameToSeconds(swipeLungeEndFrame);
-        float configuredHitStart = motion.FrameToSeconds(swipeHitStartFrame);
+        float anticipationEndAnimTime = ScaleAnimFrameTime(motion.FrameToSeconds(effectiveAnticipationEndFrame));
+        float attackEndAnimTime = ScaleAnimFrameTime(motion.FrameToSeconds(effectiveAttackEndFrame));
+        float lungeStart = ScaleAnimFrameTime(motion.FrameToSeconds(swipeLungeStartFrame));
+        float lungeEnd = ScaleAnimFrameTime(motion.FrameToSeconds(swipeLungeEndFrame));
+        float configuredHitStart = ScaleAnimFrameTime(motion.FrameToSeconds(swipeHitStartFrame));
 
         float rawAnticipationDuration = Mathf.Max(0.01f, anticipationEndAnimTime);
         float rawAttackDuration = Mathf.Max(0.01f, attackEndAnimTime - anticipationEndAnimTime);
-        float targetAnticipationDuration = Mathf.Max(0.01f, swipeAnticipationDuration);
-        float targetAttackDuration = Mathf.Max(0.01f, swipeAttackDuration);
+        float targetAnticipationDuration = Mathf.Max(0.01f, ScaleAnimDuration(swipeAnticipationDuration));
+        float targetAttackDuration = Mathf.Max(0.01f, ScaleAnimDuration(swipeAttackDuration));
 
         bool shouldStretchAnticipation = stretchSwipeAnticipation && targetAnticipationDuration > rawAnticipationDuration;
         bool shouldStretchAttack = stretchSwipeAttack && targetAttackDuration > rawAttackDuration;
@@ -1772,7 +1782,7 @@ public class DragonAI : MonoBehaviour
 
         ResetAnimatorSpeedHard();
 
-        float afterAttackDuration = Mathf.Max(0f, swipeAnimDuration - attackEndAnimTime);
+        float afterAttackDuration = Mathf.Max(0f, ScaleAnimDuration(swipeAnimDuration) - attackEndAnimTime);
         if (afterAttackDuration > 0f)
         {
             yield return new WaitForSeconds(afterAttackDuration);
@@ -1807,8 +1817,8 @@ public class DragonAI : MonoBehaviour
 
         PlayEffect(DragonEffectKind.BreathCharge, wideBreathChargeSfx, wideBreathChargeParticle);
 
-        float start = motion.FrameToSeconds(wideBreathStartFrame);
-        float end = motion.FrameToSeconds(wideBreathEndFrame);
+        float start = ScaleAnimFrameTime(motion.FrameToSeconds(wideBreathStartFrame), breathAnimatorSpeed);
+        float end = ScaleAnimFrameTime(motion.FrameToSeconds(wideBreathEndFrame), breathAnimatorSpeed);
 
         float timer = 0f;
 
@@ -1837,8 +1847,8 @@ public class DragonAI : MonoBehaviour
             wideBreathFireParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
-        yield return new WaitForSeconds(Mathf.Max(0f, breathDuration - end));
-        yield return new WaitForSeconds(wideBreathRecovery);
+        yield return new WaitForSeconds(Mathf.Max(0f, ScaleAnimDuration(breathDuration, breathAnimatorSpeed) - end));
+        yield return WaitForAnimSeconds(wideBreathRecovery, breathAnimatorSpeed);
 
         ReturnToIdle();
     }
@@ -1868,16 +1878,18 @@ public class DragonAI : MonoBehaviour
 
         PlayEffect(DragonEffectKind.BreathCharge, beamBreathChargeSfx, beamBreathChargeParticle);
 
-        float start = motion.FrameToSeconds(beamBreathStartFrame);
-        float end = motion.FrameToSeconds(beamBreathEndFrame);
-        float trackStart = motion.FrameToSeconds(beamTrackStartFrame);
-        float trackEnd = motion.FrameToSeconds(beamTrackEndFrame);
+        float start = ScaleAnimFrameTime(motion.FrameToSeconds(beamBreathStartFrame), breathAnimatorSpeed);
+        float end = ScaleAnimFrameTime(motion.FrameToSeconds(beamBreathEndFrame), breathAnimatorSpeed);
+        float trackStart = ScaleAnimFrameTime(motion.FrameToSeconds(beamTrackStartFrame), breathAnimatorSpeed);
+        float trackEnd = ScaleAnimFrameTime(motion.FrameToSeconds(beamTrackEndFrame), breathAnimatorSpeed);
 
         float timer = 0f;
         bool hitboxEnabled = false;
         bool fireParticlePlayed = false;
 
-        while (timer < breathDuration)
+        float breathRealDuration = ScaleAnimDuration(breathDuration, breathAnimatorSpeed);
+
+        while (timer < breathRealDuration)
         {
             timer += Time.deltaTime;
 
@@ -1928,7 +1940,7 @@ public class DragonAI : MonoBehaviour
             beamBreathFireParticle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
         }
 
-        yield return new WaitForSeconds(beamBreathRecovery);
+        yield return WaitForAnimSeconds(beamBreathRecovery, breathAnimatorSpeed);
 
         ReturnToIdle();
     }
@@ -1962,7 +1974,7 @@ public class DragonAI : MonoBehaviour
         float tellTimer = 0f;
         float checkTimer = 0f;
 
-        while (tellTimer < chargeTellTime)
+        while (tellTimer < ScaleAnimDuration(chargeTellTime, chargeTellAnimationSpeed))
         {
             tellTimer += Time.deltaTime;
             checkTimer += Time.deltaTime;
@@ -1984,7 +1996,7 @@ public class DragonAI : MonoBehaviour
         ResetAnimatorSpeedHard();
         PlayMoveAnimSafe(motion.runAnim);
 
-        yield return new WaitForSeconds(chargeReadyPauseTime);
+        yield return WaitForAnimSeconds(chargeReadyPauseTime);
 
         Vector3 chargeDirection = motion.GetDirectionToPlayer();
         float targetDistance = GetChargeTargetDistance(chargeDirection);
@@ -1996,7 +2008,13 @@ public class DragonAI : MonoBehaviour
             baseSpeed = phase.ApplyChargeSpeed(baseSpeed);
         }
 
-        float chargeTime = Mathf.Clamp(targetDistance / Mathf.Max(0.01f, baseSpeed), chargeMinDuration, chargeMaxDuration);
+        baseSpeed = ApplyDifficultyMoveSpeed(baseSpeed);
+
+        float chargeTime = Mathf.Clamp(
+            targetDistance / Mathf.Max(0.01f, baseSpeed),
+            ScaleAnimDuration(chargeMinDuration),
+            ScaleAnimDuration(chargeMaxDuration)
+        );
 
         float timer = 0f;
         float previousDistance = 0f;
@@ -2037,7 +2055,7 @@ public class DragonAI : MonoBehaviour
         ResetAnimatorSpeedHard();
         PlayEffect(DragonEffectKind.ChargeEnd, chargeEndSfx, null);
 
-        yield return new WaitForSeconds(chargeRecoveryTime);
+        yield return WaitForAnimSeconds(chargeRecoveryTime);
 
         ReturnToIdle();
     }
@@ -2055,7 +2073,7 @@ public class DragonAI : MonoBehaviour
         isBusy = true;
         state = DragonState.Acting;
 
-        yield return new WaitForSeconds(doubleChargeInterval);
+        yield return WaitForAnimSeconds(doubleChargeInterval);
 
         if (state == DragonState.Dead || state == DragonState.Down) yield break;
 
@@ -2064,7 +2082,7 @@ public class DragonAI : MonoBehaviour
         isBusy = true;
         state = DragonState.Acting;
 
-        yield return new WaitForSeconds(doubleChargeRecovery);
+        yield return WaitForAnimSeconds(doubleChargeRecovery);
 
         ReturnToIdle();
     }
@@ -2132,18 +2150,19 @@ public class DragonAI : MonoBehaviour
 
         float timer = 0f;
 
-        float aimStartTime = motion.FrameToSeconds(tailSlamAimStartFrame);
-        float trackEndTime = motion.FrameToSeconds(tailSlamTrackUntilFrame);
-        float hitStartTime = motion.FrameToSeconds(tailSlamHitStartFrame);
-        float hitEndTime = motion.FrameToSeconds(tailSlamHitEndFrame);
-        float returnStartTime = motion.FrameToSeconds(tailSlamReturnStartFrame);
-        float returnEndTime = motion.FrameToSeconds(tailSlamReturnEndFrame);
+        float aimStartTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSlamAimStartFrame));
+        float trackEndTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSlamTrackUntilFrame));
+        float hitStartTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSlamHitStartFrame));
+        float hitEndTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSlamHitEndFrame));
+        float returnStartTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSlamReturnStartFrame));
+        float returnEndTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSlamReturnEndFrame));
+        float tailSlamRealDuration = ScaleAnimDuration(tailSlamDuration);
 
         bool hitboxEnabled = false;
         bool returnStarted = false;
         Quaternion returnStartRotation = transform.rotation;
 
-        while (timer < tailSlamDuration)
+        while (timer < tailSlamRealDuration)
         {
             timer += Time.deltaTime;
 
@@ -2245,20 +2264,20 @@ public class DragonAI : MonoBehaviour
 
         float timer = 0f;
 
-        float aimStartTime = motion.FrameToSeconds(tailSwipeAimStartFrame);
-        float trackEndTime = motion.FrameToSeconds(tailSwipeTrackUntilFrame);
+        float aimStartTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeAimStartFrame));
+        float trackEndTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeTrackUntilFrame));
 
-        float repositionStartTime = motion.FrameToSeconds(tailSwipeRepositionStartFrame);
-        float repositionEndTime = motion.FrameToSeconds(tailSwipeRepositionEndFrame);
+        float repositionStartTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeRepositionStartFrame));
+        float repositionEndTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeRepositionEndFrame));
 
-        float firstHitStartTime = motion.FrameToSeconds(tailSwipeSlamHitStartFrame);
-        float firstHitEndTime = motion.FrameToSeconds(tailSwipeSlamHitEndFrame);
+        float firstHitStartTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeSlamHitStartFrame));
+        float firstHitEndTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeSlamHitEndFrame));
 
-        float secondTellStartTime = motion.FrameToSeconds(tailSwipeSecondTellStartFrame);
-        float secondTellEndTime = motion.FrameToSeconds(tailSwipeSecondTellEndFrame);
+        float secondTellStartTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeSecondTellStartFrame));
+        float secondTellEndTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeSecondTellEndFrame));
 
-        float spinLoopStartTime = motion.FrameToSeconds(tailSwipeSpinLoopStartFrame);
-        float spinLoopEndTime = motion.FrameToSeconds(tailSwipeSpinLoopEndFrame);
+        float spinLoopStartTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeSpinLoopStartFrame));
+        float spinLoopEndTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeSpinLoopEndFrame));
 
         bool hitboxEnabled = false;
         bool repositionStarted = false;
@@ -2408,13 +2427,18 @@ public class DragonAI : MonoBehaviour
     {
         if (tailSwipeSecondTellParticle != null)
         {
-            tailSwipeSecondTellParticle.Play();
+            PrepareParticleForDifficultyPlay(tailSwipeSecondTellParticle);
+            if (restartParticleBeforePlay)
+            {
+                tailSwipeSecondTellParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+            tailSwipeSecondTellParticle.Play(true);
         }
 
         PlayEffect(DragonEffectKind.TailSwipe, tailSwipeSecondTellSfx, null);
 
         float rawTellDuration = Mathf.Max(0.01f, tellEndTime - tellStartTime);
-        float targetTellDuration = Mathf.Max(rawTellDuration, tailSwipeSecondTellDuration);
+        float targetTellDuration = Mathf.Max(rawTellDuration, ScaleAnimDuration(tailSwipeSecondTellDuration));
 
         float animatorSpeed = rawTellDuration / targetTellDuration;
         SetAnimatorSpeedScaled(animatorSpeed);
@@ -2438,12 +2462,13 @@ public class DragonAI : MonoBehaviour
 
     private IEnumerator TailSwipeOriginalSecondHit()
     {
-        float secondHitStartTime = motion.FrameToSeconds(tailSwipeSecondHitStartFrame);
-        float secondHitEndTime = motion.FrameToSeconds(tailSwipeSecondHitEndFrame);
-        float secondTurnStartTime = motion.FrameToSeconds(tailSwipeSecondTurnStartFrame);
-        float secondTurnEndTime = motion.FrameToSeconds(tailSwipeSecondTurnEndFrame);
+        float secondHitStartTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeSecondHitStartFrame));
+        float secondHitEndTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeSecondHitEndFrame));
+        float secondTurnStartTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeSecondTurnStartFrame));
+        float secondTurnEndTime = ScaleAnimFrameTime(motion.FrameToSeconds(tailSwipeSecondTurnEndFrame));
 
         float timer = secondTurnStartTime;
+        float tailSwipeRealDuration = ScaleAnimDuration(tailSwipeDuration);
         bool hitboxEnabled = false;
         bool secondTurnStarted = false;
         Quaternion secondTurnStartRotation = transform.rotation;
@@ -2454,7 +2479,7 @@ public class DragonAI : MonoBehaviour
             tailHitbox.EnableHitbox();
         }
 
-        while (timer < tailSwipeDuration)
+        while (timer < tailSwipeRealDuration)
         {
             timer += Time.deltaTime;
 
@@ -2518,13 +2543,18 @@ public class DragonAI : MonoBehaviour
 
         if (tailSwipeSpinDashParticle != null)
         {
-            tailSwipeSpinDashParticle.Play();
+            PrepareParticleForDifficultyPlay(tailSwipeSpinDashParticle);
+            if (restartParticleBeforePlay)
+            {
+                tailSwipeSpinDashParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+            tailSwipeSpinDashParticle.Play(true);
         }
 
         PlayEffect(DragonEffectKind.TailSwipe, tailSwipeSpinDashSfx, null);
 
         float rawLoopDuration = Mathf.Max(0.01f, loopEndTime - loopStartTime);
-        float loopDuration = Mathf.Max(0.05f, tailSwipeSpinLoopDuration);
+        float loopDuration = Mathf.Max(0.05f, ScaleAnimDuration(tailSwipeSpinLoopDuration));
         float animatorSpeed = rawLoopDuration / loopDuration;
 
         Vector3 dashDirection = GetFlatDirectionToPlayer();
@@ -2585,13 +2615,15 @@ public class DragonAI : MonoBehaviour
             UpdateTailSwipeSpinLoopAnimation(loopStartTime, loopEndTime, loopDuration, loopDuration, animatorSpeed);
         }
 
-        if (tailSwipeSpinInertiaDuration > 0f && tailSwipeSpinInertiaDistance > 0f)
+        float tailSwipeSpinRealInertiaDuration = ScaleAnimDuration(tailSwipeSpinInertiaDuration);
+
+        if (tailSwipeSpinRealInertiaDuration > 0f && tailSwipeSpinInertiaDistance > 0f)
         {
             float timer = 0f;
             float previousMove = 0f;
             Quaternion baseRotation = Quaternion.LookRotation(dashDirection, Vector3.up);
 
-            while (timer < tailSwipeSpinInertiaDuration)
+            while (timer < tailSwipeSpinRealInertiaDuration)
             {
                 timer += Time.deltaTime;
 
@@ -2600,7 +2632,7 @@ public class DragonAI : MonoBehaviour
                     spinHitbox.EnableHitbox();
                 }
 
-                float t = Mathf.Clamp01(timer / tailSwipeSpinInertiaDuration);
+                float t = Mathf.Clamp01(timer / tailSwipeSpinRealInertiaDuration);
                 float eased = 1f - Mathf.Pow(1f - t, 2f);
 
                 float currentMove = tailSwipeSpinInertiaDistance * eased;
@@ -2658,7 +2690,7 @@ public class DragonAI : MonoBehaviour
             return;
         }
 
-        float safeTailSwipeDuration = Mathf.Max(0.01f, tailSwipeDuration);
+        float safeTailSwipeDuration = Mathf.Max(0.01f, ScaleAnimDuration(tailSwipeDuration));
         float startNormalizedTime = Mathf.Clamp01(loopStartTime / safeTailSwipeDuration);
         float endNormalizedTime = Mathf.Clamp01(loopEndTime / safeTailSwipeDuration);
 
@@ -2955,6 +2987,33 @@ public class DragonAI : MonoBehaviour
         }
 
         return Mathf.Max(0.05f, downDuration);
+    }
+
+    private float GetTimingAnimationMultiplier(float baseAnimatorSpeed = 1f)
+    {
+        float baseSpeed = Mathf.Max(0.05f, baseAnimatorSpeed);
+
+        if (!scaleHitboxAndEffectTimingWithAnimationSpeed)
+        {
+            return baseSpeed;
+        }
+
+        return baseSpeed * GetDifficultyAnimationSpeedMultiplier();
+    }
+
+    private float ScaleAnimDuration(float animationSeconds, float baseAnimatorSpeed = 1f)
+    {
+        return Mathf.Max(0f, animationSeconds) / GetTimingAnimationMultiplier(baseAnimatorSpeed);
+    }
+
+    private float ScaleAnimFrameTime(float animationSeconds, float baseAnimatorSpeed = 1f)
+    {
+        return ScaleAnimDuration(animationSeconds, baseAnimatorSpeed);
+    }
+
+    private WaitForSeconds WaitForAnimSeconds(float animationSeconds, float baseAnimatorSpeed = 1f)
+    {
+        return new WaitForSeconds(ScaleAnimDuration(animationSeconds, baseAnimatorSpeed));
     }
 
     private float ApplyDifficultyActionInterval(float interval)
@@ -3330,11 +3389,34 @@ public class DragonAI : MonoBehaviour
         ParticleSystem particle = overrideParticle != null ? overrideParticle : GetCommonParticle(kind);
         if (particle != null)
         {
-            particle.Play();
+            PrepareParticleForDifficultyPlay(particle);
+
+            if (restartParticleBeforePlay)
+            {
+                particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+
+            particle.Play(true);
         }
 
         AudioClip clip = overrideClip != null ? overrideClip : GetCommonClip(kind);
         PlaySfx(clip);
+    }
+
+    private void PrepareParticleForDifficultyPlay(ParticleSystem particle)
+    {
+        if (particle == null) return;
+        if (!forcePlayedParticlesToLocalSimulation) return;
+
+        ParticleSystem[] systems = particle.GetComponentsInChildren<ParticleSystem>(true);
+
+        foreach (ParticleSystem ps in systems)
+        {
+            if (ps == null) continue;
+
+            ParticleSystem.MainModule main = ps.main;
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+        }
     }
 
     private AudioClip GetCommonClip(DragonEffectKind kind)

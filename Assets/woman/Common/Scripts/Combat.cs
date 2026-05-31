@@ -265,31 +265,50 @@ namespace Retro.ThirdPersonCharacter
         [Tooltip("チャージ中に一定間隔で鳴らすSEです。空なら鳴りません。")]
         [SerializeField] private AudioClip chargeLoopSfx;
 
-        [Tooltip("旧方式用です。下のStoppable Source方式をOFFにした時だけ、何秒ごとに鳴らすかに使います。7秒くらいある長いSEでは基本使わないでください。")]
+        [Tooltip("Charge Loop Sfxを何秒ごとに鳴らすかです。0.4〜0.8くらいがおすすめです。")]
         [SerializeField] private float chargeLoopSfxInterval = 0.6f;
-
-        [Header("Charge Loop SFX Stop Control / チャージ中SE停止制御")]
-        [Tooltip("ON推奨。チャージ中SEをPlayOneShotではなく専用AudioSourceで鳴らします。攻撃・被弾・スクリプト無効化などでチャージが中断された時に確実に止められます。")]
-        [SerializeField] private bool useStoppableChargeLoopSfx = true;
-
-        [Tooltip("チャージ中SE専用AudioSourceです。空なら自動で作ります。長いチャージ音を止めたい場合はこの方式を使ってください。")]
-        [SerializeField] private AudioSource chargeLoopAudioSource;
-
-        [Tooltip("チャージ中SE専用の音量です。最終音量 = Attack Sfx Volume × この値です。")]
-        [Range(0f, 1f)]
-        [SerializeField] private float chargeLoopSfxVolume = 1f;
-
-        [Tooltip("ONならチャージ中SEをループ再生します。7秒ぴったりの素材を一回だけ鳴らしたいならOFF推奨です。")]
-        [SerializeField] private bool loopChargeLoopSfx = false;
-
-        [Tooltip("ONならチャージ中SE停止時に再生位置を0へ戻します。次回チャージ時に頭から鳴らしたいならON推奨です。")]
-        [SerializeField] private bool resetChargeLoopSfxPositionOnStop = true;
 
         [Tooltip("通常溜め可能になった瞬間に鳴らすSEです。")]
         [SerializeField] private AudioClip chargeReadySfx;
 
         [Tooltip("一段階目の最大溜め完了時に鳴らすSEです。空ならCharge Ready Sfxを使います。")]
         [SerializeField] private AudioClip maxChargeReadySfx;
+
+        [Header("Charge Interrupt Stop / 被弾時停止")]
+        [Tooltip("ON推奨。チャージ開始SEを専用AudioSourceで再生し、被弾や中断時に途中停止できるようにします。7秒など長いSEを使う場合はON。")]
+        [SerializeField] private bool useStoppableChargeStartSfx = true;
+
+        [Tooltip("チャージ開始SE専用AudioSource。空なら自動生成します。")]
+        [SerializeField] private AudioSource chargeStartAudioSource;
+
+        [Range(0f, 1f)]
+        [Tooltip("チャージ開始SE専用の音量です。")]
+        [SerializeField] private float chargeStartSfxVolume = 1f;
+
+        [Tooltip("ONならチャージ開始SEをループ再生します。7秒の一発SEならOFF推奨。")]
+        [SerializeField] private bool loopChargeStartSfx = false;
+
+        [Tooltip("ON推奨。チャージ中SEを専用AudioSourceで再生し、被弾や中断時に途中停止できるようにします。")]
+        [SerializeField] private bool useStoppableChargeLoopSfx = true;
+
+        [Tooltip("チャージ中SE専用AudioSource。空なら自動生成します。")]
+        [SerializeField] private AudioSource chargeLoopAudioSource;
+
+        [Range(0f, 1f)]
+        [Tooltip("チャージ中SE専用の音量です。")]
+        [SerializeField] private float chargeLoopSfxVolume = 1f;
+
+        [Tooltip("ONならCharge Loop SfxをAudioSource側でループ再生します。長い7秒SEを1回だけ鳴らしたいならOFF。")]
+        [SerializeField] private bool loopChargeLoopSfx = false;
+
+        [Tooltip("ON推奨。停止時にチャージSEの再生位置を0秒へ戻します。")]
+        [SerializeField] private bool resetChargeSfxPositionOnStop = true;
+
+        [Tooltip("ON推奨。被弾などでCombatが無効化された瞬間にチャージ関連のParticleとSEをすべて止めます。")]
+        [SerializeField] private bool stopChargeEffectsOnDisable = true;
+
+        [Tooltip("ONなら、チャージエフェクト停止時に子Particleも含めて完全クリアします。")]
+        [SerializeField] private bool stopChargeParticleChildrenAndClear = true;
 
         private bool chargeReadyEffectPlayed = false;
         private bool maxChargeEffectPlayed = false;
@@ -504,9 +523,29 @@ namespace Retro.ThirdPersonCharacter
 
         private void OnDisable()
         {
-            // 被弾・吹っ飛び・ゲームオーバーなどでCombatが無効化された時、
-            // 7秒程度の長いチャージ中SEが残らないように必ず停止する。
+            if (!stopChargeEffectsOnDisable) return;
+
+            CancelCurrentActionByExternalInterrupt();
+        }
+
+        public void CancelCurrentActionByExternalInterrupt()
+        {
+            isChargingHeavy = false;
+            isWaitingHeavyDecision = false;
+            AttackInProgress = false;
+
+            StopAllCoroutines();
+            comboCooldownRoutine = null;
+            neutralHeavyCooldownRoutine = null;
+            chargeLoopSfxRoutine = null;
+
             StopChargeEffects();
+            StopChargeAudioSources();
+
+            if (_animator != null)
+            {
+                _animator.speed = 1f;
+            }
 
             if (_movement != null)
             {
@@ -515,14 +554,17 @@ namespace Retro.ThirdPersonCharacter
                 _movement.StopAttackForwardMove();
             }
 
-            if (_animator != null)
+            if (daggerHitbox != null)
             {
-                _animator.speed = 1f;
+                daggerHitbox.DisableHitbox();
+                RestoreColliderScale(daggerHitbox);
             }
 
-            isChargingHeavy = false;
-            isWaitingHeavyDecision = false;
-            AttackInProgress = false;
+            if (swordHitbox != null)
+            {
+                swordHitbox.DisableHitbox();
+                RestoreColliderScale(swordHitbox);
+            }
         }
 
         private void Update()
@@ -1919,7 +1961,7 @@ namespace Retro.ThirdPersonCharacter
                 secondStageChargeReadyEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             }
 
-            PlaySfx(chargeStartSfx);
+            PlayChargeStartSfx();
             StartChargeLoopSfx();
         }
 
@@ -1996,31 +2038,39 @@ namespace Retro.ThirdPersonCharacter
 
         private void StopChargeEffects()
         {
-            if (chargeEffect != null)
-            {
-                chargeEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            }
-
-            if (chargeReadyEffect != null)
-            {
-                chargeReadyEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            }
-
-            if (maxChargeReadyEffect != null)
-            {
-                maxChargeReadyEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            }
-
-            if (secondStageChargeReadyEffect != null)
-            {
-                secondStageChargeReadyEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            }
+            StopChargeParticle(chargeEffect);
+            StopChargeParticle(chargeReadyEffect);
+            StopChargeParticle(maxChargeReadyEffect);
+            StopChargeParticle(secondStageChargeReadyEffect);
 
             StopChargeLoopSfx();
+            StopChargeStartSfx();
 
             chargeReadyEffectPlayed = false;
             maxChargeEffectPlayed = false;
             secondStageChargeEffectPlayed = false;
+        }
+
+        private void StopChargeParticle(ParticleSystem particle)
+        {
+            if (particle == null) return;
+
+            if (stopChargeParticleChildrenAndClear)
+            {
+                ParticleSystem[] systems = particle.GetComponentsInChildren<ParticleSystem>(true);
+
+                foreach (ParticleSystem ps in systems)
+                {
+                    if (ps == null) continue;
+                    ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                    ps.Clear(true);
+                }
+            }
+            else
+            {
+                particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                particle.Clear(true);
+            }
         }
 
         private void ApplyChargeEffectTransforms()
@@ -2058,6 +2108,37 @@ namespace Retro.ThirdPersonCharacter
             }
         }
 
+        private void PlayChargeStartSfx()
+        {
+            if (chargeStartSfx == null) return;
+
+            if (!useStoppableChargeStartSfx)
+            {
+                PlaySfx(chargeStartSfx);
+                return;
+            }
+
+            chargeStartAudioSource = EnsureChargeAudioSource(chargeStartAudioSource, "ChargeStartAudioSource");
+
+            if (chargeStartAudioSource == null)
+            {
+                PlaySfx(chargeStartSfx);
+                return;
+            }
+
+            chargeStartAudioSource.Stop();
+            chargeStartAudioSource.clip = chargeStartSfx;
+            chargeStartAudioSource.volume = chargeStartSfxVolume;
+            chargeStartAudioSource.loop = loopChargeStartSfx;
+            chargeStartAudioSource.time = 0f;
+            chargeStartAudioSource.Play();
+        }
+
+        private void StopChargeStartSfx()
+        {
+            StopChargeAudioSource(chargeStartAudioSource);
+        }
+
         private void StartChargeLoopSfx()
         {
             StopChargeLoopSfx();
@@ -2066,24 +2147,20 @@ namespace Retro.ThirdPersonCharacter
 
             if (useStoppableChargeLoopSfx)
             {
-                SetupChargeLoopAudioSourceIfNeeded();
+                chargeLoopAudioSource = EnsureChargeAudioSource(chargeLoopAudioSource, "ChargeLoopAudioSource");
 
-                if (chargeLoopAudioSource == null)
+                if (chargeLoopAudioSource != null)
                 {
-                    Debug.LogWarning("Charge Loop AudioSource が見つからないため、チャージ中SEを再生できません。", this);
+                    chargeLoopAudioSource.Stop();
+                    chargeLoopAudioSource.clip = chargeLoopSfx;
+                    chargeLoopAudioSource.volume = chargeLoopSfxVolume;
+                    chargeLoopAudioSource.loop = loopChargeLoopSfx;
+                    chargeLoopAudioSource.time = 0f;
+                    chargeLoopAudioSource.Play();
                     return;
                 }
-
-                chargeLoopAudioSource.clip = chargeLoopSfx;
-                chargeLoopAudioSource.volume = Mathf.Clamp01(attackSfxVolume * chargeLoopSfxVolume);
-                chargeLoopAudioSource.loop = loopChargeLoopSfx;
-                chargeLoopAudioSource.playOnAwake = false;
-                chargeLoopAudioSource.time = 0f;
-                chargeLoopAudioSource.Play();
-                return;
             }
 
-            // 旧方式。短いSEを周期的に鳴らしたい時だけ使う。
             if (chargeLoopSfxInterval <= 0f) return;
             chargeLoopSfxRoutine = StartCoroutine(ChargeLoopSfxRoutine());
         }
@@ -2096,15 +2173,39 @@ namespace Retro.ThirdPersonCharacter
                 chargeLoopSfxRoutine = null;
             }
 
-            if (chargeLoopAudioSource != null && chargeLoopAudioSource.isPlaying)
-            {
-                chargeLoopAudioSource.Stop();
+            StopChargeAudioSource(chargeLoopAudioSource);
+        }
 
-                if (resetChargeLoopSfxPositionOnStop)
-                {
-                    chargeLoopAudioSource.time = 0f;
-                }
+        private void StopChargeAudioSources()
+        {
+            StopChargeAudioSource(chargeStartAudioSource);
+            StopChargeAudioSource(chargeLoopAudioSource);
+        }
+
+        private void StopChargeAudioSource(AudioSource source)
+        {
+            if (source == null) return;
+
+            source.Stop();
+
+            if (resetChargeSfxPositionOnStop)
+            {
+                source.time = 0f;
             }
+        }
+
+        private AudioSource EnsureChargeAudioSource(AudioSource source, string objectName)
+        {
+            if (source != null) return source;
+
+            GameObject audioObject = new GameObject(objectName);
+            audioObject.transform.SetParent(transform, false);
+
+            AudioSource created = audioObject.AddComponent<AudioSource>();
+            created.playOnAwake = false;
+            created.spatialBlend = 0f;
+
+            return created;
         }
 
         private IEnumerator ChargeLoopSfxRoutine()
@@ -2116,17 +2217,6 @@ namespace Retro.ThirdPersonCharacter
             }
 
             chargeLoopSfxRoutine = null;
-        }
-
-        private void SetupChargeLoopAudioSourceIfNeeded()
-        {
-            if (chargeLoopAudioSource != null) return;
-
-            GameObject audioObj = new GameObject("ChargeLoopAudioSource");
-            audioObj.transform.SetParent(transform, false);
-            chargeLoopAudioSource = audioObj.AddComponent<AudioSource>();
-            chargeLoopAudioSource.playOnAwake = false;
-            chargeLoopAudioSource.spatialBlend = 0f;
         }
 
         private void CreateChargeEffectsIfNeeded()

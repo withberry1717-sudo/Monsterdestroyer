@@ -566,6 +566,11 @@ public class PlayerHP : MonoBehaviour
 
     private void SetActionScriptsEnabled(bool enabled)
     {
+        if (!enabled)
+        {
+            CancelCombatChargeAndEffects();
+        }
+
         if (_movement != null)
         {
             if (!enabled)
@@ -595,6 +600,16 @@ public class PlayerHP : MonoBehaviour
         {
             DisablePlayerAttackHitboxes();
         }
+    }
+
+    private void CancelCombatChargeAndEffects()
+    {
+        if (_combat == null) return;
+
+        _combat.gameObject.SendMessage(
+            "CancelCurrentActionByExternalInterrupt",
+            SendMessageOptions.DontRequireReceiver
+        );
     }
 
     private void DisablePlayerAttackHitboxes()
@@ -773,6 +788,7 @@ public class PlayerHP : MonoBehaviour
             _movement.ForceStopTrail();
         }
 
+        CancelCombatChargeAndEffects();
         DisablePlayerAttackHitboxes();
 
         if (damageFlashCanvasGroup != null)
@@ -871,6 +887,11 @@ public class PlayerHP : MonoBehaviour
             }
 
             _movement.enabled = enabled;
+        }
+
+        if (!enabled)
+        {
+            CancelCombatChargeAndEffects();
         }
 
         if (_combat != null) _combat.enabled = enabled;

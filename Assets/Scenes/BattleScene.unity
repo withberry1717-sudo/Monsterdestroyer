@@ -35140,7 +35140,7 @@ MonoBehaviour:
   lockOnCenterSmoothTime: 0.18
   lockOnCenterDeadZone: 0.25
   allowPitchInputWhileLockOn: 1
-  lockOnPitchInputSensitivity: 0.25
+  lockOnPitchInputSensitivity: 3
   minHorizontalDistanceForYaw: 0.5
   lockOnMarkerPrefab: {fileID: 2490275035408926215, guid: 1a363874805cf8b4bb5b6b119f22560e, type: 3}
   enableLockOnMarker: 1

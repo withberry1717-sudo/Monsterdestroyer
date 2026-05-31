@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
@@ -11,16 +11,16 @@ namespace NaughtyCharacter
         [System.Serializable]
         public class DifficultyMonsterUIData
         {
-            [Header("“ïˆÕ“x")]
+            [Header("é›£æ˜“åº¦")]
             public QuestDifficultyImageSelector.Difficulty difficulty;
 
-            [Header("‚±‚Ì“ïˆÕ“x‚Å•\¦‚·‚éƒ‚ƒ“ƒXƒ^[ƒAƒCƒRƒ“‰æ‘œ")]
+            [Header("ã“ã®é›£æ˜“åº¦ã§è¡¨ç¤ºã™ã‚‹ãƒ¢ãƒ³ã‚¹ã‚¿ãƒ¼ã‚¢ã‚¤ã‚³ãƒ³ç”»åƒ")]
             public Sprite monsterIconSprite;
 
-            [Header("‚±‚Ì“ïˆÕ“x‚Å•\¦‚·‚éƒ‚ƒ“ƒXƒ^[–¼‰æ‘œ")]
+            [Header("ã“ã®é›£æ˜“åº¦ã§è¡¨ç¤ºã™ã‚‹ãƒ¢ãƒ³ã‚¹ã‚¿ãƒ¼åç”»åƒ")]
             public Sprite monsterNameSprite;
 
-            [Header("‚±‚Ì“ïˆÕ“x‚Åg‚¤ƒƒbƒNƒIƒ“d‚Ë‰æ‘œB‹¤’Ê‚È‚ç‘S“ïˆÕ“x‚É“¯‚¶‰æ‘œ‚ğ“ü‚ê‚ÄOK")]
+            [Header("ã“ã®é›£æ˜“åº¦ã§ä½¿ã†ãƒ­ãƒƒã‚¯ã‚ªãƒ³é‡ã­ç”»åƒã€‚å…±é€šãªã‚‰å…¨é›£æ˜“åº¦ã«åŒã˜ç”»åƒã‚’å…¥ã‚Œã¦OK")]
             public Sprite lockOnOverlaySprite;
         }
 
@@ -41,114 +41,136 @@ namespace NaughtyCharacter
         [SerializeField] private float maxPitch = 55f;
 
         [Header("Lock On Camera")]
-        [Tooltip("ƒƒbƒNƒIƒ“‹@”\‚ğg‚¤‚©")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³æ©Ÿèƒ½ã‚’ä½¿ã†ã‹")]
         [SerializeField] private bool enableLockOn = true;
 
-        [Tooltip("ƒƒbƒNƒIƒ“Ø‚è‘Ö‚¦ƒL[B‚¨‚·‚·‚ß‚ÍT")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³åˆ‡ã‚Šæ›¿ãˆã‚­ãƒ¼ã€‚ãŠã™ã™ã‚ã¯T")]
         [SerializeField] private KeyCode lockOnKey = KeyCode.T;
 
-        [Tooltip("ƒƒbƒNƒIƒ“‘ÎÛ‚Ìƒ^ƒO")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³å¯¾è±¡ã®ã‚¿ã‚°")]
         [SerializeField] private string lockOnTargetTag = "Enemy";
 
-        [Tooltip("‚±‚±‚Éƒhƒ‰ƒSƒ“‚Ì‹¹E• E“·‘Ì’†S‚É’u‚¢‚½‹óƒIƒuƒWƒFƒNƒg‚ğ“ü‚ê‚éB“ü‚Á‚Ä‚¢‚ê‚ÎRenderer’†S‚æ‚è—Dæ‚³‚ê‚é")]
+        [Tooltip("ã“ã“ã«ãƒ‰ãƒ©ã‚´ãƒ³ã®èƒ¸ãƒ»è…¹ãƒ»èƒ´ä½“ä¸­å¿ƒã«ç½®ã„ãŸç©ºã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’å…¥ã‚Œã‚‹ã€‚å…¥ã£ã¦ã„ã‚Œã°Rendererä¸­å¿ƒã‚ˆã‚Šå„ªå…ˆã•ã‚Œã‚‹")]
         [SerializeField] private Transform manualLockOnPoint;
 
-        [Tooltip("ƒƒbƒNƒIƒ“‚Å‚«‚éÅ‘å‹——£")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³ã§ãã‚‹æœ€å¤§è·é›¢")]
         [SerializeField] private float lockOnRange = 50f;
 
-        [Tooltip("‰æ–Ê’†‰›‚É‹ß‚¢“G‚ğ—Dæ‚·‚é‹­‚³")]
+        [Tooltip("ç”»é¢ä¸­å¤®ã«è¿‘ã„æ•µã‚’å„ªå…ˆã™ã‚‹å¼·ã•")]
         [SerializeField] private float screenCenterPriority = 2.0f;
 
-        [Tooltip("ƒƒbƒNƒIƒ“’†‚ÌƒJƒƒ‰‰ñ“]‚ÌŠŠ‚ç‚©‚³B‘å‚«‚¢‚Ù‚Ç‚ä‚Á‚­‚è’Ç‚¤")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³ä¸­ã®ã‚«ãƒ¡ãƒ©å›è»¢ã®æ»‘ã‚‰ã‹ã•ã€‚å¤§ãã„ã»ã©ã‚†ã£ãã‚Šè¿½ã†")]
         [SerializeField] private float lockOnRotationSmoothTime = 0.16f;
 
-        [Tooltip("ƒƒbƒNƒIƒ“’†AƒJƒƒ‰‚ª1•b‚Å‰ñ‚ê‚éÅ‘åŠp“xBŒ‚¤‚È‚ç‰º‚°‚é")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³ä¸­ã€ã‚«ãƒ¡ãƒ©ãŒ1ç§’ã§å›ã‚Œã‚‹æœ€å¤§è§’åº¦ã€‚é…”ã†ãªã‚‰ä¸‹ã’ã‚‹")]
         [SerializeField] private float lockOnMaxTurnSpeed = 220f;
 
-        [Tooltip("manualLockOnPoint‚ª‚È‚¢ê‡ARenderer’†S‚©‚ç­‚µã‚ğŒ©‚é•â³")]
+        [Tooltip("manualLockOnPointãŒãªã„å ´åˆã€Rendererä¸­å¿ƒã‹ã‚‰å°‘ã—ä¸Šã‚’è¦‹ã‚‹è£œæ­£")]
         [SerializeField] private float lockOnCenterHeightOffset = 1.0f;
 
-        [Tooltip("ƒƒbƒNƒIƒ“’†SˆÊ’u‚Ì—h‚ê•â³B‘å‚«‚¢‚Ù‚Çƒkƒ‹‚Á‚Æ’Ç‚¤")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³ä¸­å¿ƒä½ç½®ã®æºã‚Œè£œæ­£ã€‚å¤§ãã„ã»ã©ãƒŒãƒ«ã£ã¨è¿½ã†")]
         [SerializeField] private float lockOnCenterSmoothTime = 0.18f;
 
-        [Tooltip("‚±‚Ì‹——£ˆÈ‰º‚Ì’†SˆÊ’u‚Ì—h‚ê‚Í–³‹‚·‚éBŒ‚¢–h~")]
+        [Tooltip("ã“ã®è·é›¢ä»¥ä¸‹ã®ä¸­å¿ƒä½ç½®ã®æºã‚Œã¯ç„¡è¦–ã™ã‚‹ã€‚é…”ã„é˜²æ­¢")]
         [SerializeField] private float lockOnCenterDeadZone = 0.25f;
 
-        [Tooltip("ƒƒbƒNƒIƒ“’†‚Å‚àƒ}ƒEƒXã‰º‘€ì‚ğ­‚µ‹–‰Â‚·‚é")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³ä¸­ã§ã‚‚ãƒã‚¦ã‚¹ä¸Šä¸‹æ“ä½œã‚’å°‘ã—è¨±å¯ã™ã‚‹")]
         [SerializeField] private bool allowPitchInputWhileLockOn = false;
 
-        [Tooltip("ƒƒbƒNƒIƒ“’†‚Ìã‰º‹“_‘€ì‚Ì‹­‚³")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³ä¸­ã®ä¸Šä¸‹è¦–ç‚¹æ“ä½œã®å¼·ã•")]
         [SerializeField] private float lockOnPitchInputSensitivity = 0.25f;
 
-        [Tooltip("…•½•ûŒü‚ª‹ß‚·‚¬‚é‚ÉYaw‚ğXV‚µ‚È‚¢B‹}‚ÈŒã‚ëŒü‚«ƒoƒO–h~")]
+        [Tooltip("æ°´å¹³æ–¹å‘ãŒè¿‘ã™ãã‚‹æ™‚ã«Yawã‚’æ›´æ–°ã—ãªã„ã€‚æ€¥ãªå¾Œã‚å‘ããƒã‚°é˜²æ­¢")]
         [SerializeField] private float minHorizontalDistanceForYaw = 0.5f;
 
+        [Header("Lock On View Angle Fix / ãƒ­ãƒƒã‚¯ã‚ªãƒ³è¦‹ä¸Šã’å¯¾ç­–")]
+        [Tooltip("ONæ¨å¥¨ã€‚ãƒ­ãƒƒã‚¯ã‚ªãƒ³æ™‚ã®ä¸Šä¸‹è§’åº¦ã ã‘å°‚ç”¨ã«è£œæ­£ã—ã¾ã™ã€‚ä¸‹ã‹ã‚‰è¦‹ä¸Šã’ã™ãã‚‹æ™‚ã«ä½¿ã„ã¾ã™ã€‚")]
+        [SerializeField] private bool useLockOnViewAngleFix = true;
+
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³è¨ˆç®—ã§ä½¿ã†ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼å´ã®è¦–ç‚¹é«˜ã•ã§ã™ã€‚0ã ã¨è¶³å…ƒåŸºæº–ã«ãªã‚Šã‚„ã™ãã€è¦‹ä¸Šã’ãŒå¼·ããªã‚Šã¾ã™ã€‚1.0ã€œ1.4æ¨å¥¨ã€‚")]
+        [SerializeField] private float lockOnPlayerAimHeightOffset = 1.2f;
+
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³è¨ˆç®—ã§ä½¿ã†æ•µå´ã®é«˜ã•è£œæ­£ã§ã™ã€‚ä¸‹ã’ãŸã„ãªã‚‰ãƒã‚¤ãƒŠã‚¹ã€‚ãƒ‰ãƒ©ã‚´ãƒ³ã‚’è¦‹ä¸Šã’ã™ãã‚‹å ´åˆã¯ -0.5ã€œ-1.5 æ¨å¥¨ã€‚")]
+        [SerializeField] private float lockOnTargetAimHeightOffset = -0.8f;
+
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³æ™‚ã®Pitchè£œæ­£ã§ã™ã€‚ãƒ—ãƒ©ã‚¹ã«ã™ã‚‹ã¨è¦‹ä¸Šã’ã‚’æŠ‘ãˆã¾ã™ã€‚5ã€œ12æ¨å¥¨ã€‚")]
+        [SerializeField] private float lockOnPitchOffset = 8f;
+
+        [Tooltip("ONãªã‚‰ãƒ­ãƒƒã‚¯ã‚ªãƒ³ä¸­ã ã‘é€šå¸¸ã‚«ãƒ¡ãƒ©ã¨ã¯åˆ¥ã®Pitchåˆ¶é™ã‚’ä½¿ã„ã¾ã™ã€‚")]
+        [SerializeField] private bool useSeparateLockOnPitchLimits = true;
+
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³ä¸­ã®æœ€å°Pitchã§ã™ã€‚ãƒã‚¤ãƒŠã‚¹ãŒå¤§ãã„ã»ã©è¦‹ä¸Šã’ã¾ã™ã€‚è¦‹ä¸Šã’ã™ãã‚‹ãªã‚‰ -8ã€œ-15ã€‚")]
+        [SerializeField] private float lockOnMinPitch = -10f;
+
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³ä¸­ã®æœ€å¤§Pitchã§ã™ã€‚å¤§ãã„ã»ã©è¦‹ä¸‹ã‚ã›ã¾ã™ã€‚")]
+        [SerializeField] private float lockOnMaxPitch = 45f;
+
         [Header("World Lock On Marker")]
-        [Tooltip("ƒƒbƒNƒIƒ“’†‚Éƒ[ƒ‹ƒhã‚Ö•\¦‚·‚éƒ}[ƒN‚ÌPrefabBSpriteRenderer„§")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³ä¸­ã«ãƒ¯ãƒ¼ãƒ«ãƒ‰ä¸Šã¸è¡¨ç¤ºã™ã‚‹ãƒãƒ¼ã‚¯ã®Prefabã€‚SpriteRendereræ¨å¥¨")]
         [SerializeField] private GameObject lockOnMarkerPrefab;
 
-        [Tooltip("ƒ[ƒ‹ƒhã‚ÌƒƒbƒNƒIƒ“ƒ}[ƒN‚ğ•\¦‚·‚é‚©")]
+        [Tooltip("ãƒ¯ãƒ¼ãƒ«ãƒ‰ä¸Šã®ãƒ­ãƒƒã‚¯ã‚ªãƒ³ãƒãƒ¼ã‚¯ã‚’è¡¨ç¤ºã™ã‚‹ã‹")]
         [SerializeField] private bool enableLockOnMarker = true;
 
-        [Tooltip("ƒƒbƒNƒIƒ“ŠJn‚©‚ç‰½•bŠÔ‚¾‚¯ƒ[ƒ‹ƒhƒ}[ƒJ[‚ğ•\¦‚·‚é‚©")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³é–‹å§‹ã‹ã‚‰ä½•ç§’é–“ã ã‘ãƒ¯ãƒ¼ãƒ«ãƒ‰ãƒãƒ¼ã‚«ãƒ¼ã‚’è¡¨ç¤ºã™ã‚‹ã‹")]
         [SerializeField] private float lockOnMarkerVisibleTime = 1.2f;
 
-        [Tooltip("ƒƒbƒNƒIƒ“’†S‚©‚ç‚Ì•\¦ˆÊ’u•â³")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³ä¸­å¿ƒã‹ã‚‰ã®è¡¨ç¤ºä½ç½®è£œæ­£")]
         [SerializeField] private Vector3 lockOnMarkerOffset = Vector3.zero;
 
-        [Tooltip("’Êí‚ÌƒƒbƒNƒIƒ“ƒ}[ƒN‚Ì‘å‚«‚³")]
+        [Tooltip("é€šå¸¸æ™‚ã®ãƒ­ãƒƒã‚¯ã‚ªãƒ³ãƒãƒ¼ã‚¯ã®å¤§ãã•")]
         [SerializeField] private float lockOnMarkerScale = 1.0f;
 
-        [Tooltip("ƒƒbƒNƒIƒ“ŠJn‚Ìˆêu‚ÌŠg‘å—¦B1.5‚È‚ç1.5”{‚©‚ç1”{‚Ö–ß‚é")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³é–‹å§‹æ™‚ã®ä¸€ç¬ã®æ‹¡å¤§ç‡ã€‚1.5ãªã‚‰1.5å€ã‹ã‚‰1å€ã¸æˆ»ã‚‹")]
         [SerializeField] private float lockOnMarkerStartPopScale = 1.5f;
 
-        [Tooltip("Šg‘åó‘Ô‚©‚ç’ÊíƒTƒCƒY‚Ö–ß‚éŠÔ")]
+        [Tooltip("æ‹¡å¤§çŠ¶æ…‹ã‹ã‚‰é€šå¸¸ã‚µã‚¤ã‚ºã¸æˆ»ã‚‹æ™‚é–“")]
         [SerializeField] private float lockOnMarkerPopDuration = 0.18f;
 
-        [Tooltip("ƒ}[ƒN‚ªƒJƒƒ‰‚Ì•û‚ğŒü‚­‚æ‚¤‚É‚·‚é")]
+        [Tooltip("ãƒãƒ¼ã‚¯ãŒã‚«ãƒ¡ãƒ©ã®æ–¹ã‚’å‘ãã‚ˆã†ã«ã™ã‚‹")]
         [SerializeField] private bool lockOnMarkerFaceCamera = true;
 
-        [Tooltip("ƒ}[ƒN‚Ì’Ç]‚ÌŠŠ‚ç‚©‚³")]
+        [Tooltip("ãƒãƒ¼ã‚¯ã®è¿½å¾“ã®æ»‘ã‚‰ã‹ã•")]
         [SerializeField] private float lockOnMarkerSmoothTime = 0.04f;
 
-        [Tooltip("ƒ}[ƒJ[‚ğƒhƒ‰ƒSƒ“‚É–„‚à‚ê‚É‚­‚­‚·‚é‚½‚ßAƒJƒƒ‰‘¤‚É­‚µè‘O‚Öo‚·‹——£")]
+        [Tooltip("ãƒãƒ¼ã‚«ãƒ¼ã‚’ãƒ‰ãƒ©ã‚´ãƒ³ã«åŸ‹ã‚‚ã‚Œã«ããã™ã‚‹ãŸã‚ã€ã‚«ãƒ¡ãƒ©å´ã«å°‘ã—æ‰‹å‰ã¸å‡ºã™è·é›¢")]
         [SerializeField] private float lockOnMarkerPullTowardCamera = 0.8f;
 
-        [Tooltip("‰Â”\‚È‚çƒ}[ƒJ[‚ğƒhƒ‰ƒSƒ“‰z‚µ‚É‚àŒ©‚¦‚é‚æ‚¤‚É‚·‚éBŠÂ‹«‚É‚æ‚Á‚Ä‚ÍŒø‚©‚È‚¢ê‡‚ ‚è")]
+        [Tooltip("å¯èƒ½ãªã‚‰ãƒãƒ¼ã‚«ãƒ¼ã‚’ãƒ‰ãƒ©ã‚´ãƒ³è¶Šã—ã«ã‚‚è¦‹ãˆã‚‹ã‚ˆã†ã«ã™ã‚‹ã€‚ç’°å¢ƒã«ã‚ˆã£ã¦ã¯åŠ¹ã‹ãªã„å ´åˆã‚ã‚Š")]
         [SerializeField] private bool tryMakeMarkerVisibleThroughDragon = true;
 
-        [Tooltip("ƒ}[ƒJ[‚Ì•`‰æ‡B‘å‚«‚¢‚Ù‚Çè‘O‚Éo‚â‚·‚¢")]
+        [Tooltip("ãƒãƒ¼ã‚«ãƒ¼ã®æç”»é †ã€‚å¤§ãã„ã»ã©æ‰‹å‰ã«å‡ºã‚„ã™ã„")]
         [SerializeField] private int lockOnMarkerSortingOrder = 5000;
 
         [Header("Monster Icon / Name UI")]
-        [Tooltip("‰æ–Êã‚É•\¦‚·‚éƒ‚ƒ“ƒXƒ^[ƒAƒCƒRƒ“Image")]
+        [Tooltip("ç”»é¢ä¸Šã«è¡¨ç¤ºã™ã‚‹ãƒ¢ãƒ³ã‚¹ã‚¿ãƒ¼ã‚¢ã‚¤ã‚³ãƒ³Image")]
         [SerializeField] private Image monsterIconImage;
 
-        [Tooltip("‰æ–Êã‚É•\¦‚·‚éƒ‚ƒ“ƒXƒ^[–¼ImageB“ïˆÕ“x•Ê‚É‰æ‘œ‚ğØ‚è‘Ö‚¦‚Ü‚·")]
+        [Tooltip("ç”»é¢ä¸Šã«è¡¨ç¤ºã™ã‚‹ãƒ¢ãƒ³ã‚¹ã‚¿ãƒ¼åImageã€‚é›£æ˜“åº¦åˆ¥ã«ç”»åƒã‚’åˆ‡ã‚Šæ›¿ãˆã¾ã™")]
         [SerializeField] private Image monsterNameImage;
 
-        [Tooltip("ƒƒbƒNƒIƒ“’†‚¾‚¯ƒ‚ƒ“ƒXƒ^[ƒAƒCƒRƒ“‚Ìã‚Éd‚Ë‚é”’‚¢ƒƒbƒNƒIƒ“‰æ‘œ")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³ä¸­ã ã‘ãƒ¢ãƒ³ã‚¹ã‚¿ãƒ¼ã‚¢ã‚¤ã‚³ãƒ³ã®ä¸Šã«é‡ã­ã‚‹ç™½ã„ãƒ­ãƒƒã‚¯ã‚ªãƒ³ç”»åƒ")]
         [SerializeField] private Image monsterLockOnOverlayImage;
 
-        [Tooltip("ON‚È‚çƒ^ƒCƒgƒ‹‚Å‘I‚ñ‚¾“ïˆÕ“x‚É‰‚¶‚Äƒ‚ƒ“ƒXƒ^[ƒAƒCƒRƒ“E–¼‘O‰æ‘œ‚ğØ‚è‘Ö‚¦‚é")]
+        [Tooltip("ONãªã‚‰ã‚¿ã‚¤ãƒˆãƒ«ã§é¸ã‚“ã é›£æ˜“åº¦ã«å¿œã˜ã¦ãƒ¢ãƒ³ã‚¹ã‚¿ãƒ¼ã‚¢ã‚¤ã‚³ãƒ³ãƒ»åå‰ç”»åƒã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹")]
         [SerializeField] private bool useDifficultyMonsterUI = true;
 
-        [Tooltip("“ïˆÕ“x‚²‚Æ‚Ìƒ‚ƒ“ƒXƒ^[ƒAƒCƒRƒ“E–¼‘O‰æ‘œ")]
+        [Tooltip("é›£æ˜“åº¦ã”ã¨ã®ãƒ¢ãƒ³ã‚¹ã‚¿ãƒ¼ã‚¢ã‚¤ã‚³ãƒ³ãƒ»åå‰ç”»åƒ")]
         [SerializeField] private DifficultyMonsterUIData[] difficultyMonsterUIs;
 
-        [Tooltip("ƒ‚ƒ“ƒXƒ^[ƒAƒCƒRƒ“ã‚ÌƒƒbƒNƒIƒ“•\¦‚ğg‚¤‚©")]
+        [Tooltip("ãƒ¢ãƒ³ã‚¹ã‚¿ãƒ¼ã‚¢ã‚¤ã‚³ãƒ³ä¸Šã®ãƒ­ãƒƒã‚¯ã‚ªãƒ³è¡¨ç¤ºã‚’ä½¿ã†ã‹")]
         [SerializeField] private bool enableMonsterIconLockOnOverlay = true;
 
-        [Tooltip("ƒƒbƒNƒIƒ“‚µ‚Ä‚¢‚È‚¢‚É”’‚¢ƒƒbƒNƒIƒ“‰æ‘œ‚ğ”ñ•\¦‚É‚·‚é")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³ã—ã¦ã„ãªã„æ™‚ã«ç™½ã„ãƒ­ãƒƒã‚¯ã‚ªãƒ³ç”»åƒã‚’éè¡¨ç¤ºã«ã™ã‚‹")]
         [SerializeField] private bool hideMonsterOverlayWhenNotLocked = true;
 
-        [Tooltip("ƒƒbƒNƒIƒ“‚µ‚½uŠÔ‚ÉƒAƒCƒRƒ“ã‚ÌƒƒbƒNƒIƒ“‰æ‘œ‚ğ­‚µŠg‘å‚µ‚Ä–ß‚·")]
+        [Tooltip("ãƒ­ãƒƒã‚¯ã‚ªãƒ³ã—ãŸç¬é–“ã«ã‚¢ã‚¤ã‚³ãƒ³ä¸Šã®ãƒ­ãƒƒã‚¯ã‚ªãƒ³ç”»åƒã‚’å°‘ã—æ‹¡å¤§ã—ã¦æˆ»ã™")]
         [SerializeField] private bool useMonsterOverlayPopAnimation = true;
 
-        [Tooltip("ƒAƒCƒRƒ“ãƒƒbƒNƒIƒ“‰æ‘œ‚ÌŠJnŠg‘å—¦")]
+        [Tooltip("ã‚¢ã‚¤ã‚³ãƒ³ä¸Šãƒ­ãƒƒã‚¯ã‚ªãƒ³ç”»åƒã®é–‹å§‹æ‹¡å¤§ç‡")]
         [SerializeField] private float monsterOverlayStartPopScale = 1.18f;
 
-        [Tooltip("ƒAƒCƒRƒ“ãƒƒbƒNƒIƒ“‰æ‘œ‚ª’ÊíƒTƒCƒY‚Ö–ß‚éŠÔ")]
+        [Tooltip("ã‚¢ã‚¤ã‚³ãƒ³ä¸Šãƒ­ãƒƒã‚¯ã‚ªãƒ³ç”»åƒãŒé€šå¸¸ã‚µã‚¤ã‚ºã¸æˆ»ã‚‹æ™‚é–“")]
         [SerializeField] private float monsterOverlayPopDuration = 0.16f;
 
         [Header("Camera Shake")]
@@ -277,7 +299,7 @@ namespace NaughtyCharacter
 
             if (data == null)
             {
-                Debug.LogWarning("SafePlayerCamera: “ïˆÕ“x‚É‘Î‰‚·‚éƒ‚ƒ“ƒXƒ^[UIİ’è‚ª‚ ‚è‚Ü‚¹‚ñ: " + difficulty);
+                Debug.LogWarning("SafePlayerCamera: é›£æ˜“åº¦ã«å¯¾å¿œã™ã‚‹ãƒ¢ãƒ³ã‚¹ã‚¿ãƒ¼UIè¨­å®šãŒã‚ã‚Šã¾ã›ã‚“: " + difficulty);
                 return;
             }
 
@@ -813,7 +835,16 @@ namespace NaughtyCharacter
 
             UpdateLockOnMarker(enemyCenter);
 
-            Vector3 direction = enemyCenter - playerPos;
+            Vector3 cameraAimOrigin = playerPos;
+            Vector3 cameraAimTarget = enemyCenter;
+
+            if (useLockOnViewAngleFix)
+            {
+                cameraAimOrigin += Vector3.up * lockOnPlayerAimHeightOffset;
+                cameraAimTarget += Vector3.up * lockOnTargetAimHeightOffset;
+            }
+
+            Vector3 direction = cameraAimTarget - cameraAimOrigin;
 
             if (direction.sqrMagnitude < 0.01f)
             {
@@ -830,14 +861,23 @@ namespace NaughtyCharacter
                 desiredYaw = Quaternion.LookRotation(flatDirection.normalized, Vector3.up).eulerAngles.y;
             }
 
+            float pitchMinLimit = useSeparateLockOnPitchLimits ? lockOnMinPitch : minPitch;
+            float pitchMaxLimit = useSeparateLockOnPitchLimits ? lockOnMaxPitch : maxPitch;
+
             float desiredPitch = -Mathf.Atan2(direction.y, Mathf.Max(horizontalDistance, 0.01f)) * Mathf.Rad2Deg;
-            desiredPitch = Mathf.Clamp(desiredPitch, minPitch, maxPitch);
+
+            if (useLockOnViewAngleFix)
+            {
+                desiredPitch += lockOnPitchOffset;
+            }
+
+            desiredPitch = Mathf.Clamp(desiredPitch, pitchMinLimit, pitchMaxLimit);
 
             if (allowPitchInputWhileLockOn && Cursor.lockState == CursorLockMode.Locked)
             {
                 float mouseY = Input.GetAxis("Mouse Y");
                 desiredPitch -= mouseY * lockOnPitchInputSensitivity;
-                desiredPitch = Mathf.Clamp(desiredPitch, minPitch, maxPitch);
+                desiredPitch = Mathf.Clamp(desiredPitch, pitchMinLimit, pitchMaxLimit);
             }
 
             targetYaw = Mathf.MoveTowardsAngle(

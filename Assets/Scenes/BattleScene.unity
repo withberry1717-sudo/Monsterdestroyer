@@ -22503,19 +22503,19 @@ MonoBehaviour:
   normalCrystalHpMultiplier: 1
   normalActionIntervalMultiplier: 1
   normalMoveSpeedMultiplier: 1
-  normalAnimationSpeedMultiplier: 1
+  normalAnimationSpeedMultiplier: 1.1
   normalDragonDamageMultiplier: 0.8
   normalDragonScaleMultiplier: 1
   normalHalfHPDownDuration: 8
   normalTailBreakBigHitDuration: 1.2
-  hardDragonHpMultiplier: 1.1
-  hardCrystalHpMultiplier: 1.2
+  hardDragonHpMultiplier: 1.3
+  hardCrystalHpMultiplier: 1
   hardActionIntervalMultiplier: 0.5
   hardMoveSpeedMultiplier: 1.7
-  hardAnimationSpeedMultiplier: 1.5
+  hardAnimationSpeedMultiplier: 1.7
   hardDragonDamageMultiplier: 1.25
   hardDragonScaleMultiplier: 1.2
-  hardHalfHPDownDuration: 5
+  hardHalfHPDownDuration: 8
   hardTailBreakBigHitDuration: 1
   hardAttackStartDelay: 0
   hardOverrideChargeTellTime: 0

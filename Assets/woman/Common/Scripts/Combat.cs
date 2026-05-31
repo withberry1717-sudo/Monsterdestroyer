@@ -143,6 +143,14 @@ namespace Retro.ThirdPersonCharacter
         };
 
         [SerializeField]
+        private AttackEffectSettings secondStageChargedHeavyEffect = new AttackEffectSettings
+        {
+            offset = new Vector3(0f, 1.2f, 1.05f),
+            destroyTime = 2.3f,
+            particleScale = new Vector3(1.7f, 1.7f, 1.7f)
+        };
+
+        [SerializeField]
         private AttackEffectSettings dashAttackEffect = new AttackEffectSettings
         {
             offset = new Vector3(0f, 1.0f, 0.65f),
@@ -193,7 +201,12 @@ namespace Retro.ThirdPersonCharacter
 
         [Header("Charge Effects")]
         [SerializeField] private ParticleSystem chargeEffect;
+
+        [Tooltip("通常溜め可能になった瞬間に出すエフェクトです。Charge Required Time到達時に再生します。")]
         [SerializeField] private ParticleSystem chargeReadyEffect;
+
+        [Tooltip("一段階目の最大溜め完了時に出すエフェクトです。Max Charge Time到達時に再生します。空ならCharge Ready Effectを再生します。")]
+        [SerializeField] private ParticleSystem maxChargeReadyEffect;
 
         [Tooltip("チャージ中エフェクトのローカル座標です。プレイヤー本体基準で調整できます。")]
         [SerializeField] private Vector3 chargeEffectLocalPosition = new Vector3(0f, 1.2f, 0.3f);
@@ -210,8 +223,28 @@ namespace Retro.ThirdPersonCharacter
         [Tooltip("チャージ完了エフェクトのローカル角度です。向きがズレる時に調整してください。")]
         [SerializeField] private Vector3 chargeReadyEffectLocalEuler = Vector3.zero;
 
-        [Tooltip("チャージ完了エフェクトのローカルサイズです。")]
+        [Tooltip("通常溜め可能エフェクトのローカルサイズです。")]
         [SerializeField] private Vector3 chargeReadyEffectLocalScale = Vector3.one;
+
+        [Header("Max Charge Ready Effect / 一段階目完了エフェクト")]
+        [Tooltip("一段階目の最大溜め完了エフェクトのローカル座標です。Max Charge Time到達時に使います。")]
+        [SerializeField] private Vector3 maxChargeReadyEffectLocalPosition = new Vector3(0f, 1.35f, 0.45f);
+
+        [Tooltip("一段階目の最大溜め完了エフェクトのローカル角度です。")]
+        [SerializeField] private Vector3 maxChargeReadyEffectLocalEuler = Vector3.zero;
+
+        [Tooltip("一段階目の最大溜め完了エフェクトのローカルサイズです。")]
+        [SerializeField] private Vector3 maxChargeReadyEffectLocalScale = new Vector3(1.25f, 1.25f, 1.25f);
+
+        [Header("Second Stage Charge Ready Effect / 二段階目完了エフェクト")]
+        [Tooltip("二段階目のチャージ完了エフェクトのローカル座標です。Second Stage Charge Time到達時に使います。")]
+        [SerializeField] private Vector3 secondStageChargeReadyEffectLocalPosition = new Vector3(0f, 1.45f, 0.55f);
+
+        [Tooltip("二段階目のチャージ完了エフェクトのローカル角度です。")]
+        [SerializeField] private Vector3 secondStageChargeReadyEffectLocalEuler = Vector3.zero;
+
+        [Tooltip("二段階目のチャージ完了エフェクトのローカルサイズです。")]
+        [SerializeField] private Vector3 secondStageChargeReadyEffectLocalScale = new Vector3(1.6f, 1.6f, 1.6f);
 
         [Tooltip("ONなら、外部から入れたchargeEffectもチャージ中はLoop扱いにして、止まっても再再生します。")]
         [SerializeField] private bool keepChargeEffectLoopingWhileCharging = true;
@@ -232,14 +265,35 @@ namespace Retro.ThirdPersonCharacter
         [Tooltip("チャージ中に一定間隔で鳴らすSEです。空なら鳴りません。")]
         [SerializeField] private AudioClip chargeLoopSfx;
 
-        [Tooltip("Charge Loop Sfxを何秒ごとに鳴らすかです。0.4〜0.8くらいがおすすめです。")]
+        [Tooltip("旧方式用です。下のStoppable Source方式をOFFにした時だけ、何秒ごとに鳴らすかに使います。7秒くらいある長いSEでは基本使わないでください。")]
         [SerializeField] private float chargeLoopSfxInterval = 0.6f;
 
-        [Tooltip("チャージ完了した瞬間に鳴らすSEです。")]
+        [Header("Charge Loop SFX Stop Control / チャージ中SE停止制御")]
+        [Tooltip("ON推奨。チャージ中SEをPlayOneShotではなく専用AudioSourceで鳴らします。攻撃・被弾・スクリプト無効化などでチャージが中断された時に確実に止められます。")]
+        [SerializeField] private bool useStoppableChargeLoopSfx = true;
+
+        [Tooltip("チャージ中SE専用AudioSourceです。空なら自動で作ります。長いチャージ音を止めたい場合はこの方式を使ってください。")]
+        [SerializeField] private AudioSource chargeLoopAudioSource;
+
+        [Tooltip("チャージ中SE専用の音量です。最終音量 = Attack Sfx Volume × この値です。")]
+        [Range(0f, 1f)]
+        [SerializeField] private float chargeLoopSfxVolume = 1f;
+
+        [Tooltip("ONならチャージ中SEをループ再生します。7秒ぴったりの素材を一回だけ鳴らしたいならOFF推奨です。")]
+        [SerializeField] private bool loopChargeLoopSfx = false;
+
+        [Tooltip("ONならチャージ中SE停止時に再生位置を0へ戻します。次回チャージ時に頭から鳴らしたいならON推奨です。")]
+        [SerializeField] private bool resetChargeLoopSfxPositionOnStop = true;
+
+        [Tooltip("通常溜め可能になった瞬間に鳴らすSEです。")]
         [SerializeField] private AudioClip chargeReadySfx;
+
+        [Tooltip("一段階目の最大溜め完了時に鳴らすSEです。空ならCharge Ready Sfxを使います。")]
+        [SerializeField] private AudioClip maxChargeReadySfx;
 
         private bool chargeReadyEffectPlayed = false;
         private bool maxChargeEffectPlayed = false;
+        private bool secondStageChargeEffectPlayed = false;
         private float chargeEffectReplayTimer = 0f;
 
         [Header("Attack Forward Movement")]
@@ -357,6 +411,28 @@ namespace Retro.ThirdPersonCharacter
         [Tooltip("ONなら最大溜め攻撃の当たり判定を Max Charged Heavy Hitbox Scale で大きくします。")]
         [SerializeField] private bool scaleColliderForMaxChargedHeavy = true;
 
+        [Header("Second Stage Charged Heavy / 溜め二段階目")]
+        [Tooltip("この秒数まで溜めると二段階目になります。7秒推奨です。")]
+        [SerializeField] private float secondStageChargeTime = 7f;
+
+        [Tooltip("二段階目溜め攻撃のダメージ倍率です。通常の溜め倍率とは別管理です。")]
+        [SerializeField] private float secondStageChargedHeavyMultiplier = 2.2f;
+
+        [Tooltip("二段階目溜め攻撃時だけColliderを大きくする倍率です。1なら通常サイズです。")]
+        [SerializeField] private float secondStageChargedHeavyHitboxScale = 1.8f;
+
+        [Tooltip("ONなら二段階目溜め攻撃の当たり判定を Second Stage Charged Heavy Hitbox Scale で大きくします。")]
+        [SerializeField] private bool scaleColliderForSecondStageChargedHeavy = true;
+
+        [Tooltip("ONなら二段階目溜め攻撃後はコンボに派生できません。")]
+        [SerializeField] private bool secondStageChargedHeavyBlocksCombo = true;
+
+        [Tooltip("二段階目に到達した瞬間に出すチャージ完了エフェクトです。空なら一段階目完了エフェクト、さらに空なら通常溜め可能エフェクトを使います。")]
+        [SerializeField] private ParticleSystem secondStageChargeReadyEffect;
+
+        [Tooltip("二段階目に到達した瞬間に鳴らすSEです。空ならMax Charge Ready Sfx、さらに空ならCharge Ready Sfxを使います。")]
+        [SerializeField] private AudioClip secondStageChargeReadySfx;
+
         [Header("Charge Movement / 溜め中の移動・旋回")]
         [Tooltip("ONなら溜め中も向きを変えられます。OFFにすると溜め開始時の向きで固定されます。")]
         [SerializeField] private bool allowTurnWhileCharging = true;
@@ -424,6 +500,29 @@ namespace Retro.ThirdPersonCharacter
             CreateChargeEffectsIfNeeded();
             ApplyChargeEffectTransforms();
             StopChargeEffects();
+        }
+
+        private void OnDisable()
+        {
+            // 被弾・吹っ飛び・ゲームオーバーなどでCombatが無効化された時、
+            // 7秒程度の長いチャージ中SEが残らないように必ず停止する。
+            StopChargeEffects();
+
+            if (_movement != null)
+            {
+                _movement.EndChargeAttackMove();
+                _movement.SetAllowBlinkWhileAttacking(false);
+                _movement.StopAttackForwardMove();
+            }
+
+            if (_animator != null)
+            {
+                _animator.speed = 1f;
+            }
+
+            isChargingHeavy = false;
+            isWaitingHeavyDecision = false;
+            AttackInProgress = false;
         }
 
         private void Update()
@@ -665,11 +764,12 @@ namespace Retro.ThirdPersonCharacter
         {
             isChargingHeavy = true;
             chargeHeldTimer = Mathf.Max(0f, initialChargeTime);
-            chargePowerTimer = Mathf.Min(chargeHeldTimer, maxChargeTime);
+            chargePowerTimer = chargeHeldTimer;
 
             AttackInProgress = true;
             chargeReadyEffectPlayed = false;
             maxChargeEffectPlayed = false;
+            secondStageChargeEffectPlayed = false;
 
             if (_movement != null)
             {
@@ -707,7 +807,7 @@ namespace Retro.ThirdPersonCharacter
         private void UpdateHeavyCharge()
         {
             chargeHeldTimer += Time.deltaTime;
-            chargePowerTimer = Mathf.Min(chargeHeldTimer, maxChargeTime);
+            chargePowerTimer = chargeHeldTimer;
 
             KeepChargeEffectAlive();
 
@@ -730,13 +830,15 @@ namespace Retro.ThirdPersonCharacter
             if (!maxChargeEffectPlayed && chargeHeldTimer >= maxChargeTime)
             {
                 maxChargeEffectPlayed = true;
+                PlayMaxChargeReadyEffect();
+                Debug.Log("一段階目の最大溜め完了！");
+            }
 
-                if (chargeReadyEffect != null)
-                {
-                    chargeReadyEffect.Play();
-                }
-
-                Debug.Log("最大溜め完了！");
+            if (!secondStageChargeEffectPlayed && chargeHeldTimer >= secondStageChargeTime)
+            {
+                secondStageChargeEffectPlayed = true;
+                PlaySecondStageChargeReadyEffect();
+                Debug.Log("溜め二段階目 完了！");
             }
 
             if (_animator != null)
@@ -1076,8 +1178,20 @@ namespace Retro.ThirdPersonCharacter
         {
             Debug.Log("溜め強攻撃 PowerTime: " + finalChargePowerTime);
 
-            comboStage = ComboStage.ChargedHeavyDone;
-            RefreshComboTimer();
+            bool isSecondStageCharged = finalChargePowerTime >= secondStageChargeTime;
+
+            if (isSecondStageCharged)
+            {
+                comboStage = ComboStage.None;
+                comboTimer = 0f;
+                bufferedLight = false;
+                bufferedHeavy = false;
+            }
+            else
+            {
+                comboStage = ComboStage.ChargedHeavyDone;
+                RefreshComboTimer();
+            }
 
             if (_movement != null)
             {
@@ -1088,15 +1202,25 @@ namespace Retro.ThirdPersonCharacter
             }
 
             float chargeRate = Mathf.Clamp01(finalChargePowerTime / maxChargeTime);
-            float multiplier = Mathf.Lerp(chargedHeavyMinMultiplier, chargedHeavyMaxMultiplier, chargeRate);
+            float multiplier = isSecondStageCharged
+                ? secondStageChargedHeavyMultiplier
+                : Mathf.Lerp(chargedHeavyMinMultiplier, chargedHeavyMaxMultiplier, chargeRate);
 
             PlayAttackAnimation(abilityStateName, chargeHoldNormalizedTime);
 
             bool isMaxCharged = finalChargePowerTime >= maxChargeTime - 0.01f;
-            AttackEffectSettings chargedEffectToUse = GetChargedHeavyEffect(isMaxCharged);
-            float chargedHitboxScale = (isMaxCharged && scaleColliderForMaxChargedHeavy)
-                ? Mathf.Max(1f, maxChargedHeavyHitboxScale)
-                : 1f;
+            AttackEffectSettings chargedEffectToUse = GetChargedHeavyEffect(isMaxCharged, isSecondStageCharged);
+
+            float chargedHitboxScale = 1f;
+
+            if (isSecondStageCharged && scaleColliderForSecondStageChargedHeavy)
+            {
+                chargedHitboxScale = Mathf.Max(1f, secondStageChargedHeavyHitboxScale);
+            }
+            else if (isMaxCharged && scaleColliderForMaxChargedHeavy)
+            {
+                chargedHitboxScale = Mathf.Max(1f, maxChargedHeavyHitboxScale);
+            }
 
             StartCoroutine(
                 AttackRoutine(
@@ -1106,7 +1230,7 @@ namespace Retro.ThirdPersonCharacter
                     multiplier,
                     chargedHeavyEndDelay,
                     1f,
-                    false,
+                    isSecondStageCharged && secondStageChargedHeavyBlocksCombo,
                     false,
                     true,
                     chargedHeavyMoveUnlockTime,
@@ -1296,8 +1420,19 @@ namespace Retro.ThirdPersonCharacter
             }
         }
 
-        private AttackEffectSettings GetChargedHeavyEffect(bool isMaxCharged)
+        private AttackEffectSettings GetChargedHeavyEffect(bool isMaxCharged, bool isSecondStageCharged)
         {
+            if (isSecondStageCharged)
+            {
+                bool secondHasAnyEffect = secondStageChargedHeavyEffect != null
+                    && (secondStageChargedHeavyEffect.particlePrefab != null || secondStageChargedHeavyEffect.sfx != null);
+
+                if (secondHasAnyEffect)
+                {
+                    return secondStageChargedHeavyEffect;
+                }
+            }
+
             if (!isMaxCharged)
             {
                 return chargedHeavyEffect;
@@ -1361,6 +1496,18 @@ namespace Retro.ThirdPersonCharacter
             if (effect == maxChargedHeavyEffect && clip == null && chargedHeavyEffect != null)
             {
                 clip = chargedHeavyEffect.sfx;
+            }
+
+            if (effect == secondStageChargedHeavyEffect && clip == null)
+            {
+                if (maxChargedHeavyEffect != null && maxChargedHeavyEffect.sfx != null)
+                {
+                    clip = maxChargedHeavyEffect.sfx;
+                }
+                else if (chargedHeavyEffect != null)
+                {
+                    clip = chargedHeavyEffect.sfx;
+                }
             }
 
             return clip;
@@ -1704,6 +1851,48 @@ namespace Retro.ThirdPersonCharacter
             }
         }
 
+        private void PlayMaxChargeReadyEffect()
+        {
+            ApplyChargeEffectTransforms();
+
+            ParticleSystem effectToPlay = maxChargeReadyEffect != null
+                ? maxChargeReadyEffect
+                : chargeReadyEffect;
+
+            if (effectToPlay != null)
+            {
+                effectToPlay.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                effectToPlay.Play(true);
+            }
+
+            AudioClip sfxToPlay = maxChargeReadySfx != null
+                ? maxChargeReadySfx
+                : chargeReadySfx;
+
+            PlaySfx(sfxToPlay);
+        }
+
+        private void PlaySecondStageChargeReadyEffect()
+        {
+            ApplyChargeEffectTransforms();
+
+            ParticleSystem effectToPlay = secondStageChargeReadyEffect != null
+                ? secondStageChargeReadyEffect
+                : (maxChargeReadyEffect != null ? maxChargeReadyEffect : chargeReadyEffect);
+
+            if (effectToPlay != null)
+            {
+                effectToPlay.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                effectToPlay.Play(true);
+            }
+
+            AudioClip sfxToPlay = secondStageChargeReadySfx != null
+                ? secondStageChargeReadySfx
+                : (maxChargeReadySfx != null ? maxChargeReadySfx : chargeReadySfx);
+
+            PlaySfx(sfxToPlay);
+        }
+
         private void StartChargeEffect()
         {
             ApplyChargeEffectTransforms();
@@ -1718,6 +1907,16 @@ namespace Retro.ThirdPersonCharacter
             if (chargeReadyEffect != null)
             {
                 chargeReadyEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+
+            if (maxChargeReadyEffect != null)
+            {
+                maxChargeReadyEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+
+            if (secondStageChargeReadyEffect != null)
+            {
+                secondStageChargeReadyEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             }
 
             PlaySfx(chargeStartSfx);
@@ -1807,10 +2006,21 @@ namespace Retro.ThirdPersonCharacter
                 chargeReadyEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             }
 
+            if (maxChargeReadyEffect != null)
+            {
+                maxChargeReadyEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+
+            if (secondStageChargeReadyEffect != null)
+            {
+                secondStageChargeReadyEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+
             StopChargeLoopSfx();
 
             chargeReadyEffectPlayed = false;
             maxChargeEffectPlayed = false;
+            secondStageChargeEffectPlayed = false;
         }
 
         private void ApplyChargeEffectTransforms()
@@ -1830,6 +2040,22 @@ namespace Retro.ThirdPersonCharacter
                 chargeReadyEffect.transform.localRotation = Quaternion.Euler(chargeReadyEffectLocalEuler);
                 chargeReadyEffect.transform.localScale = chargeReadyEffectLocalScale == Vector3.zero ? Vector3.one : chargeReadyEffectLocalScale;
             }
+
+            if (maxChargeReadyEffect != null)
+            {
+                maxChargeReadyEffect.transform.SetParent(transform, false);
+                maxChargeReadyEffect.transform.localPosition = maxChargeReadyEffectLocalPosition;
+                maxChargeReadyEffect.transform.localRotation = Quaternion.Euler(maxChargeReadyEffectLocalEuler);
+                maxChargeReadyEffect.transform.localScale = maxChargeReadyEffectLocalScale == Vector3.zero ? Vector3.one : maxChargeReadyEffectLocalScale;
+            }
+
+            if (secondStageChargeReadyEffect != null)
+            {
+                secondStageChargeReadyEffect.transform.SetParent(transform, false);
+                secondStageChargeReadyEffect.transform.localPosition = secondStageChargeReadyEffectLocalPosition;
+                secondStageChargeReadyEffect.transform.localRotation = Quaternion.Euler(secondStageChargeReadyEffectLocalEuler);
+                secondStageChargeReadyEffect.transform.localScale = secondStageChargeReadyEffectLocalScale == Vector3.zero ? Vector3.one : secondStageChargeReadyEffectLocalScale;
+            }
         }
 
         private void StartChargeLoopSfx()
@@ -1837,8 +2063,28 @@ namespace Retro.ThirdPersonCharacter
             StopChargeLoopSfx();
 
             if (chargeLoopSfx == null) return;
-            if (chargeLoopSfxInterval <= 0f) return;
 
+            if (useStoppableChargeLoopSfx)
+            {
+                SetupChargeLoopAudioSourceIfNeeded();
+
+                if (chargeLoopAudioSource == null)
+                {
+                    Debug.LogWarning("Charge Loop AudioSource が見つからないため、チャージ中SEを再生できません。", this);
+                    return;
+                }
+
+                chargeLoopAudioSource.clip = chargeLoopSfx;
+                chargeLoopAudioSource.volume = Mathf.Clamp01(attackSfxVolume * chargeLoopSfxVolume);
+                chargeLoopAudioSource.loop = loopChargeLoopSfx;
+                chargeLoopAudioSource.playOnAwake = false;
+                chargeLoopAudioSource.time = 0f;
+                chargeLoopAudioSource.Play();
+                return;
+            }
+
+            // 旧方式。短いSEを周期的に鳴らしたい時だけ使う。
+            if (chargeLoopSfxInterval <= 0f) return;
             chargeLoopSfxRoutine = StartCoroutine(ChargeLoopSfxRoutine());
         }
 
@@ -1848,6 +2094,16 @@ namespace Retro.ThirdPersonCharacter
             {
                 StopCoroutine(chargeLoopSfxRoutine);
                 chargeLoopSfxRoutine = null;
+            }
+
+            if (chargeLoopAudioSource != null && chargeLoopAudioSource.isPlaying)
+            {
+                chargeLoopAudioSource.Stop();
+
+                if (resetChargeLoopSfxPositionOnStop)
+                {
+                    chargeLoopAudioSource.time = 0f;
+                }
             }
         }
 
@@ -1860,6 +2116,17 @@ namespace Retro.ThirdPersonCharacter
             }
 
             chargeLoopSfxRoutine = null;
+        }
+
+        private void SetupChargeLoopAudioSourceIfNeeded()
+        {
+            if (chargeLoopAudioSource != null) return;
+
+            GameObject audioObj = new GameObject("ChargeLoopAudioSource");
+            audioObj.transform.SetParent(transform, false);
+            chargeLoopAudioSource = audioObj.AddComponent<AudioSource>();
+            chargeLoopAudioSource.playOnAwake = false;
+            chargeLoopAudioSource.spatialBlend = 0f;
         }
 
         private void CreateChargeEffectsIfNeeded()

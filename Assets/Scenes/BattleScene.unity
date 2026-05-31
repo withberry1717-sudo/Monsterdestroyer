@@ -1171,8 +1171,8 @@ RectTransform:
   m_GameObject: {fileID: 67639262}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.00115, y: 1.00115, z: 1.00115}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 1.00115, y: 1.0668255, z: 1.00115}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2047952164}
   - {fileID: 1301633504}
@@ -11583,8 +11583,8 @@ RectTransform:
   m_GameObject: {fileID: 559545622}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.0165888, y: 1.0165888, z: 1.0165888}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 1.0165888, y: 1.1126132, z: 1.0165888}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 932411087}
   - {fileID: 1419521492}
@@ -36394,8 +36394,8 @@ RectTransform:
   m_GameObject: {fileID: 1372887322}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.86, y: 0.86, z: 0.86}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 0.86, y: 0.99545, z: 0.86}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 355538323}
   m_Father: {fileID: 709078156}
@@ -37545,6 +37545,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb43bb8bb4619024bb616f27f48a5e0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ForcePlayButtleBGM
+  applySavedMasterVolumeOnStart: 1
+  ignoreListenerPause: 1
 --- !u!1 &1429448775
 GameObject:
   m_ObjectHideFlags: 0
@@ -39083,7 +39085,7 @@ MonoBehaviour:
   - {fileID: 1160931302}
   hardModeOneDeathRetry: 1
   hardModeAllowedDeaths: 1
-  hardModeReturnToTitleDelay: 5
+  hardModeReturnToTitleDelay: 3
   titleSceneName: TitleScene
   hardModeYouDiedText: {fileID: 1697357962}
   hideOtherGameOverChildrenOnHardFinalDeath: 1

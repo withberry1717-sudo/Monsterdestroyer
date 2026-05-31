@@ -116,6 +116,18 @@ public class DragonAI : MonoBehaviour
     [Tooltip("プレイヤー本体のTransformを入れてください。ドラゴンが向く方向、追跡、攻撃対象の基準になります。")]
     public Transform player;
 
+    [Header("Player Death Stop / プレイヤー死亡時停止")]
+    [Tooltip("PlayerHP。空ならPlayer Transformから自動取得します。HPが0の間、ドラゴンは攻撃せずIdleします。")]
+    public PlayerHP playerHP;
+
+    [Tooltip("ONならプレイヤーHPが0になった瞬間、現在の攻撃や移動を中断してIdleで待機します。")]
+    public bool stopActionsWhenPlayerDead = true;
+
+    [Tooltip("ONならプレイヤーが復帰した時にAIループを再開します。Hard最終死亡でタイトルへ戻る場合も安全です。")]
+    public bool resumeAIWhenPlayerRevived = true;
+
+    private bool pausedBecausePlayerDead = false;
+
     [Header("デバッグ用：行動オンオフ")]
     [Tooltip("接近行動を使うかどうかです。オフにすると遠距離で近づかなくなるため、単体テスト時以外はオン推奨です。")]
     public bool enableApproachAction = true;
@@ -918,6 +930,8 @@ public class DragonAI : MonoBehaviour
             motion.SetPlayer(player);
         }
 
+        FindPlayerHPIfNeeded();
+
         if (beamBreathAimer != null)
         {
             beamBreathAimer.player = player;
@@ -960,6 +974,18 @@ public class DragonAI : MonoBehaviour
     private void Update()
     {
         if (state == DragonState.Dead) return;
+
+        if (stopActionsWhenPlayerDead && IsPlayerDead())
+        {
+            EnterPlayerDeadIdle();
+            return;
+        }
+
+        if (pausedBecausePlayerDead && resumeAIWhenPlayerRevived && !IsPlayerDead())
+        {
+            ResumeFromPlayerDeadIdle();
+        }
+
         if (state == DragonState.Down) return;
         if (isBusy) return;
         if (motion == null) return;
@@ -1034,6 +1060,13 @@ public class DragonAI : MonoBehaviour
     {
         while (state != DragonState.Dead)
         {
+            if (stopActionsWhenPlayerDead && IsPlayerDead())
+            {
+                EnterPlayerDeadIdle();
+                yield return null;
+                continue;
+            }
+
             if (state == DragonState.Down || isBusy || player == null || motion == null)
             {
                 yield return null;
@@ -1304,6 +1337,12 @@ public class DragonAI : MonoBehaviour
 
     private IEnumerator ExecuteAction(DragonAction action)
     {
+        if (stopActionsWhenPlayerDead && IsPlayerDead())
+        {
+            EnterPlayerDeadIdle();
+            yield break;
+        }
+
         RegisterAction(action);
 
         yield return WaitDifficultyAttackStartDelayIfNeeded(action);
@@ -3151,6 +3190,90 @@ public class DragonAI : MonoBehaviour
         PlayEffect(DragonEffectKind.Death, deathSfx, deathParticle);
     }
 
+    private void FindPlayerHPIfNeeded()
+    {
+        if (playerHP != null) return;
+
+        if (player != null)
+        {
+            playerHP = player.GetComponent<PlayerHP>();
+
+            if (playerHP == null)
+            {
+                playerHP = player.GetComponentInChildren<PlayerHP>();
+            }
+
+            if (playerHP == null)
+            {
+                playerHP = player.GetComponentInParent<PlayerHP>();
+            }
+        }
+
+        if (playerHP == null)
+        {
+            playerHP = FindFirstObjectByType<PlayerHP>();
+        }
+    }
+
+    private bool IsPlayerDead()
+    {
+        FindPlayerHPIfNeeded();
+
+        if (playerHP == null) return false;
+
+        return playerHP.IsDead;
+    }
+
+    private void EnterPlayerDeadIdle()
+    {
+        if (pausedBecausePlayerDead) return;
+        if (state == DragonState.Dead) return;
+
+        pausedBecausePlayerDead = true;
+
+        StopAllCoroutines();
+        aiLoopCoroutine = null;
+        downRoutineCoroutine = null;
+
+        DisableAllHitboxes();
+        StopAllSpecialParticles();
+        ResetAnimatorSpeedHard();
+
+        state = DragonState.Idle;
+        isBusy = true;
+        skipNextActionInterval = false;
+
+        if (motion != null)
+        {
+            motion.PlayAnim(motion.idleAnim, true);
+        }
+
+        Debug.Log("DragonAI: Player HP is 0. Stop attacks and wait in Idle.");
+    }
+
+    private void ResumeFromPlayerDeadIdle()
+    {
+        if (!pausedBecausePlayerDead) return;
+        if (state == DragonState.Dead) return;
+
+        pausedBecausePlayerDead = false;
+
+        DisableAllHitboxes();
+        StopAllSpecialParticles();
+        ResetAnimatorSpeedHard();
+
+        state = DragonState.Idle;
+        isBusy = false;
+
+        if (motion != null)
+        {
+            motion.PlayAnim(motion.idleAnim, true);
+        }
+
+        StartAILoopSafely();
+        Debug.Log("DragonAI: Player revived. Resume AI.");
+    }
+
     private bool IsTailBroken()
     {
         if (dragonHP == null) return false;
@@ -3551,6 +3674,12 @@ public class DragonAI : MonoBehaviour
     {
         if (state == DragonState.Dead)
         {
+            return;
+        }
+
+        if (stopActionsWhenPlayerDead && IsPlayerDead())
+        {
+            EnterPlayerDeadIdle();
             return;
         }
 

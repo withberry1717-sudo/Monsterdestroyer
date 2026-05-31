@@ -7,6 +7,12 @@ using UnityEngine.UI;
 
 public class PlayerHP : MonoBehaviour
 {
+    public float CurrentHp => currentHp;
+    public float MaxHp => maxHp;
+    public bool IsDead => isGameOver || currentHp <= 0f;
+    public bool IsGameOver => isGameOver;
+    public bool IsGameClear => isGameClear;
+
     [Header("HP")]
     [SerializeField] private float maxHp = 100f;
     [SerializeField] private TextMeshProUGUI hpText;

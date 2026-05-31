@@ -142,6 +142,7 @@ namespace Retro.ThirdPersonCharacter
         private bool isDragonStaggered = false;
         private Coroutine dragonStaggerRoutine;
         private Coroutine attackForwardMoveRoutine;
+        private Coroutine activeDashRoutine;
 
         private bool chargeAttackMoveOverrideActive = false;
         private float defaultAttackMoveSpeedMultiplier;
@@ -224,6 +225,7 @@ namespace Retro.ThirdPersonCharacter
 
         public void ResetActionStateAfterDamage()
         {
+            CancelBlinkByDamage();
             ForceStopTrail();
             StopAttackForwardMove();
             EndChargeAttackMove();
@@ -506,12 +508,51 @@ namespace Retro.ThirdPersonCharacter
                 }
 
                 UseBlink();
-                StartCoroutine(DashCoroutine(dashDir));
+                StartDash(dashDir);
             }
 
             if (!isDashing)
             {
                 Move();
+            }
+        }
+
+        private void StartDash(Vector3 dashDir)
+        {
+            if (activeDashRoutine != null)
+            {
+                StopCoroutine(activeDashRoutine);
+                activeDashRoutine = null;
+            }
+
+            activeDashRoutine = StartCoroutine(DashCoroutine(dashDir));
+        }
+
+        public void CancelBlinkByDamage()
+        {
+            if (activeDashRoutine != null)
+            {
+                StopCoroutine(activeDashRoutine);
+                activeDashRoutine = null;
+            }
+
+            isDashing = false;
+            dashAttackWindowTimer = 0f;
+
+            if (_trailRenderer != null)
+            {
+                _trailRenderer.enabled = false;
+                _trailRenderer.Clear();
+            }
+
+            if (dashParticleSystem != null)
+            {
+                dashParticleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
+
+            if (_animator != null)
+            {
+                _animator.SetBool("IsInAir", false);
             }
         }
 
@@ -688,6 +729,8 @@ namespace Retro.ThirdPersonCharacter
             {
                 dashAttackWindowTimer = 0f;
             }
+
+            activeDashRoutine = null;
         }
 
         private void Move()

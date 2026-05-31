@@ -289,6 +289,8 @@ public class PlayerHP : MonoBehaviour
     {
         if (isGameOver || isGameClear) return;
 
+        CancelBlinkBeforeDamageKnockback();
+
         if (knockbackDirection.sqrMagnitude < 0.001f)
         {
             knockbackDirection = -transform.forward;
@@ -327,10 +329,7 @@ public class PlayerHP : MonoBehaviour
     {
         PlayDamageFlash(damage);
 
-        if (_movement != null)
-        {
-            _movement.ForceStopTrail();
-        }
+        CancelBlinkBeforeDamageKnockback();
 
         currentHp -= damage;
         currentHp = Mathf.Max(currentHp, 0f);
@@ -338,6 +337,14 @@ public class PlayerHP : MonoBehaviour
         UpdateHPUI();
 
         Debug.Log("Hit! Damage: " + damage + " | Remaining HP: " + currentHp);
+    }
+
+    private void CancelBlinkBeforeDamageKnockback()
+    {
+        if (_movement == null) return;
+
+        _movement.CancelBlinkByDamage();
+        _movement.ForceStopTrail();
     }
 
     private void StartDamageReaction(float damage)

@@ -357,12 +357,20 @@ namespace Retro.ThirdPersonCharacter
         [Tooltip("ONなら最大溜め攻撃の当たり判定を Max Charged Heavy Hitbox Scale で大きくします。")]
         [SerializeField] private bool scaleColliderForMaxChargedHeavy = true;
 
-        [Header("Charge Movement")]
+        [Header("Charge Movement / 溜め中の移動・旋回")]
+        [Tooltip("ONなら溜め中も向きを変えられます。OFFにすると溜め開始時の向きで固定されます。")]
         [SerializeField] private bool allowTurnWhileCharging = true;
-        [SerializeField] private float chargeTurnMultiplier = 0.85f;
 
+        [Tooltip("溜め中の向き変更速度倍率です。小さいほどゆっくり向きを変えます。0.2〜0.45くらいがおすすめです。")]
+        [Range(0f, 1f)]
+        [SerializeField] private float chargeTurnMultiplier = 0.35f;
+
+        [Tooltip("ONなら溜め中も少しだけ移動できます。OFFにすると溜め中は移動できません。")]
         [SerializeField] private bool allowMoveWhileCharging = true;
-        [SerializeField] private float chargeMoveMultiplier = 0.22f;
+
+        [Tooltip("溜め中の移動速度倍率です。小さいほどほぼその場で溜めます。0.08〜0.16くらいがおすすめです。")]
+        [Range(0f, 1f)]
+        [SerializeField] private float chargeMoveMultiplier = 0.12f;
 
         [Header("Charge Blink")]
         [SerializeField] private bool allowBlinkWhileCharging = true;

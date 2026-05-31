@@ -11,6 +11,13 @@ public class DifficultyApplier : MonoBehaviour
     [Tooltip("ドラゴン全体の親Transform。Easyで小さくしたいオブジェクトを入れる")]
     [SerializeField] private Transform dragonRoot;
 
+    [Header("Dragon Attack Hitboxes")]
+    [Tooltip("空ならDragon Root以下からDragonAttackHitboxを自動取得します。手動で指定したい場合はここに全部入れてください。")]
+    [SerializeField] private DragonAttackHitbox[] dragonAttackHitboxes;
+
+    [Tooltip("ONならDragon Attack Hitboxesが空の時にDragon Root以下から自動取得します。")]
+    [SerializeField] private bool autoFindDragonAttackHitboxes = true;
+
     [Header("Tail Break Reaction")]
     [Tooltip("ONなら尻尾切断時はDownではなくBigHitを再生する")]
     [SerializeField] private bool useBigHitOnTailBreak = true;
@@ -24,6 +31,7 @@ public class DifficultyApplier : MonoBehaviour
     [SerializeField] private float easyActionIntervalMultiplier = 1.15f;
     [SerializeField] private float easyMoveSpeedMultiplier = 0.9f;
     [SerializeField] private float easyAnimationSpeedMultiplier = 0.9f;
+    [SerializeField] private float easyDragonDamageMultiplier = 0.75f;
     [SerializeField] private float easyDragonScaleMultiplier = 0.9f;
     [Tooltip("HP50%で第2形態に入る時のダウン時間")]
     [SerializeField] private float easyHalfHPDownDuration = 3.8f;
@@ -36,6 +44,7 @@ public class DifficultyApplier : MonoBehaviour
     [SerializeField] private float normalActionIntervalMultiplier = 1.0f;
     [SerializeField] private float normalMoveSpeedMultiplier = 1.0f;
     [SerializeField] private float normalAnimationSpeedMultiplier = 1.0f;
+    [SerializeField] private float normalDragonDamageMultiplier = 1.0f;
     [SerializeField] private float normalDragonScaleMultiplier = 1.0f;
     [Tooltip("HP50%で第2形態に入る時のダウン時間")]
     [SerializeField] private float normalHalfHPDownDuration = 5.0f;
@@ -48,11 +57,15 @@ public class DifficultyApplier : MonoBehaviour
     [SerializeField] private float hardActionIntervalMultiplier = 0.85f;
     [SerializeField] private float hardMoveSpeedMultiplier = 1.1f;
     [SerializeField] private float hardAnimationSpeedMultiplier = 1.1f;
+    [SerializeField] private float hardDragonDamageMultiplier = 1.25f;
     [SerializeField] private float hardDragonScaleMultiplier = 1.0f;
     [Tooltip("HP50%で第2形態に入る時のダウン時間")]
     [SerializeField] private float hardHalfHPDownDuration = 4.0f;
     [Tooltip("尻尾切断BigHitの硬直時間")]
     [SerializeField] private float hardTailBreakBigHitDuration = 1.0f;
+
+    [Header("Debug")]
+    [SerializeField] private bool logAppliedDamageMultiplier = true;
 
     private Vector3 originalDragonScale = Vector3.one;
 
@@ -84,6 +97,7 @@ public class DifficultyApplier : MonoBehaviour
                     easyHalfHPDownDuration,
                     easyTailBreakBigHitDuration
                 );
+                ApplyDragonDamage(easyDragonDamageMultiplier);
                 ApplyDragonScale(easyDragonScaleMultiplier);
                 break;
 
@@ -96,6 +110,7 @@ public class DifficultyApplier : MonoBehaviour
                     normalHalfHPDownDuration,
                     normalTailBreakBigHitDuration
                 );
+                ApplyDragonDamage(normalDragonDamageMultiplier);
                 ApplyDragonScale(normalDragonScaleMultiplier);
                 break;
 
@@ -108,6 +123,7 @@ public class DifficultyApplier : MonoBehaviour
                     hardHalfHPDownDuration,
                     hardTailBreakBigHitDuration
                 );
+                ApplyDragonDamage(hardDragonDamageMultiplier);
                 ApplyDragonScale(hardDragonScaleMultiplier);
                 break;
         }
@@ -155,6 +171,52 @@ public class DifficultyApplier : MonoBehaviour
             tailBreakBigHitAnimName,
             tailBreakBigHitDuration
         );
+    }
+
+    private void ApplyDragonDamage(float damageMultiplier)
+    {
+        DragonAttackHitbox[] hitboxes = GetDragonAttackHitboxes();
+
+        if (hitboxes == null || hitboxes.Length == 0)
+        {
+            Debug.LogWarning("DifficultyApplier: DragonAttackHitbox が見つかりません。Dragon RootかDragon Attack Hitboxesを確認してください。");
+            return;
+        }
+
+        foreach (DragonAttackHitbox hitbox in hitboxes)
+        {
+            if (hitbox == null) continue;
+            hitbox.SetDifficultyDamageMultiplier(damageMultiplier);
+        }
+
+        if (logAppliedDamageMultiplier)
+        {
+            Debug.Log($"DifficultyApplier: DragonAttackHitbox {hitboxes.Length}個にダメージ倍率 x{damageMultiplier} を適用しました。");
+        }
+    }
+
+    private DragonAttackHitbox[] GetDragonAttackHitboxes()
+    {
+        if (dragonAttackHitboxes != null && dragonAttackHitboxes.Length > 0)
+        {
+            return dragonAttackHitboxes;
+        }
+
+        if (!autoFindDragonAttackHitboxes)
+        {
+            return dragonAttackHitboxes;
+        }
+
+        if (dragonRoot != null)
+        {
+            dragonAttackHitboxes = dragonRoot.GetComponentsInChildren<DragonAttackHitbox>(true);
+        }
+        else
+        {
+            dragonAttackHitboxes = FindObjectsByType<DragonAttackHitbox>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        }
+
+        return dragonAttackHitboxes;
     }
 
     private void ApplyDragonScale(float scaleMultiplier)

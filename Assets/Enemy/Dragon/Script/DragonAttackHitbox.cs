@@ -5,8 +5,11 @@ using System.Collections.Generic;
 public class DragonAttackHitbox : MonoBehaviour
 {
     [Header("攻撃設定")]
-    [Tooltip("プレイヤーに与えるダメージ")]
+    [Tooltip("プレイヤーに与える基本ダメージ")]
     public float damage = 20f;
+
+    [Tooltip("難易度などで上書きされるダメージ倍率。通常はDifficultyApplierから設定されます。")]
+    [SerializeField] private float difficultyDamageMultiplier = 1f;
 
     [Tooltip("吹っ飛ばしの強さ")]
     public float knockbackPower = 5f;
@@ -62,6 +65,9 @@ public class DragonAttackHitbox : MonoBehaviour
     private Rigidbody rb;
     private Collider[] hitboxColliders;
     private readonly HashSet<GameObject> hitTargets = new HashSet<GameObject>();
+
+    public float CurrentDifficultyDamageMultiplier => difficultyDamageMultiplier;
+    public float CurrentFinalDamage => damage * difficultyDamageMultiplier;
 
     private void Awake()
     {
@@ -134,6 +140,16 @@ public class DragonAttackHitbox : MonoBehaviour
         }
     }
 
+    public void SetDifficultyDamageMultiplier(float multiplier)
+    {
+        difficultyDamageMultiplier = Mathf.Max(0f, multiplier);
+
+        if (debugLog)
+        {
+            Debug.Log($"{name}: Dragon damage multiplier set to {difficultyDamageMultiplier}. Final damage = {CurrentFinalDamage}", this);
+        }
+    }
+
     public void EnableHitbox()
     {
         hitTargets.Clear();
@@ -154,12 +170,12 @@ public class DragonAttackHitbox : MonoBehaviour
 
         if (activationParticle != null)
         {
-            activationParticle.Play();
+            activationParticle.Play(true);
         }
 
         if (loopParticle != null)
         {
-            loopParticle.Play();
+            loopParticle.Play(true);
         }
 
         PlayOneShot(activationSfx);
@@ -239,14 +255,16 @@ public class DragonAttackHitbox : MonoBehaviour
 
         knockDir.Normalize();
 
+        float finalDamage = CurrentFinalDamage;
+
         if (debugLog)
         {
-            Debug.Log($"{name}: hit {other.name} / root {targetRoot.name} / damage {damage}");
+            Debug.Log($"{name}: hit {other.name} / root {targetRoot.name} / base damage {damage} / difficulty x{difficultyDamageMultiplier} / final damage {finalDamage}");
         }
 
         other.SendMessageUpwards(
             "TakeDamage",
-            damage,
+            finalDamage,
             SendMessageOptions.DontRequireReceiver
         );
 

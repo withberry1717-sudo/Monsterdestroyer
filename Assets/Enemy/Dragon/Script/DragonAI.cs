@@ -79,6 +79,12 @@ public class DragonAI : MonoBehaviour
     [Tooltip("ONにすると、Particle再生前にStopしてからPlayします。連続攻撃時に古い再生状態が残る場合はON推奨です。")]
     public bool restartParticleBeforePlay = true;
 
+    [Tooltip("ONにすると、突進の溜め時間も難易度のAnimator速度に合わせて短縮/延長します。OFFならCharge Tell Timeは実時間のままです。突進溜めが異常に長い時はOFF推奨です。")]
+    public bool scaleChargeTellTimeWithAnimationSpeed = false;
+
+    [Tooltip("ONにすると、突進直前のReady Pauseも難易度のAnimator速度に合わせて短縮/延長します。OFFなら実時間のままです。")]
+    public bool scaleChargeReadyPauseWithAnimationSpeed = false;
+
     [Tooltip("DragonCoreに付いているDragonHPを入れてください。本体HP、尻尾クリスタル破壊、死亡イベントを受け取ります。")]
     public DragonHP dragonHP;
 
@@ -1974,7 +1980,7 @@ public class DragonAI : MonoBehaviour
         float tellTimer = 0f;
         float checkTimer = 0f;
 
-        while (tellTimer < ScaleAnimDuration(chargeTellTime, chargeTellAnimationSpeed))
+        while (tellTimer < GetChargeTellDuration())
         {
             tellTimer += Time.deltaTime;
             checkTimer += Time.deltaTime;
@@ -1996,7 +2002,7 @@ public class DragonAI : MonoBehaviour
         ResetAnimatorSpeedHard();
         PlayMoveAnimSafe(motion.runAnim);
 
-        yield return WaitForAnimSeconds(chargeReadyPauseTime);
+        yield return WaitForChargeReadyPause();
 
         Vector3 chargeDirection = motion.GetDirectionToPlayer();
         float targetDistance = GetChargeTargetDistance(chargeDirection);
@@ -2977,6 +2983,36 @@ public class DragonAI : MonoBehaviour
             actionSpeedMultiplier,
             actionSpeedMultiplier
         );
+    }
+
+
+    private float GetChargeTellDuration()
+    {
+        float safeTime = Mathf.Max(0f, chargeTellTime);
+
+        if (!scaleChargeTellTimeWithAnimationSpeed)
+        {
+            return safeTime;
+        }
+
+        // chargeTellAnimationSpeed は「溜め姿勢の見た目用スロー倍率」。
+        // ここで割ると 1.0 / 0.18 = 5.5秒 になってしまうため、
+        // 突進の予兆時間には使わない。難易度のアニメ倍率だけを見る。
+        float difficultySpeed = Mathf.Max(0.05f, GetDifficultyAnimationSpeedMultiplier());
+        return safeTime / difficultySpeed;
+    }
+
+    private WaitForSeconds WaitForChargeReadyPause()
+    {
+        float safeTime = Mathf.Max(0f, chargeReadyPauseTime);
+
+        if (scaleChargeReadyPauseWithAnimationSpeed)
+        {
+            float difficultySpeed = Mathf.Max(0.05f, GetDifficultyAnimationSpeedMultiplier());
+            safeTime /= difficultySpeed;
+        }
+
+        return new WaitForSeconds(safeTime);
     }
 
     private float GetHalfHPDownDuration()

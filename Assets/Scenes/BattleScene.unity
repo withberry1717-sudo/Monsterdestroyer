@@ -9438,9 +9438,20 @@ MonoBehaviour:
   difficultyChargeTellTimeOverride: 0.35
   useDifficultyChargeReadyPauseOverride: 0
   difficultyChargeReadyPauseOverride: 0.05
+  useDifficultyChargeHoming: 0
+  difficultyChargeHomingStrength: 0.35
+  difficultyChargeHomingMaxTurnSpeed: 90
+  useDifficultyTailPreHitDelay: 0
+  difficultyTailSlamPreHitDelay: 0.12
+  difficultyTailSwipeFirstPreHitDelay: 0.12
+  difficultyTailPreHitTurnSpeed: 22
+  pauseAnimatorDuringDifficultyTailDelay: 1
   dragonHP: {fileID: 78498549}
   effectPlayer: {fileID: 356980425}
   player: {fileID: 426628364}
+  playerHP: {fileID: 0}
+  stopActionsWhenPlayerDead: 1
+  resumeAIWhenPlayerRevived: 1
   enableApproachAction: 1
   enableSwipeCounterAction: 1
   enableTailSlamAction: 1
@@ -22501,7 +22512,7 @@ MonoBehaviour:
   hardCrystalHpMultiplier: 1.2
   hardActionIntervalMultiplier: 0.5
   hardMoveSpeedMultiplier: 1.7
-  hardAnimationSpeedMultiplier: 1.7
+  hardAnimationSpeedMultiplier: 1.5
   hardDragonDamageMultiplier: 1.25
   hardDragonScaleMultiplier: 1.2
   hardHalfHPDownDuration: 5
@@ -22511,6 +22522,14 @@ MonoBehaviour:
   hardChargeTellTime: 0.7
   hardOverrideChargeReadyPause: 1
   hardChargeReadyPause: 0.15
+  hardUseChargeHoming: 1
+  hardChargeHomingStrength: 0.35
+  hardChargeHomingMaxTurnSpeed: 70
+  hardUseTailPreHitDelay: 1
+  hardTailSlamPreHitDelay: 0.12
+  hardTailSwipeFirstPreHitDelay: 0.12
+  hardTailPreHitTurnSpeed: 22
+  hardPauseAnimatorDuringTailDelay: 1
   logAppliedDamageMultiplier: 1
 --- !u!4 &658696243
 Transform:

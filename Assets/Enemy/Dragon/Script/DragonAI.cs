@@ -107,6 +107,32 @@ public class DragonAI : MonoBehaviour
     [Tooltip("難易度専用の突進直前停止時間です。")]
     public float difficultyChargeReadyPauseOverride = 0.05f;
 
+    [Header("Hard限定 突進追尾 / 尻尾直前ディレイ")]
+    [Tooltip("DifficultyApplierからHard時だけONにします。ONなら突進中に少しだけプレイヤー方向へ曲がります。")]
+    public bool useDifficultyChargeHoming = false;
+
+    [Tooltip("突進追尾の強さです。0なら追尾なし、0.2〜0.5くらいが少し曲がる設定です。")]
+    [Range(0f, 1f)]
+    public float difficultyChargeHomingStrength = 0.35f;
+
+    [Tooltip("突進追尾で1秒間に曲がれる最大角度です。大きくすると急に曲がります。Hardでも60〜120くらい推奨です。")]
+    public float difficultyChargeHomingMaxTurnSpeed = 90f;
+
+    [Tooltip("DifficultyApplierからHard時だけONにします。ONならTailSlam/TailSwipe一段目の判定直前に短いディレイを入れます。")]
+    public bool useDifficultyTailPreHitDelay = false;
+
+    [Tooltip("Hard限定。TailSlamの当たり判定が出る直前に入れる追加ディレイです。")]
+    public float difficultyTailSlamPreHitDelay = 0.12f;
+
+    [Tooltip("Hard限定。TailSwipe一段目の当たり判定が出る直前に入れる追加ディレイです。")]
+    public float difficultyTailSwipeFirstPreHitDelay = 0.12f;
+
+    [Tooltip("尻尾直前ディレイ中にプレイヤーを追う旋回速度です。")]
+    public float difficultyTailPreHitTurnSpeed = 22f;
+
+    [Tooltip("ON推奨。尻尾直前ディレイ中はアニメを一時停止して、見た目と当たり判定のズレを減らします。")]
+    public bool pauseAnimatorDuringDifficultyTailDelay = true;
+
     [Tooltip("DragonCoreに付いているDragonHPを入れてください。本体HP、尻尾クリスタル破壊、死亡イベントを受け取ります。")]
     public DragonHP dragonHP;
 
@@ -2191,6 +2217,8 @@ public class DragonAI : MonoBehaviour
 
             KeepMoveAnimSafe(motion.runAnim, ref runCheckTimer, ref chargeMoveAnimSafetyTimer);
 
+            chargeDirection = ApplyDifficultyChargeHoming(chargeDirection);
+
             float t = Mathf.Clamp01(timer / chargeTime);
             float eased = EvaluateChargeMoveCurve(t);
             float currentDistance = targetDistance * eased;
@@ -2316,6 +2344,7 @@ public class DragonAI : MonoBehaviour
 
         bool hitboxEnabled = false;
         bool tailSlamSfxPlayed = false;
+        bool tailSlamPreHitDelayDone = false;
         bool returnStarted = false;
         Quaternion returnStartRotation = transform.rotation;
 
@@ -2363,15 +2392,30 @@ public class DragonAI : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, easedRotation, tailTrackingTurnSpeed * Time.deltaTime);
             }
 
+            if (!tailSlamPreHitDelayDone && timer >= hitStartTime)
+            {
+                tailSlamPreHitDelayDone = true;
+                yield return WaitDifficultyTailPreHitDelay(
+                    GetDifficultyTailSlamPreHitDelay(),
+                    tailSlamAttackOffsetY,
+                    tailSlamAngleOffset
+                );
+            }
+
             float tailSlamSfxTime = Mathf.Max(0f, hitStartTime - Mathf.Max(0f, tailSlamImpactSfxAdvanceTime));
 
-            if (!tailSlamSfxPlayed && timer >= tailSlamSfxTime)
+            if (!tailSlamSfxPlayed
+                && timer >= tailSlamSfxTime
+                && (!ShouldUseDifficultyTailSlamPreHitDelay() || tailSlamPreHitDelayDone))
             {
                 tailSlamSfxPlayed = true;
                 PlayTailSlamImpactSfx();
             }
 
-            bool shouldEnableHitbox = timer >= hitStartTime && timer <= hitEndTime;
+            bool shouldEnableHitbox =
+                timer >= hitStartTime
+                && timer <= hitEndTime
+                && (!ShouldUseDifficultyTailSlamPreHitDelay() || tailSlamPreHitDelayDone);
 
             if (shouldEnableHitbox && !hitboxEnabled)
             {
@@ -2447,6 +2491,7 @@ public class DragonAI : MonoBehaviour
 
         bool hitboxEnabled = false;
         bool firstSlamSfxPlayed = false;
+        bool tailSwipeFirstPreHitDelayDone = false;
         bool repositionStarted = false;
 
         Vector3 repositionStartPosition = transform.position;
@@ -2514,15 +2559,30 @@ public class DragonAI : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, tailSwipeRepositionTurnSpeed * Time.deltaTime);
             }
 
+            if (!tailSwipeFirstPreHitDelayDone && timer >= firstHitStartTime)
+            {
+                tailSwipeFirstPreHitDelayDone = true;
+                yield return WaitDifficultyTailPreHitDelay(
+                    GetDifficultyTailSwipeFirstPreHitDelay(),
+                    tailSwipeFixedAttackOffsetY,
+                    tailSwipeFixedAttackOffsetY
+                );
+            }
+
             float tailSwipeFirstSlamSfxTime = Mathf.Max(0f, firstHitStartTime - Mathf.Max(0f, tailSwipeFirstSlamSfxAdvanceTime));
 
-            if (!firstSlamSfxPlayed && timer >= tailSwipeFirstSlamSfxTime)
+            if (!firstSlamSfxPlayed
+                && timer >= tailSwipeFirstSlamSfxTime
+                && (!ShouldUseDifficultyTailSwipeFirstPreHitDelay() || tailSwipeFirstPreHitDelayDone))
             {
                 firstSlamSfxPlayed = true;
                 PlayTailSwipeFirstSlamSfx();
             }
 
-            bool shouldEnableHitbox = timer >= firstHitStartTime && timer <= firstHitEndTime;
+            bool shouldEnableHitbox =
+                timer >= firstHitStartTime
+                && timer <= firstHitEndTime
+                && (!ShouldUseDifficultyTailSwipeFirstPreHitDelay() || tailSwipeFirstPreHitDelayDone);
 
             if (shouldEnableHitbox && !hitboxEnabled)
             {
@@ -3294,6 +3354,185 @@ public class DragonAI : MonoBehaviour
         return true;
     }
 
+
+
+    private bool ShouldUseDifficultyChargeHoming()
+    {
+        return useExternalDifficultyMultipliers
+            && useDifficultyChargeHoming
+            && difficultyChargeHomingStrength > 0f
+            && player != null
+            && motion != null;
+    }
+
+    private Vector3 ApplyDifficultyChargeHoming(Vector3 currentDirection)
+    {
+        currentDirection.y = 0f;
+
+        if (currentDirection.sqrMagnitude < 0.001f)
+        {
+            currentDirection = transform.forward;
+            currentDirection.y = 0f;
+        }
+
+        if (currentDirection.sqrMagnitude < 0.001f)
+        {
+            currentDirection = Vector3.forward;
+        }
+
+        currentDirection.Normalize();
+
+        if (!ShouldUseDifficultyChargeHoming())
+        {
+            return currentDirection;
+        }
+
+        Vector3 toPlayer = player.position - transform.position;
+        toPlayer.y = 0f;
+
+        if (toPlayer.sqrMagnitude < 0.001f)
+        {
+            return currentDirection;
+        }
+
+        Vector3 desiredDirection = toPlayer.normalized;
+
+        float maxRadiansDelta =
+            Mathf.Max(0f, difficultyChargeHomingMaxTurnSpeed) * Mathf.Deg2Rad * Time.deltaTime;
+
+        Vector3 limitedDirection = Vector3.RotateTowards(
+            currentDirection,
+            desiredDirection,
+            maxRadiansDelta,
+            0f
+        ).normalized;
+
+        float homingT = Mathf.Clamp01(difficultyChargeHomingStrength);
+        Vector3 result = Vector3.Slerp(currentDirection, limitedDirection, homingT).normalized;
+
+        if (result.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(result, Vector3.up);
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                targetRotation,
+                Mathf.Max(0f, difficultyChargeHomingMaxTurnSpeed) * Time.deltaTime
+            );
+        }
+
+        return result.sqrMagnitude > 0.001f ? result : currentDirection;
+    }
+
+    private bool ShouldUseDifficultyTailSlamPreHitDelay()
+    {
+        return useExternalDifficultyMultipliers
+            && useDifficultyTailPreHitDelay
+            && difficultyTailSlamPreHitDelay > 0f;
+    }
+
+    private bool ShouldUseDifficultyTailSwipeFirstPreHitDelay()
+    {
+        return useExternalDifficultyMultipliers
+            && useDifficultyTailPreHitDelay
+            && difficultyTailSwipeFirstPreHitDelay > 0f;
+    }
+
+    private float GetDifficultyTailSlamPreHitDelay()
+    {
+        return ShouldUseDifficultyTailSlamPreHitDelay()
+            ? Mathf.Max(0f, difficultyTailSlamPreHitDelay)
+            : 0f;
+    }
+
+    private float GetDifficultyTailSwipeFirstPreHitDelay()
+    {
+        return ShouldUseDifficultyTailSwipeFirstPreHitDelay()
+            ? Mathf.Max(0f, difficultyTailSwipeFirstPreHitDelay)
+            : 0f;
+    }
+
+    private IEnumerator WaitDifficultyTailPreHitDelay(
+        float delay,
+        float tailRotationOffsetY,
+        float fallbackRotationOffsetY
+    )
+    {
+        delay = Mathf.Max(0f, delay);
+
+        if (delay <= 0f)
+        {
+            yield break;
+        }
+
+        float originalAnimatorSpeed = dragonAnimator != null ? dragonAnimator.speed : 1f;
+
+        if (pauseAnimatorDuringDifficultyTailDelay && dragonAnimator != null)
+        {
+            dragonAnimator.speed = 0f;
+        }
+
+        float timer = 0f;
+
+        while (timer < delay)
+        {
+            if (state == DragonState.Dead || state == DragonState.Down || IsTailBroken())
+            {
+                break;
+            }
+
+            timer += Time.deltaTime;
+
+            if (motion != null && player != null)
+            {
+                Quaternion targetRotation;
+
+                if (tailAttacksTurnTailToPlayer)
+                {
+                    targetRotation = motion.GetTailRotationToPlayer(tailFacePlayerOffsetY, tailRotationOffsetY);
+                }
+                else
+                {
+                    targetRotation = motion.GetRotationToPlayerWithOffset(fallbackRotationOffsetY);
+                }
+
+                float turnSpeed = Mathf.Max(0f, difficultyTailPreHitTurnSpeed);
+                transform.rotation = Quaternion.Slerp(
+                    transform.rotation,
+                    targetRotation,
+                    turnSpeed * Time.deltaTime
+                );
+            }
+
+            yield return null;
+        }
+
+        if (pauseAnimatorDuringDifficultyTailDelay && dragonAnimator != null)
+        {
+            dragonAnimator.speed = originalAnimatorSpeed;
+        }
+    }
+
+    public void SetDifficultyHardOnlyExtraTuning(
+        bool enableChargeHoming,
+        float chargeHomingStrength,
+        float chargeHomingMaxTurnSpeed,
+        bool enableTailPreHitDelay,
+        float tailSlamPreHitDelay,
+        float tailSwipeFirstPreHitDelay,
+        float tailPreHitTurnSpeed,
+        bool pauseAnimatorDuringTailDelay
+    )
+    {
+        useDifficultyChargeHoming = enableChargeHoming;
+        difficultyChargeHomingStrength = Mathf.Clamp01(chargeHomingStrength);
+        difficultyChargeHomingMaxTurnSpeed = Mathf.Max(0f, chargeHomingMaxTurnSpeed);
+
+        useDifficultyTailPreHitDelay = enableTailPreHitDelay;
+        difficultyTailSlamPreHitDelay = Mathf.Max(0f, tailSlamPreHitDelay);
+        difficultyTailSwipeFirstPreHitDelay = Mathf.Max(0f, tailSwipeFirstPreHitDelay);
+        difficultyTailPreHitTurnSpeed = Mathf.Max(0f, tailPreHitTurnSpeed);
+        pauseAnimatorDuringDifficultyTailDelay = pauseAnimatorDuringTailDelay;
+    }
 
     public void SetDifficultySpecialAttackTiming(
         float attackStartDelay,

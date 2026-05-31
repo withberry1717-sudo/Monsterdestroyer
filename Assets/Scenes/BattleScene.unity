@@ -1161,7 +1161,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &67639263
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1171,7 +1171,7 @@ RectTransform:
   m_GameObject: {fileID: 67639262}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.00115, y: 1.0668255, z: 1.00115}
+  m_LocalScale: {x: 1.00115, y: 1.0134202, z: 1.00115}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2047952164}
@@ -22510,9 +22510,9 @@ MonoBehaviour:
   normalTailBreakBigHitDuration: 1.2
   hardDragonHpMultiplier: 1.3
   hardCrystalHpMultiplier: 1
-  hardActionIntervalMultiplier: 0.5
-  hardMoveSpeedMultiplier: 1.7
-  hardAnimationSpeedMultiplier: 1.7
+  hardActionIntervalMultiplier: 0.3
+  hardMoveSpeedMultiplier: 2
+  hardAnimationSpeedMultiplier: 1.8
   hardDragonDamageMultiplier: 1.25
   hardDragonScaleMultiplier: 1.2
   hardHalfHPDownDuration: 8
@@ -22524,7 +22524,7 @@ MonoBehaviour:
   hardChargeReadyPause: 0.15
   hardUseChargeHoming: 1
   hardChargeHomingStrength: 0.35
-  hardChargeHomingMaxTurnSpeed: 70
+  hardChargeHomingMaxTurnSpeed: 100
   hardUseTailPreHitDelay: 1
   hardTailSlamPreHitDelay: 0.12
   hardTailSwipeFirstPreHitDelay: 0.12
@@ -33113,11 +33113,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: blinkRecoverTime
-      value: 5
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: blinkRecoverDelay
-      value: 3
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6102168432905421708, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: lockCameraYawWhileMoveInputHeld

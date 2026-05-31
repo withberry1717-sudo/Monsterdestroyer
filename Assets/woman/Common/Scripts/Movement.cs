@@ -523,7 +523,7 @@ namespace Retro.ThirdPersonCharacter
                 return;
             }
 
-            if (Input.GetKeyDown(dashKey) && CanBlink())
+            if (IsBlinkPressed() && CanBlink())
             {
                 Vector3 dashDir = transform.forward;
                 Vector2 dashInput = _playerInput != null ? _playerInput.MovementInput : Vector2.zero;
@@ -600,6 +600,18 @@ namespace Retro.ThirdPersonCharacter
                 _animator.SetFloat("InputY", 0f);
                 _animator.SetBool("IsInAir", false);
             }
+        }
+
+        private bool IsBlinkPressed()
+        {
+            // PlayerInput側でキーボード設定とゲームパッド設定をまとめて判定する。
+            // 旧設定との互換のため、dashKey直押しも残しておく。
+            if (_playerInput != null && _playerInput.BlinkInput)
+            {
+                return true;
+            }
+
+            return Input.GetKeyDown(dashKey);
         }
 
         private bool CanBlink()

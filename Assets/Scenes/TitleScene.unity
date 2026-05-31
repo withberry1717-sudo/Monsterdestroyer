@@ -429,6 +429,8 @@ MonoBehaviour:
   clickSound: {fileID: 0}
   volume: 0
   isHeavyDarkFantasyStyle: 0
+  respectMasterVolume: 1
+  playWhilePaused: 1
 --- !u!114 &94820646
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1310,6 +1312,8 @@ MonoBehaviour:
   clickSound: {fileID: 8300000, guid: 65ce26986de3bff45a3dad1f985f9ef3, type: 3}
   volume: 0
   isHeavyDarkFantasyStyle: 0
+  respectMasterVolume: 1
+  playWhilePaused: 1
 --- !u!114 &299345897
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1891,6 +1895,8 @@ MonoBehaviour:
   clickSound: {fileID: 8300000, guid: 65ce26986de3bff45a3dad1f985f9ef3, type: 3}
   volume: 0.05
   isHeavyDarkFantasyStyle: 0
+  respectMasterVolume: 1
+  playWhilePaused: 1
 --- !u!114 &444283509
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2684,6 +2690,8 @@ MonoBehaviour:
   clickSound: {fileID: 8300000, guid: 936b640378ae4f8468c531a27245986c, type: 3}
   volume: 0.5
   isHeavyDarkFantasyStyle: 1
+  respectMasterVolume: 1
+  playWhilePaused: 1
 --- !u!1 &666431740
 GameObject:
   m_ObjectHideFlags: 0
@@ -3578,6 +3586,8 @@ MonoBehaviour:
   clickSound: {fileID: 0}
   volume: 0
   isHeavyDarkFantasyStyle: 0
+  respectMasterVolume: 1
+  playWhilePaused: 1
 --- !u!114 &796093762
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4072,7 +4082,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.5283019, g: 0.5283019, b: 0.5283019, a: 1}
+  m_Color: {r: 0.6603774, g: 0.6603774, b: 0.6603774, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4437,6 +4447,9 @@ GameObject:
   - component: {fileID: 1084668989}
   - component: {fileID: 1084668988}
   - component: {fileID: 1084668987}
+  - component: {fileID: 1084668991}
+  - component: {fileID: 1084668990}
+  - component: {fileID: 1084668992}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -4505,6 +4518,61 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1084668990
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1084668986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a62dbde948c2dee4c9e14375270bc8e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GamepadInputController
+--- !u!114 &1084668991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1084668986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a9c9fb22eb7cae40acc50546c1c5107, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Retro.ThirdPersonCharacter.GamepadPauseBridge
+  pauseReceiver: {fileID: 0}
+  methodNames:
+  - TogglePause
+  - TogglePauseMenu
+  - OnEscape
+  - HandleEscape
+  - PauseGame
+  - OpenPause
+  - Pause
+  optionsButtonActsAsEscape: 1
+  keyboardEscapeAlsoCallsReceiver: 0
+--- !u!114 &1084668992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1084668986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 613ac1088455ac745891f4c94cf26ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GamepadCursorController
+  enableRightStickCursor: 1
+  cursorSpeed: 1100
+  deadZone: 0.18
+  onlyWhenCursorVisible: 1
+  onlyWhenCursorUnlocked: 1
+  crossButtonClicksUI: 1
+  circleButtonCancels: 1
+  submitSelectedWhenNoPointerTarget: 1
 --- !u!1 &1116143735
 GameObject:
   m_ObjectHideFlags: 0

@@ -47,6 +47,22 @@ namespace NaughtyCharacter
         [Tooltip("ロックオン切り替えキー。おすすめはT")]
         [SerializeField] private KeyCode lockOnKey = KeyCode.T;
 
+        [Header("Gamepad Camera / Controller")]
+        [Tooltip("ONならRスティック押し込みでロックオンを切り替えます。")]
+        [SerializeField] private bool useRightStickButtonForLockOn = true;
+
+        [Tooltip("ONなら右スティックで視点移動できます。通常カメラとロックオン中の上下補正に使います。")]
+        [SerializeField] private bool useRightStickForCameraLook = true;
+
+        [Tooltip("右スティック横方向の視点移動速度です。deg/secです。")]
+        [SerializeField] private float gamepadLookSensitivityX = 180f;
+
+        [Tooltip("右スティック縦方向の視点移動速度です。deg/secです。")]
+        [SerializeField] private float gamepadLookSensitivityY = 130f;
+
+        [Tooltip("右スティックのデッドゾーンです。小さすぎると勝手にカメラが動きます。")]
+        [SerializeField] private float gamepadLookDeadZone = 0.12f;
+
         [Tooltip("ロックオン対象のタグ")]
         [SerializeField] private string lockOnTargetTag = "Enemy";
 
@@ -348,7 +364,7 @@ namespace NaughtyCharacter
         {
             if (!enableLockOn) return;
 
-            if (Input.GetKeyDown(lockOnKey))
+            if (Input.GetKeyDown(lockOnKey) || IsGamepadLockOnPressed())
             {
                 if (currentLockOnTarget != null)
                 {
@@ -799,9 +815,13 @@ namespace NaughtyCharacter
 
             float mouseX = Input.GetAxis("Mouse X");
             float mouseY = Input.GetAxis("Mouse Y");
+            Vector2 gamepadLook = GetGamepadLookInput();
 
             targetYaw += mouseX * sensitivityX;
             targetPitch -= mouseY * sensitivityY;
+
+            targetYaw += gamepadLook.x * gamepadLookSensitivityX * Time.unscaledDeltaTime;
+            targetPitch -= gamepadLook.y * gamepadLookSensitivityY * Time.unscaledDeltaTime;
             targetPitch = Mathf.Clamp(targetPitch, minPitch, maxPitch);
 
             currentYaw = Mathf.SmoothDampAngle(
@@ -910,6 +930,34 @@ namespace NaughtyCharacter
 
             Rig.localRotation = Quaternion.Euler(0f, currentYaw, 0f);
             Pivot.localRotation = Quaternion.Euler(currentPitch, 0f, 0f);
+        }
+
+
+        private bool IsGamepadLockOnPressed()
+        {
+            if (!useRightStickButtonForLockOn) return false;
+
+            var gamepad = UnityEngine.InputSystem.Gamepad.current;
+            if (gamepad == null) return false;
+
+            return gamepad.rightStickButton.wasPressedThisFrame;
+        }
+
+        private Vector2 GetGamepadLookInput()
+        {
+            if (!useRightStickForCameraLook) return Vector2.zero;
+
+            var gamepad = UnityEngine.InputSystem.Gamepad.current;
+            if (gamepad == null) return Vector2.zero;
+
+            Vector2 look = gamepad.rightStick.ReadValue();
+
+            if (look.magnitude < gamepadLookDeadZone)
+            {
+                return Vector2.zero;
+            }
+
+            return Vector2.ClampMagnitude(look, 1f);
         }
 
         private float NormalizeAngle(float angle)

@@ -9642,7 +9642,7 @@ MonoBehaviour:
   tailSwipeSpinMinLoops: 1
   tailSwipeSpinMaxLoops: 4
   tailSwipeSpinOvershootDistance: 4
-  tailSwipeSpinHomingStrength: 2
+  tailSwipeSpinHomingStrength: 1
   tailSwipeSpinRotationPerLoop: 360
   tailSwipeSpinInertiaDistance: 2
   tailSwipeSpinInertiaDuration: 1
@@ -23480,6 +23480,7 @@ GameObject:
   - component: {fileID: 772781602}
   - component: {fileID: 772781601}
   - component: {fileID: 772781600}
+  - component: {fileID: 772781603}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -23548,6 +23549,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &772781603
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 772781599}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a62dbde948c2dee4c9e14375270bc8e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GamepadInputController
 --- !u!1 &785866509
 GameObject:
   m_ObjectHideFlags: 0
@@ -32076,6 +32089,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1148623337}
   - component: {fileID: 1148623336}
+  - component: {fileID: 1148623338}
+  - component: {fileID: 1148623339}
   m_Layer: 0
   m_Name: PauseManager
   m_TagString: Untagged
@@ -32117,6 +32132,64 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1148623338
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1148623335}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a9c9fb22eb7cae40acc50546c1c5107, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Retro.ThirdPersonCharacter.GamepadPauseBridge
+  pauseReceiver: {fileID: 0}
+  optionsButtonActsAsEscape: 1
+  pauseMethodNames:
+  - TogglePause
+  - TogglePauseMenu
+  - OnEscape
+  - OnEscapePressed
+  - PauseGame
+  - OpenPauseMenu
+  - OpenPause
+  - Pause
+  - ResumeGame
+  clearSelectedObjectBeforePause: 1
+  inputCooldown: 0.2
+  showDebugLog: 1
+--- !u!114 &1148623339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1148623335}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 613ac1088455ac745891f4c94cf26ecb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GamepadCursorController
+  enableRightStickCursor: 1
+  cursorSpeed: 1100
+  onlyWhenCursorVisible: 1
+  onlyWhenCursorUnlocked: 1
+  stickDeadZone: 0.12
+  crossButtonClicksUI: 1
+  circleButtonCancels: 1
+  cancelReceiver: {fileID: 0}
+  cancelMethodNames:
+  - CloseSettings
+  - ClosePause
+  - ClosePauseMenu
+  - ResumeGame
+  - TogglePause
+  - Back
+  - Cancel
+  preventDoubleSubmit: 1
+  submitCooldown: 0.12
+  showDebugLog: 0
 --- !u!1 &1150122093
 GameObject:
   m_ObjectHideFlags: 0
@@ -35130,6 +35203,11 @@ MonoBehaviour:
   maxPitch: 55
   enableLockOn: 1
   lockOnKey: 116
+  useRightStickButtonForLockOn: 1
+  useRightStickForCameraLook: 1
+  gamepadLookSensitivityX: 180
+  gamepadLookSensitivityY: 130
+  gamepadLookDeadZone: 0.12
   lockOnTargetTag: Enemy
   manualLockOnPoint: {fileID: 1753746015}
   lockOnRange: 50

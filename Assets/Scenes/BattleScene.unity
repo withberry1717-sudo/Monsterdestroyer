@@ -1161,7 +1161,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &67639263
 RectTransform:
   m_ObjectHideFlags: 0
@@ -35142,6 +35142,13 @@ MonoBehaviour:
   allowPitchInputWhileLockOn: 1
   lockOnPitchInputSensitivity: 3
   minHorizontalDistanceForYaw: 0.5
+  useLockOnViewAngleFix: 1
+  lockOnPlayerAimHeightOffset: 1.2
+  lockOnTargetAimHeightOffset: -0.8
+  lockOnPitchOffset: 8
+  useSeparateLockOnPitchLimits: 1
+  lockOnMinPitch: -10
+  lockOnMaxPitch: 45
   lockOnMarkerPrefab: {fileID: 2490275035408926215, guid: 1a363874805cf8b4bb5b6b119f22560e, type: 3}
   enableLockOnMarker: 1
   lockOnMarkerVisibleTime: 1.2
@@ -35865,7 +35872,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 54, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1355819889

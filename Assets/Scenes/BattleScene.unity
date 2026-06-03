@@ -8216,21 +8216,41 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 490904714}
     m_Modifications:
+    - target: {fileID: 416755331111707229, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 416755331111707229, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 416755331111707229, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.r
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1655401396687660183, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.b
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1655401396687660183, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
       propertyPath: InitialModule.startColor.maxColor.g
-      value: 0.21365176
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1655401396687660183, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
+      propertyPath: InitialModule.startColor.maxColor.r
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1826456898873643406, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
       propertyPath: InitialModule.startColor.maxColor.b
-      value: 0.6792453
+      value: 0.051886797
       objectReference: {fileID: 0}
     - target: {fileID: 1826456898873643406, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
       propertyPath: InitialModule.startColor.maxColor.g
-      value: 0.6792453
+      value: 0.051886797
       objectReference: {fileID: 0}
     - target: {fileID: 1826456898873643406, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
       propertyPath: InitialModule.startColor.maxColor.r
-      value: 0.6792453
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3096923336240688081, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
       propertyPath: InitialModule.startColor.maxColor.b
@@ -8290,39 +8310,39 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5379775475224576585, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
       propertyPath: InitialModule.startColor.maxColor.b
-      value: 0.41037738
+      value: 0.3679245
       objectReference: {fileID: 0}
     - target: {fileID: 5379775475224576585, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
       propertyPath: InitialModule.startColor.maxColor.g
-      value: 0.41037738
+      value: 0.3679245
       objectReference: {fileID: 0}
     - target: {fileID: 5379775475224576585, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
       propertyPath: InitialModule.startColor.maxColor.r
-      value: 1
+      value: 0.3679245
       objectReference: {fileID: 0}
     - target: {fileID: 6117494293036675509, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
       propertyPath: InitialModule.startColor.maxColor.b
-      value: 0.4433962
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6117494293036675509, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
       propertyPath: InitialModule.startColor.maxColor.g
-      value: 0.4433962
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6117494293036675509, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
       propertyPath: InitialModule.startColor.maxColor.r
-      value: 0.4433962
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6398059680395427076, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
       propertyPath: InitialModule.startColor.maxColor.b
-      value: 0.5471698
+      value: 0.2830189
       objectReference: {fileID: 0}
     - target: {fileID: 6398059680395427076, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
       propertyPath: InitialModule.startColor.maxColor.g
-      value: 0.5471698
+      value: 0.2830189
       objectReference: {fileID: 0}
     - target: {fileID: 6398059680395427076, guid: 50f1354827c77ef4b99c4dca0ee3411d, type: 3}
       propertyPath: InitialModule.startColor.maxColor.r
-      value: 0.5471698
+      value: 0.2830189
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -33599,6 +33619,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboFirstEffect.sfx
+      value: 
+      objectReference: {fileID: 8300000, guid: bf187e22f26bbd148a5d77e0beedf74c, type: 3}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboThirdEffect.sfx
+      value: 
+      objectReference: {fileID: 8300000, guid: bf187e22f26bbd148a5d77e0beedf74c, type: 3}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: heavyWeakHeavyHitboxScale
       value: 3
       objectReference: {fileID: 0}
@@ -33621,6 +33649,22 @@ PrefabInstance:
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: dashAttackDamageMultiplier
       value: 3.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboFirstHitboxScale
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboSecondEffect.sfx
+      value: 
+      objectReference: {fileID: 8300000, guid: bf187e22f26bbd148a5d77e0beedf74c, type: 3}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboThirdHitboxScale
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyHeavyHeavyHitboxScale
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: maxChargedHeavyHitboxScale
@@ -33659,6 +33703,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboSecondHitboxScale
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: quickHeavyToLightBranchTime
       value: 0.9
       objectReference: {fileID: 0}
@@ -33695,8 +33743,24 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboFirstAnimationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboThirdAnimationSpeed
+      value: 0.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: dashAttackEffect.eulerOffset.y
       value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboFirstEffect.offset.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboThirdEffect.offset.z
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: maxChargedHeavyEffect.sfxDelay
@@ -33718,6 +33782,18 @@ PrefabInstance:
       propertyPath: dashAttackEffect.particlePrefab
       value: 
       objectReference: {fileID: 688588940}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboFirstDamageMultiplier
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboSecondEffect.offset.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboThirdDamageMultiplier
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: swordAttackColliders.Array.size
       value: 1
@@ -33763,6 +33839,10 @@ PrefabInstance:
       value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboSecondDamageMultiplier
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: heavyWeakHeavyFinisherEffect.sfx
       value: 
       objectReference: {fileID: 8300000, guid: bf187e22f26bbd148a5d77e0beedf74c, type: 3}
@@ -33791,9 +33871,29 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: chargedHeavyComboFirstHitboxScale
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: chargedHeavyComboThirdHitboxScale
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedHeavyEffect.particlePrefab
       value: 
       objectReference: {fileID: 2131510675}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: chargedHeavyHeavyHeavyHitboxScale
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboFirstToSecondBranchTime
+      value: 0.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboSecondToThirdBranchTime
+      value: 0.9
+      objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: heavyWeakHeavyFinisherHitboxScale
       value: 5
@@ -33803,8 +33903,16 @@ PrefabInstance:
       value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: secondStageChargedHeavyEffect.sfx
+      value: 
+      objectReference: {fileID: 8300000, guid: bf187e22f26bbd148a5d77e0beedf74c, type: 3}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: secondStageChargedHeavyMultiplier
       value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: chargedHeavyComboSecondHitboxScale
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: comboFinisherParticleEulerOffset.y
@@ -33827,6 +33935,22 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2120810692}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboFirstEffect.eulerOffset.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboThirdEffect.eulerOffset.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboThirdEffect.eulerOffset.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboThirdEffect.eulerOffset.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: maxChargeReadyEffectLocalPosition.y
       value: 0
       objectReference: {fileID: 0}
@@ -33847,9 +33971,37 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1115999690}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: chargedHeavyComboFirstAnimationSpeed
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: chargedHeavyComboThirdAnimationSpeed
+      value: 0.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: earlyChainFirstHeavyDamageMultiplier
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboFirstEffect.particlePrefab
+      value: 
+      objectReference: {fileID: 2131510675}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboSecondEffect.eulerOffset.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboSecondEffect.eulerOffset.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboSecondEffect.eulerOffset.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboThirdEffect.particlePrefab
+      value: 
+      objectReference: {fileID: 1679509069}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: heavyWeakHeavyFinisherParticlePrefab
       value: 
@@ -33867,6 +34019,34 @@ PrefabInstance:
       value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboFirstEffect.particleScale.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboFirstEffect.particleScale.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboFirstEffect.particleScale.z
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboSecondEffect.particlePrefab
+      value: 
+      objectReference: {fileID: 2131510675}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboThirdEffect.particleScale.x
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboThirdEffect.particleScale.y
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboThirdEffect.particleScale.z
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: heavyWeakHeavyFinisherEffect.offset.z
       value: 0
       objectReference: {fileID: 0}
@@ -33875,12 +34055,36 @@ PrefabInstance:
       value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: chargedHeavyComboFirstDamageMultiplier
+      value: 1.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: chargedHeavyComboThirdDamageMultiplier
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedWeakWeakHeavyFinisherEffect.sfx
       value: 
       objectReference: {fileID: 8300000, guid: bf187e22f26bbd148a5d77e0beedf74c, type: 3}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedWeakWeakHeavyFinisherMultiplier
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboSecondEffect.particleScale.x
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboSecondEffect.particleScale.y
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyComboSecondEffect.particleScale.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: chargedHeavyComboSecondDamageMultiplier
+      value: 2.25
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedHeavyWeakHeavyFinisherEffect.sfx
@@ -33897,6 +34101,14 @@ PrefabInstance:
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: weakWeakHeavyFinisherEffect.destroyTime
       value: 1.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: chargedHeavyComboFirstToSecondBranchTime
+      value: 0.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: chargedHeavyComboSecondToThirdBranchTime
+      value: 0.9
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedHeavyWeakHeavyFinisherHitboxScale
@@ -33959,6 +34171,10 @@ PrefabInstance:
       value: 0.3
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyHeavyHeavyFinisherEffect.eulerOffset.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: heavyWeakHeavyFinisherEffect.particlePrefab
       value: 
       objectReference: {fileID: 2131510675}
@@ -33986,6 +34202,10 @@ PrefabInstance:
       propertyPath: chargedHeavyWeakHeavyFinisherEffect.sfxDelay
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: heavyHeavyHeavyFinisherEffect.particlePrefab
+      value: 
+      objectReference: {fileID: 1679509069}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: secondStageChargedHeavyEffect.particlePrefab
       value: 
@@ -34046,6 +34266,10 @@ PrefabInstance:
       propertyPath: chargedWeakWeakHeavyFinisherEffect.particleScale.z
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
+      propertyPath: chargedHeavyHeavyHeavyFinisherEffect.particlePrefab
+      value: 
+      objectReference: {fileID: 1679509069}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedHeavyWeakHeavyFinisherEffect.particleScale.x
       value: 2

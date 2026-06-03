@@ -175,6 +175,60 @@ namespace Retro.ThirdPersonCharacter
         [Tooltip("溜め強→強強強 3段目の当たり判定倍率です。通常ルートと分けて調整できます。1なら通常サイズです。")]
         [SerializeField] private float chargedHeavyComboThirdHitboxScale = 1.5f;
 
+        [Header("Heavy 3 Combo Damage / 強強強の段ごとの威力")]
+        [Tooltip("通常の強強強 1段目の威力倍率です。")]
+        [SerializeField] private float heavyComboFirstDamageMultiplier = 0.75f;
+
+        [Tooltip("通常の強強強 2段目の威力倍率です。")]
+        [SerializeField] private float heavyComboSecondDamageMultiplier = 0.90f;
+
+        [Tooltip("通常の強強強 3段目の威力倍率です。")]
+        [SerializeField] private float heavyComboThirdDamageMultiplier = 1.15f;
+
+        [Tooltip("溜め強→強強強 1段目の威力倍率です。通常ルートと分けて調整できます。")]
+        [SerializeField] private float chargedHeavyComboFirstDamageMultiplier = 0.80f;
+
+        [Tooltip("溜め強→強強強 2段目の威力倍率です。通常ルートと分けて調整できます。")]
+        [SerializeField] private float chargedHeavyComboSecondDamageMultiplier = 0.95f;
+
+        [Tooltip("溜め強→強強強 3段目の威力倍率です。通常ルートと分けて調整できます。")]
+        [SerializeField] private float chargedHeavyComboThirdDamageMultiplier = 1.20f;
+
+        [Header("Heavy 3 Combo Animation Speed / 強強強の段ごとのアニメ速度")]
+        [Tooltip("通常の強強強 1段目のアニメーション速度です。")]
+        [SerializeField] private float heavyComboFirstAnimationSpeed = 1.35f;
+
+        [Tooltip("通常の強強強 2段目のアニメーション速度です。")]
+        [SerializeField] private float heavyComboSecondAnimationSpeed = 1.40f;
+
+        [Tooltip("通常の強強強 3段目のアニメーション速度です。")]
+        [SerializeField] private float heavyComboThirdAnimationSpeed = 1.25f;
+
+        [Tooltip("溜め強→強強強 1段目のアニメーション速度です。通常ルートと分けて調整できます。")]
+        [SerializeField] private float chargedHeavyComboFirstAnimationSpeed = 1.35f;
+
+        [Tooltip("溜め強→強強強 2段目のアニメーション速度です。通常ルートと分けて調整できます。")]
+        [SerializeField] private float chargedHeavyComboSecondAnimationSpeed = 1.40f;
+
+        [Tooltip("溜め強→強強強 3段目のアニメーション速度です。通常ルートと分けて調整できます。")]
+        [SerializeField] private float chargedHeavyComboThirdAnimationSpeed = 1.25f;
+
+        [Header("Heavy 3 Combo Early Branch / 強強強の途中派生")]
+        [Tooltip("ONなら、強強強の1段目・2段目の途中から次の強攻撃を差し込めます。")]
+        [SerializeField] private bool allowHeavyComboEarlyHeavyBranch = true;
+
+        [Tooltip("通常の強強強 1段目開始から何秒後に2段目への早出し派生を許可するかです。")]
+        [SerializeField] private float heavyComboFirstToSecondBranchTime = 0.32f;
+
+        [Tooltip("通常の強強強 2段目開始から何秒後に3段目への早出し派生を許可するかです。")]
+        [SerializeField] private float heavyComboSecondToThirdBranchTime = 0.34f;
+
+        [Tooltip("溜め強→強強強 1段目開始から何秒後に2段目への早出し派生を許可するかです。")]
+        [SerializeField] private float chargedHeavyComboFirstToSecondBranchTime = 0.32f;
+
+        [Tooltip("溜め強→強強強 2段目開始から何秒後に3段目への早出し派生を許可するかです。")]
+        [SerializeField] private float chargedHeavyComboSecondToThirdBranchTime = 0.34f;
+
         [SerializeField]
         private AttackEffectSettings chargedHeavyEffect = new AttackEffectSettings
         {
@@ -1181,16 +1235,19 @@ namespace Retro.ThirdPersonCharacter
                     swordHitbox,
                     quickHeavyStart,
                     quickHeavyEnd,
-                    quickHeavyDamageMultiplier,
+                    heavyComboFirstDamageMultiplier,
                     quickHeavyEndDelay,
-                    quickHeavyAnimationSpeed,
+                    heavyComboFirstAnimationSpeed,
                     false,
                     false,
                     true,
                     quickHeavyMoveUnlockTime,
                     heavyComboFirstEffect,
                     FinisherType.None,
-                    Mathf.Max(1f, heavyComboFirstHitboxScale)
+                    Mathf.Max(1f, heavyComboFirstHitboxScale),
+                    false,
+                    true,
+                    heavyComboFirstToSecondBranchTime
                 )
             );
         }
@@ -1219,16 +1276,19 @@ namespace Retro.ThirdPersonCharacter
                     swordHitbox,
                     quickHeavySecondStart,
                     quickHeavySecondEnd,
-                    quickHeavySecondDamageMultiplier,
+                    heavyComboSecondDamageMultiplier,
                     quickHeavySecondEndDelay,
-                    quickHeavySecondAnimationSpeed,
+                    heavyComboSecondAnimationSpeed,
                     false,
                     false,
                     true,
                     quickHeavySecondMoveUnlockTime,
                     heavyComboSecondEffect,
                     FinisherType.None,
-                    Mathf.Max(1f, heavyComboSecondHitboxScale)
+                    Mathf.Max(1f, heavyComboSecondHitboxScale),
+                    false,
+                    true,
+                    heavyComboSecondToThirdBranchTime
                 )
             );
         }
@@ -1257,9 +1317,9 @@ namespace Retro.ThirdPersonCharacter
                     swordHitbox,
                     heavyFinisherStart,
                     heavyFinisherEnd,
-                    heavyHeavyHeavyFinisherMultiplier,
+                    heavyComboThirdDamageMultiplier,
                     heavyFinisherEndDelay,
-                    heavyFinisherAnimationSpeed,
+                    heavyComboThirdAnimationSpeed,
                     true,
                     true,
                     true,
@@ -1331,16 +1391,19 @@ namespace Retro.ThirdPersonCharacter
                     swordHitbox,
                     quickHeavyStart,
                     quickHeavyEnd,
-                    quickHeavyDamageMultiplier,
+                    chargedHeavyComboFirstDamageMultiplier,
                     quickHeavyEndDelay,
-                    quickHeavyAnimationSpeed,
+                    chargedHeavyComboFirstAnimationSpeed,
                     false,
                     false,
                     true,
                     quickHeavyMoveUnlockTime,
                     heavyComboFirstEffect,
                     FinisherType.None,
-                    Mathf.Max(1f, chargedHeavyComboFirstHitboxScale)
+                    Mathf.Max(1f, chargedHeavyComboFirstHitboxScale),
+                    false,
+                    true,
+                    chargedHeavyComboFirstToSecondBranchTime
                 )
             );
         }
@@ -1369,16 +1432,19 @@ namespace Retro.ThirdPersonCharacter
                     swordHitbox,
                     quickHeavySecondStart,
                     quickHeavySecondEnd,
-                    quickHeavySecondDamageMultiplier,
+                    chargedHeavyComboSecondDamageMultiplier,
                     quickHeavySecondEndDelay,
-                    quickHeavySecondAnimationSpeed,
+                    chargedHeavyComboSecondAnimationSpeed,
                     false,
                     false,
                     true,
                     quickHeavySecondMoveUnlockTime,
                     heavyComboSecondEffect,
                     FinisherType.None,
-                    Mathf.Max(1f, chargedHeavyComboSecondHitboxScale)
+                    Mathf.Max(1f, chargedHeavyComboSecondHitboxScale),
+                    false,
+                    true,
+                    chargedHeavyComboSecondToThirdBranchTime
                 )
             );
         }
@@ -1407,9 +1473,9 @@ namespace Retro.ThirdPersonCharacter
                     swordHitbox,
                     heavyFinisherStart,
                     heavyFinisherEnd,
-                    chargedHeavyHeavyHeavyFinisherMultiplier,
+                    chargedHeavyComboThirdDamageMultiplier,
                     heavyFinisherEndDelay,
-                    heavyFinisherAnimationSpeed,
+                    chargedHeavyComboThirdAnimationSpeed,
                     true,
                     true,
                     true,
@@ -1563,7 +1629,9 @@ namespace Retro.ThirdPersonCharacter
             AttackEffectSettings attackEffect,
             FinisherType finisherType,
             float hitboxSizeMultiplier,
-            bool allowEarlyLightBranch = false
+            bool allowEarlyLightBranch = false,
+            bool allowEarlyHeavyBranch = false,
+            float earlyHeavyBranchTime = 999f
         )
         {
             AttackInProgress = true;
@@ -1600,6 +1668,30 @@ namespace Retro.ThirdPersonCharacter
             while (timer < totalDuration)
             {
                 timer += Time.deltaTime;
+
+                if (allowEarlyHeavyBranch
+                    && allowHeavyComboEarlyHeavyBranch
+                    && bufferedHeavy
+                    && timer >= Mathf.Max(0f, earlyHeavyBranchTime)
+                    && (comboStage == ComboStage.Heavy1
+                        || comboStage == ComboStage.Heavy2
+                        || comboStage == ComboStage.ChargedHeavy1
+                        || comboStage == ComboStage.ChargedHeavy2))
+                {
+                    bufferedLight = false;
+                    bufferedHeavy = false;
+
+                    if (hitboxEnabled)
+                    {
+                        hitboxEnabled = false;
+                        hitbox.DisableHitbox();
+                        RestoreColliderScale(hitbox);
+                    }
+
+                    EndAttack();
+                    StartHeavyFromComboInput();
+                    yield break;
+                }
 
                 if (!hitboxEnabled && timer >= hitStart)
                 {

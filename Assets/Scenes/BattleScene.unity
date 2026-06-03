@@ -9454,16 +9454,16 @@ MonoBehaviour:
   difficultyChargeReadyPauseOverride: 0.05
   useDifficultyChargeHoming: 0
   difficultyChargeHomingStrength: 0.35
-  difficultyChargeHomingMaxTurnSpeed: 90
+  difficultyChargeHomingMaxTurnSpeed: 45
   useDifficultyTailPreHitDelay: 0
-  difficultyTailSlamPreHitDelay: 0.12
-  difficultyTailSwipeFirstPreHitDelay: 0.12
+  difficultyTailSlamPreHitDelay: 0
+  difficultyTailSwipeFirstPreHitDelay: 0
   difficultyTailPreHitTurnSpeed: 22
   pauseAnimatorDuringDifficultyTailDelay: 1
   dragonHP: {fileID: 78498549}
   effectPlayer: {fileID: 356980425}
   player: {fileID: 426628364}
-  playerHP: {fileID: 0}
+  playerHP: {fileID: 1572162862}
   stopActionsWhenPlayerDead: 1
   resumeAIWhenPlayerRevived: 1
   enableApproachAction: 1
@@ -9496,7 +9496,7 @@ MonoBehaviour:
   switchToRunDistance: 8
   runChaseStopDistance: 5
   minActionInterval: 0.4
-  maxActionInterval: 1
+  maxActionInterval: 0.6
   useOpeningIdle: 0
   openingIdleChance: 0.18
   openingIdleMinTime: 1
@@ -22527,7 +22527,7 @@ MonoBehaviour:
   hardAnimationSpeedMultiplier: 1.8
   hardDragonDamageMultiplier: 1.25
   hardDragonScaleMultiplier: 1.2
-  hardHalfHPDownDuration: 8
+  hardHalfHPDownDuration: 6
   hardTailBreakBigHitDuration: 1
   hardAttackStartDelay: 0
   hardOverrideChargeTellTime: 0
@@ -33792,7 +33792,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: heavyComboThirdDamageMultiplier
-      value: 2
+      value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: swordAttackColliders.Array.size
@@ -33840,7 +33840,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: heavyComboSecondDamageMultiplier
-      value: 1.5
+      value: 1.1
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: heavyWeakHeavyFinisherEffect.sfx
@@ -34060,7 +34060,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedHeavyComboThirdDamageMultiplier
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedWeakWeakHeavyFinisherEffect.sfx
@@ -34084,7 +34084,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedHeavyComboSecondDamageMultiplier
-      value: 2.25
+      value: 1.4
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedHeavyWeakHeavyFinisherEffect.sfx

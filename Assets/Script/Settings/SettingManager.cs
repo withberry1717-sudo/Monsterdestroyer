@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
 using Retro.ThirdPersonCharacter;
 using System.Collections;
@@ -86,6 +87,14 @@ public class SettingManager : MonoBehaviour
         }
 
         isWaitingForBlinkKey = false;
+    }
+
+    public void Retry()
+    {
+        Time.timeScale = 1f;
+
+        Scene currentScene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(currentScene.name);
     }
 
     private void SetupQualityDropdown()
@@ -215,8 +224,6 @@ public class SettingManager : MonoBehaviour
     {
         volume = Mathf.Clamp01(volume);
 
-        // ゲーム全体の音量はここで一括管理する。
-        // BGM側で ignoreListenerVolume = true にしていると、この値が効かなくなる。
         AudioListener.volume = volume;
 
         if (save)
@@ -251,7 +258,6 @@ public class SettingManager : MonoBehaviour
 
         while (isWaitingForBlinkKey)
         {
-            // Keyboardは今まで通り、押したキーをそのまま確定。
             foreach (KeyCode key in System.Enum.GetValues(typeof(KeyCode)))
             {
                 if (Input.GetKeyDown(key))
@@ -264,14 +270,12 @@ public class SettingManager : MonoBehaviour
             var gamepad = UnityEngine.InputSystem.Gamepad.current;
             if (gamepad != null)
             {
-                // PS4の〇 / Gamepad Eastでキャンセル。
                 if (gamepad.buttonEast.wasPressedThisFrame)
                 {
                     CancelBlinkBindingChange();
                     yield break;
                 }
 
-                // 候補がある状態で、PS4の× / Gamepad Southを押したら確定。
                 if (waitingGamepadConfirm && gamepad.buttonSouth.wasPressedThisFrame)
                 {
                     SaveBlinkBinding(pendingGamepadBlinkBinding);
@@ -282,7 +286,6 @@ public class SettingManager : MonoBehaviour
 
                 if (!string.IsNullOrEmpty(pressedBinding))
                 {
-                    // ×は確定キーとして使う。候補なしで押した場合は、ブリンクを×にせず待つ。
                     if (pressedBinding == PlayerInput.ToGamepadBlinkPrefsValue(PlayerInput.GamepadBlinkButton.South))
                     {
                         if (blinkKeyText != null)

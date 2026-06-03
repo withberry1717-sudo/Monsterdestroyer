@@ -155,12 +155,12 @@ namespace Retro.ThirdPersonCharacter
         [Tooltip("ONなら安全位置へ戻した時、移動・ブリンク・攻撃移動の慣性を全部消します。")]
         [SerializeField] private bool clearMovementStateOnSafetyRecover = true;
 
-        private int currentBlinkCharges;
-        private float blinkRecoverTimer = 0f;
+        private float currentBlinkChargeValue;
         private float blinkRecoverDelayTimer = 0f;
 
         private bool isDashing = false;
         private float dashAttackWindowTimer = 0f;
+        private bool wasBlinkInputHeld = false;
 
         private bool isDragonStaggered = false;
         private Coroutine dragonStaggerRoutine;
@@ -233,8 +233,7 @@ namespace Retro.ThirdPersonCharacter
             defaultAttackMoveSpeedMultiplier = attackMoveSpeedMultiplier;
             defaultAttackTurnSpeedMultiplier = attackTurnSpeedMultiplier;
 
-            currentBlinkCharges = maxBlinkCharges;
-            blinkRecoverTimer = 0f;
+            currentBlinkChargeValue = maxBlinkCharges;
             blinkRecoverDelayTimer = 0f;
 
             string savedBlinkKey = PlayerPrefs.GetString("BlinkKey", dashKey.ToString());
@@ -291,6 +290,7 @@ namespace Retro.ThirdPersonCharacter
             lastMovementInput = Vector2.zero;
             hasLockedMoveCameraYaw = false;
             noMoveInputTimer = 0f;
+            wasBlinkInputHeld = false;
 
             if (_animator != null)
             {
@@ -604,14 +604,20 @@ namespace Retro.ThirdPersonCharacter
 
         private bool IsBlinkPressed()
         {
-            // PlayerInput側でキーボード設定とゲームパッド設定をまとめて判定する。
-            // 旧設定との互換のため、dashKey直押しも残しておく。
-            if (_playerInput != null && _playerInput.BlinkInput)
+            // PlayerInput側のBlinkInputが「押している間 true」の実装でも、
+            // ブリンクを1入力につき1回だけ発動させる。
+            bool isHeldNow = _playerInput != null && _playerInput.BlinkInput;
+            bool pressedThisFrame = isHeldNow && !wasBlinkInputHeld;
+
+            wasBlinkInputHeld = isHeldNow;
+
+            // 旧設定との互換。キーボード直押しはGetKeyDownなので1回だけ反応。
+            if (Input.GetKeyDown(dashKey))
             {
-                return true;
+                pressedThisFrame = true;
             }
 
-            return Input.GetKeyDown(dashKey);
+            return pressedThisFrame;
         }
 
         private bool CanBlink()
@@ -620,35 +626,32 @@ namespace Retro.ThirdPersonCharacter
 
             return !isDashing
                 && !isDragonStaggered
-                && currentBlinkCharges > 0
+                && currentBlinkChargeValue >= 1f
                 && (!isAttacking || canBlinkDuringAttack);
         }
 
         private void UseBlink()
         {
-            currentBlinkCharges--;
+            // 1回のブリンクで必ず1本分だけ消費する。
+            // 例：1.5本ある時に使ったら0.5本残る。
+            currentBlinkChargeValue -= 1f;
+            currentBlinkChargeValue = Mathf.Clamp(currentBlinkChargeValue, 0f, maxBlinkCharges);
 
-            if (currentBlinkCharges < 0)
-            {
-                currentBlinkCharges = 0;
-            }
-
-            if (currentBlinkCharges < maxBlinkCharges)
+            if (currentBlinkChargeValue < maxBlinkCharges)
             {
                 blinkRecoverDelayTimer = blinkRecoverDelay;
-                blinkRecoverTimer = blinkRecoverTime;
             }
 
             UpdateBlinkUI();
 
-            Debug.Log("Blink Used. Current Charges: " + currentBlinkCharges);
+            Debug.Log("Blink Used. Current Charge Value: " + currentBlinkChargeValue);
         }
 
         private void RecoverBlinkCharge()
         {
-            if (currentBlinkCharges >= maxBlinkCharges)
+            if (currentBlinkChargeValue >= maxBlinkCharges)
             {
-                blinkRecoverTimer = 0f;
+                currentBlinkChargeValue = maxBlinkCharges;
                 blinkRecoverDelayTimer = 0f;
                 UpdateBlinkUI();
                 return;
@@ -661,23 +664,27 @@ namespace Retro.ThirdPersonCharacter
                 return;
             }
 
-            blinkRecoverTimer -= Time.deltaTime;
-
-            if (blinkRecoverTimer <= 0f)
+            if (blinkRecoverTime <= 0f)
             {
-                currentBlinkCharges++;
-                PlayBlinkRecoverSfx();
+                currentBlinkChargeValue = maxBlinkCharges;
+                UpdateBlinkUI();
+                return;
+            }
 
-                if (currentBlinkCharges < maxBlinkCharges)
-                {
-                    blinkRecoverTimer = blinkRecoverTime;
-                    blinkRecoverDelayTimer = 0f;
-                }
-                else
-                {
-                    blinkRecoverTimer = 0f;
-                    blinkRecoverDelayTimer = 0f;
-                }
+            float beforeChargeValue = currentBlinkChargeValue;
+
+            // blinkRecoverTime秒で1本分回復する。
+            currentBlinkChargeValue += Time.deltaTime / blinkRecoverTime;
+            currentBlinkChargeValue = Mathf.Clamp(currentBlinkChargeValue, 0f, maxBlinkCharges);
+
+            // 1本分をまたいだタイミングだけ回復SEを鳴らす。
+            // 例：0.99 -> 1.00、1.99 -> 2.00
+            int beforeFullCharges = Mathf.FloorToInt(beforeChargeValue);
+            int afterFullCharges = Mathf.FloorToInt(currentBlinkChargeValue);
+
+            if (afterFullCharges > beforeFullCharges)
+            {
+                PlayBlinkRecoverSfx();
             }
 
             UpdateBlinkUI();
@@ -685,39 +692,10 @@ namespace Retro.ThirdPersonCharacter
 
         private void UpdateBlinkUI()
         {
-            float slot1Amount = 0f;
-            float slot2Amount = 0f;
+            float clampedChargeValue = Mathf.Clamp(currentBlinkChargeValue, 0f, maxBlinkCharges);
 
-            if (currentBlinkCharges >= 1)
-            {
-                slot1Amount = 1f;
-            }
-
-            if (currentBlinkCharges >= 2)
-            {
-                slot2Amount = 1f;
-            }
-
-            if (currentBlinkCharges < maxBlinkCharges && blinkRecoverTime > 0f)
-            {
-                float recoverProgress = 0f;
-
-                if (blinkRecoverDelayTimer <= 0f)
-                {
-                    recoverProgress = 1f - Mathf.Clamp01(blinkRecoverTimer / blinkRecoverTime);
-                }
-
-                if (currentBlinkCharges == 0)
-                {
-                    slot1Amount = recoverProgress;
-                    slot2Amount = 0f;
-                }
-                else if (currentBlinkCharges == 1)
-                {
-                    slot1Amount = 1f;
-                    slot2Amount = recoverProgress;
-                }
-            }
+            float slot1Amount = Mathf.Clamp01(clampedChargeValue);
+            float slot2Amount = Mathf.Clamp01(clampedChargeValue - 1f);
 
             if (blinkSlot1Fill != null)
             {

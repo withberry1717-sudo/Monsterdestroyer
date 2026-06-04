@@ -33836,7 +33836,7 @@ PrefabInstance:
       objectReference: {fileID: 8300000, guid: 58941789cb0075e4e870308954121421, type: 3}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: secondStageChargeTime
-      value: 6
+      value: 5.5
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedHeavyEffect.sfx
@@ -33988,7 +33988,7 @@ PrefabInstance:
       objectReference: {fileID: 1586193195}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargeBlinkDistanceMultiplier
-      value: 0.3
+      value: 1.2
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargeReadyEffectLocalScale.x
@@ -34180,7 +34180,7 @@ PrefabInstance:
       objectReference: {fileID: 8300000, guid: bf187e22f26bbd148a5d77e0beedf74c, type: 3}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: secondStageChargedHeavyMultiplier
-      value: 7
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 9046699602885704366, guid: 15f9a6dab4c749943af11a085056ea56, type: 3}
       propertyPath: chargedHeavyComboSecondHitboxScale

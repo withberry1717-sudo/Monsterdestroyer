@@ -4,7 +4,6 @@ using UnityEngine.UI;
 public class ControlPageSwitcher : MonoBehaviour
 {
     [Header("Control Pages")]
-    [Tooltip("操作説明ページを順番に入れてください。Page1, Page2...")]
     [SerializeField] private GameObject[] controlPages;
 
     [Header("Arrow Buttons")]
@@ -12,31 +11,39 @@ public class ControlPageSwitcher : MonoBehaviour
     [SerializeField] private Button rightArrowButton;
 
     [Header("Settings")]
-    [Tooltip("ONなら最後のページの次に1ページ目へ戻ります。")]
     [SerializeField] private bool loopPages = true;
 
     private int currentPageIndex = 0;
 
-    private void Awake()
+    private void OnEnable()
+    {
+        RegisterButtons();
+
+        currentPageIndex = 0;
+        UpdatePage();
+    }
+
+    private void OnDisable()
+    {
+        UnregisterButtons();
+    }
+
+    private void RegisterButtons()
     {
         if (leftArrowButton != null)
         {
+            leftArrowButton.onClick.RemoveListener(ShowPreviousPage);
             leftArrowButton.onClick.AddListener(ShowPreviousPage);
         }
 
         if (rightArrowButton != null)
         {
+            rightArrowButton.onClick.RemoveListener(ShowNextPage);
             rightArrowButton.onClick.AddListener(ShowNextPage);
         }
     }
 
-    private void OnEnable()
-    {
-        currentPageIndex = 0;
-        UpdatePage();
-    }
-
-    private void OnDestroy()
+    private void UnregisterButtons()
     {
         if (leftArrowButton != null)
         {
@@ -51,7 +58,13 @@ public class ControlPageSwitcher : MonoBehaviour
 
     public void ShowNextPage()
     {
-        if (controlPages == null || controlPages.Length == 0) return;
+        Debug.Log("Next Page Button Pressed");
+
+        if (controlPages == null || controlPages.Length == 0)
+        {
+            Debug.LogWarning("Control Pages が空です");
+            return;
+        }
 
         currentPageIndex++;
 
@@ -65,7 +78,13 @@ public class ControlPageSwitcher : MonoBehaviour
 
     public void ShowPreviousPage()
     {
-        if (controlPages == null || controlPages.Length == 0) return;
+        Debug.Log("Previous Page Button Pressed");
+
+        if (controlPages == null || controlPages.Length == 0)
+        {
+            Debug.LogWarning("Control Pages が空です");
+            return;
+        }
 
         currentPageIndex--;
 
@@ -79,7 +98,7 @@ public class ControlPageSwitcher : MonoBehaviour
 
     private void UpdatePage()
     {
-        if (controlPages == null) return;
+        if (controlPages == null || controlPages.Length == 0) return;
 
         for (int i = 0; i < controlPages.Length; i++)
         {
@@ -101,5 +120,19 @@ public class ControlPageSwitcher : MonoBehaviour
                 rightArrowButton.interactable = currentPageIndex < controlPages.Length - 1;
             }
         }
+        else
+        {
+            if (leftArrowButton != null)
+            {
+                leftArrowButton.interactable = true;
+            }
+
+            if (rightArrowButton != null)
+            {
+                rightArrowButton.interactable = true;
+            }
+        }
+
+        Debug.Log("Control Page Index: " + currentPageIndex);
     }
 }

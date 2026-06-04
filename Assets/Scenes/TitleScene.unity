@@ -720,9 +720,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 121080512}
-        m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
-        m_MethodName: Play
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: ControlPageSwitcher, Assembly-CSharp
+        m_MethodName: 
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2015,9 +2015,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 121080512}
-        m_TargetAssemblyTypeName: UnityEngine.AudioSource, UnityEngine
-        m_MethodName: Play
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: ControlPageSwitcher, Assembly-CSharp
+        m_MethodName: 
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -5946,7 +5946,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1283283733
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5997,10 +5997,10 @@ RectTransform:
   m_LocalScale: {x: 3.8382573, y: 3.8382573, z: 3.8382573}
   m_ConstrainProportionsScale: 1
   m_Children:
-  - {fileID: 143647949}
-  - {fileID: 383470879}
   - {fileID: 924211610}
   - {fileID: 1706002323}
+  - {fileID: 143647949}
+  - {fileID: 383470879}
   - {fileID: 793199342}
   - {fileID: 502794011}
   m_Father: {fileID: 1079301375}
